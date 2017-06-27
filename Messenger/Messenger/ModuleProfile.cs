@@ -9,6 +9,7 @@ namespace Messenger
 {
     class ModuleProfile : INotifyPropertyChanged
     {
+        public const int GroupLimit = 32;
         public const string KeyCode = "profile-code";
         public const string KeyName = "profile-name";
         public const string KeyText = "profile-text";
@@ -126,7 +127,6 @@ namespace Messenger
         /// </summary>
         /// <param name="id">编号</param>
         /// <param name="create">指定编号不存在时创建对象</param>
-        /// <returns></returns>
         public static Profile Query(int id, bool create = false)
         {
             if (id == instance._local.ID)
@@ -146,7 +146,7 @@ namespace Messenger
         }
 
         /// <summary>
-        /// 移除所有 ID 不在给定集合的项目
+        /// 移除所有 ID 不在给定集合的项目 并把含有未读消息的项目添加到最近列表
         /// </summary>
         /// <param name="ids">ID 集合</param>
         public static IList<Profile> Remove(IEnumerable<int> ids)
@@ -156,16 +156,23 @@ namespace Messenger
             Application.Current.Dispatcher.Invoke(() =>
                 {
                     lst = clt.Remove(r => ids.Contains(r.ID) == false);
-                    foreach (var r in lst) if (r.Hint > 0) SetRecent(r);
+                    foreach (var r in lst)
+                        if (r.Hint > 0)
+                            SetRecent(r);
                 });
             return lst;
         }
 
-        public static void SetGroupLabels(string args)
+        /// <summary>
+        /// 设置组标签 不区分大小写 以空格分开 超出个数限制返回 false
+        /// </summary>
+        public static bool SetGroupLabels(string args)
         {
             var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
             var kvs = tmp.Distinct((a, b) => a.Hash == b.Hash).ToList();
+            if (kvs.Count > GroupLimit)
+                return false;
             var ids = from i in kvs select i.Hash;
             instance._grouptags = args;
             instance._groupids = ids;
@@ -174,7 +181,9 @@ namespace Messenger
             Application.Current.Dispatcher.Invoke(() =>
                 {
                     var lst = gro.Remove(r => ids.Contains(r.ID) == false);
-                    foreach (var r in lst) if (r.Hint > 0) SetRecent(r);
+                    foreach (var r in lst)
+                        if (r.Hint > 0)
+                            SetRecent(r);
                     var add = from r in kvs where gro.Contains(t => t.ID == r.Hash) == false select r;
                     foreach (var i in add)
                     {
@@ -184,12 +193,12 @@ namespace Messenger
                         gro.Add(pro);
                     }
                 });
+            return true;
         }
 
         /// <summary>
         /// 设置当前联系人
         /// </summary>
-        /// <param name="profile"></param>
         public static void SetInscope(Profile profile)
         {
             if (profile == null)

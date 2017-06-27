@@ -35,6 +35,9 @@ namespace Messenger
                 frameRight.Navigate(new Chatter());
         }
 
+        /// <summary>
+        /// 根据用户昵称和签名提供搜索功能
+        /// </summary>
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (e.OriginalSource != textbox)
@@ -50,7 +53,7 @@ namespace Messenger
             {
                 var txt = textbox.Text.ToLower();
                 var val = (from i in ModuleProfile.ClientList.Union(ModuleProfile.GroupsList).Union(ModuleProfile.RecentList)
-                           where i.Name?.ToLower()?.Contains(txt) == true || i.Text?.ToLower()?.Contains(txt) == true
+                           where i.Name?.ToLower().Contains(txt) == true || i.Text?.ToLower().Contains(txt) == true
                            select i).ToList();
                 var idx = val.IndexOf(ModuleProfile.Inscope);
                 listbox.ItemsSource = val;

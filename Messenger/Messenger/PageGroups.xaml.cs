@@ -17,7 +17,7 @@ namespace Messenger
         {
             PageManager.SetProfilePage(this, listbox, ModuleProfile.GroupsList);
         }
-        
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var btn = e.OriginalSource as Button;
@@ -30,7 +30,10 @@ namespace Messenger
             }
             else if (btn == buttonApply && string.Equals(textboxEdit.Text, ModuleProfile.GroupLabels) == false)
             {
-                ModuleProfile.SetGroupLabels(textboxEdit.Text);
+                var res = ModuleProfile.SetGroupLabels(textboxEdit.Text);
+                if (res == false)
+                    MainWindow.ShowMessage($"最多允许使用 {ModuleProfile.GroupLimit} 个群组标签.", null);
+                return;
             }
         }
     }
