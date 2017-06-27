@@ -8,7 +8,7 @@
       d:DesignHeight="480" d:DesignWidth="720"
       FontSize="14"
       KeepAlive="False"
-      Loaded="Page_Loaded">
+      Loaded="Page_Loaded" Unloaded="Page_Unloaded">
     <Page.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="#FFE0E0E0"/>

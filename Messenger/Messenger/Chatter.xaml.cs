@@ -54,6 +54,9 @@ namespace Messenger
             _ScrollToEnd();
         }
 
+        /// <summary>
+        /// 拦截消息通知
+        /// </summary>
         private void ModuleMessage_Receiving(object sender, GenericEventArgs<ItemPacket> e)
         {
             if (e.Value.Groups != _profile.ID)

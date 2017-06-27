@@ -78,7 +78,7 @@ namespace Messenger
                 _instance._client = clt;
             }
 
-            ModulePacket.OnHandled += ModuleMessage_Onhandled;
+            ModulePacket.OnHandled += ModulePacket_OnHandled;
             ModuleTrans.Expect.ListChanged += ModuleTrans_ListChanged;
             ModuleProfile.Current.ID = id;
             Enqueue(Server.ID, PacketGenre.UserProfile, ModuleProfile.Current);
@@ -88,6 +88,7 @@ namespace Messenger
             var lst = ModuleProfile.GroupIDs;
             if (lst != null)
                 Enqueue(Server.ID, PacketGenre.UserGroups, lst.ToList());
+            return;
         }
 
         public static void Close()
@@ -105,7 +106,7 @@ namespace Messenger
             clt.Shutdown -= Client_Shutdown;
             clt.Dispose();
 
-            ModulePacket.OnHandled -= ModuleMessage_Onhandled;
+            ModulePacket.OnHandled -= ModulePacket_OnHandled;
             ModuleTrans.Expect.ListChanged -= ModuleTrans_ListChanged;
         }
 
@@ -133,7 +134,7 @@ namespace Messenger
             return res;
         }
 
-        private static void ModuleMessage_Onhandled(object sender, GenericEventArgs<ItemPacket> e)
+        private static void ModulePacket_OnHandled(object sender, GenericEventArgs<ItemPacket> e)
         {
             Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -141,9 +142,9 @@ namespace Messenger
                     if (pro == null)
                         return;
                     var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                    if (Application.Current.MainWindow.IsActive == false || e.Handled == false)
+                    if (e.Handled == false || Application.Current.MainWindow.IsActive == false)
                         NativeMethods.FlashWindow(hdl, true);
-                    if (e.Handled == false)
+                    if (e.Handled == false || e.Cancel == true)
                         pro.Hint += 1;
                 });
         }

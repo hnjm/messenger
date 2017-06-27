@@ -77,6 +77,9 @@ namespace Messenger
 
         private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
+        /// <summary>
+        /// 重新计算未读消息数量
+        /// </summary>
         private void OnChanged()
         {
             var cli = _client.Sum(r => r.Hint);
