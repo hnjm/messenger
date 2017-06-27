@@ -1,0 +1,189 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Sockets;
+using System.Threading;
+
+namespace Messenger.Foundation
+{
+    /// <summary>
+    /// 文件接收类 (线程安全)
+    /// </summary>
+    public class Taker : Transport
+    {
+        private string _filepath = null;
+        private FileStream _stream = null;
+        private Socket _socket = null;
+        private Thread _thread = null;
+        private List<string> _ieps = null;
+        private Func<string> _callback = null;
+
+        /// <summary>
+        /// 初始化对象 并设定文件保存路径函数
+        /// </summary>
+        public Taker(TransportHeader trans, Func<string> callback)
+        {
+            if (trans == null || callback == null)
+                throw new ArgumentNullException();
+            _key = trans.Key;
+            _name = trans.FileName;
+            _ieps = trans.EndPoints;
+            _length = trans.FileLength;
+            _status = TransportStatus.等待;
+            _callback = callback;
+        }
+
+        /// <summary>
+        /// 启动文件接收
+        /// </summary>
+        public override void Start()
+        {
+            lock (_locker)
+            {
+                if (_started || _disposed)
+                    throw new InvalidOperationException();
+                _started = true;
+
+                _status = TransportStatus.运行;
+                _OnStarted();
+            }
+
+            var flg = false;
+            var inf = default(FileInfo);
+            var str = default(FileStream);
+            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            var dis = new Action(() =>
+                {
+                    soc?.Dispose();
+                    str?.Dispose();
+                    soc = null;
+                    str = null;
+                });
+
+            for (var i = 0; i < _ieps.Count && flg == false; i++)
+            {
+                try
+                {
+                    var iep = _ieps[i].ToEndPoint();
+                    Extension.TimeoutInvoke(() => soc.Connect(iep), Server.DefaultTimeout);
+                    soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
+                    flg = true;
+                }
+                catch (Exception ex)
+                {
+                    Log.E(nameof(Taker), ex, "无法连接到远程端点.");
+                }
+            }
+
+            if (flg == false)
+            {
+                dis.Invoke();
+                throw new ApplicationException("无法与发送者建立连接, 网络不可达或对方已取消发送操作.");
+            }
+
+            try
+            {
+                soc.SendExt(Xml.Serialize(_key));
+                inf = new FileInfo(_callback.Invoke());
+                str = new FileStream(inf.FullName, FileMode.CreateNew);
+            }
+            catch
+            {
+                dis.Invoke();
+                throw;
+            }
+
+            _name = inf.Name;
+            _filepath = inf.FullName;
+
+            lock (_locker)
+            {
+                if (IsDisposed)
+                {
+                    dis.Invoke();
+                    throw new InvalidOperationException();
+                }
+
+                _socket = soc;
+                _stream = str;
+                _thread = new Thread(_Taker);
+                _thread.Start();
+            }
+        }
+
+        /// <summary>
+        /// 循环接收文件
+        /// </summary>
+        private void _Taker()
+        {
+            var exc = default(Exception);
+            try
+            {
+                while (_socket != null)
+                {
+                    if (_position >= _length)
+                        break;
+                    _stream.Seek(_position, SeekOrigin.Begin);
+                    var len = (long)short.MaxValue;
+                    if (_position + len > _length)
+                        len = _length - _position;
+                    var buf = new byte[len];
+                    int l = _socket.Receive(buf, 0, (int)len, SocketFlags.None, out var err);
+                    if (l < 1)
+                        throw new SocketException((int)err);
+                    _stream.Write(buf, 0, l);
+                    _position += l;
+                }
+            }
+            catch (Exception ex)
+            {
+                exc = ex;
+            }
+
+            var res = (exc == null && _position == _length);
+            lock (_locker)
+            {
+                if (IsDisposed == false)
+                {
+                    _status = res ? TransportStatus.成功 : TransportStatus.中断;
+                    _exception = exc;
+                    Dispose(true);
+                }
+            }
+
+            try
+            {
+                if (res == false && File.Exists(_filepath))
+                    File.Delete(_filepath);
+                return;
+            }
+            catch (Exception ex)
+            {
+                Log.E(nameof(Taker), ex, "尝试删除未完全接收的文件出错.");
+            }
+        }
+
+        #region 实现 IDisposable
+        /// <summary>
+        /// 释放资源并在后台触发 <see cref="Transport.Disposed"/> 事件 (不含 lock 语句)
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            var val = _status & TransportStatus.终态;
+            if (val == 0)
+                _status = TransportStatus.取消;
+
+            _socket?.Dispose();
+            _socket = null;
+            _stream?.Dispose();
+            _stream = null;
+
+            _disposed = true;
+            _OnDisposed();
+        }
+        #endregion
+    }
+}

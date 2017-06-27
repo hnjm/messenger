@@ -1,0 +1,67 @@
+﻿<Page x:Class="Messenger.PageGroups"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Messenger"
+      mc:Ignorable="d" 
+      KeepAlive="False"
+      d:DesignHeight="300" d:DesignWidth="300"
+      Loaded="Page_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Margin="10,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Margin="0,5" FontSize="16" FontWeight="Bold" Foreground="#C0C0C0">群组</TextBlock>
+            <TextBlock Grid.Row="1" Margin="0,5" FontSize="12" Foreground="#C0C0C0">所有标记的群组</TextBlock>
+        </Grid>
+        <ListBox x:Name="listbox" Grid.Row="1"
+                 Style="{DynamicResource ThinListBox}"
+                 ItemsSource="{x:Static local:ModuleProfile.GroupsList}"
+                 ItemContainerStyle="{DynamicResource ProfileItem}">
+        </ListBox>
+        <Border Grid.Row="2" Background="#404040" Height="1" SnapsToDevicePixels="True"/>
+        <Grid Grid.Row="3" Button.Click="Button_Click">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid x:Name="gridEdit" Grid.Row="1" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="10"/>
+                </Grid.RowDefinitions>
+                <TextBox x:Name="textboxEdit" Grid.Row="1" Margin="10,0" TextWrapping="WrapWithOverflow" AllowDrop="True" Text="{Binding Source={x:Static local:ModuleProfile.GroupLabels}, Mode=OneTime}" Tag="请输入群组标签 多个标签用空格分隔"/>
+                <Button x:Name="buttonApply" Grid.Row="3" Margin="10,0">应用</Button>
+            </Grid>
+            <Button x:Name="buttonEdit" Grid.Row="0" Background="Transparent" BorderThickness="0" ToolTip="编辑群组标签"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Width="32" Height="32">
+                <Path Grid.Column="0" Stroke="#FFC0C0C0" Width="24" Height="24">
+                    <Path.Data>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="11,7" RadiusX="5" RadiusY="5"/>
+                            <PathGeometry Figures="M 2,22 A 9,9 0 0 1 21,22"/>
+                            <LineGeometry StartPoint="17,3" EndPoint="23,3"/>
+                            <LineGeometry StartPoint="20,0" EndPoint="20,6"/>
+                        </GeometryGroup>
+                    </Path.Data>
+                </Path>
+            </Button>
+        </Grid>
+    </Grid>
+</Page>

@@ -1,0 +1,51 @@
+﻿<Page x:Class="Messenger.PageOption"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="540" d:DesignWidth="960"
+      KeepAlive="False"
+      FontSize="14"
+      Background="#FF000000" Loaded="Page_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Margin="25,15" FontSize="36" Foreground="#FFC0C0C0" FontWeight="Light">设置</TextBlock>
+        <ScrollViewer Grid.Row="1" Margin="0,10" Template="{DynamicResource ThinScrollViewer}">
+            <Grid Margin="25,0" Button.Click="Button_Click">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" HorizontalAlignment="Left" RadioButton.Click="RadioButton_Click">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" FontSize="24" Foreground="#FFC0C0C0" Text="发送消息按键"/>
+                    <RadioButton x:Name="radioEnter" Grid.Row="2" Content="Enter"/>
+                    <RadioButton x:Name="radioCtrlEnter" Grid.Row="4" Content="Ctrl + Enter"/>
+                </Grid>
+                <Grid Grid.Row="3" HorizontalAlignment="Left">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" FontSize="24" Foreground="#FFC0C0C0" Text="连接控制"/>
+                    <Button x:Name="buttonOut" Grid.Row="2" Content="注销登陆" HorizontalAlignment="Left" Width="120"/>
+                    <Button x:Name="buttonExit" Grid.Row="4" Content="退出程序" HorizontalAlignment="Left" Width="120"/>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

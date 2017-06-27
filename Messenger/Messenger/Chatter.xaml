@@ -1,0 +1,240 @@
+﻿<Page x:Class="Messenger.Chatter"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:local="clr-namespace:Messenger"
+      mc:Ignorable="d" 
+      x:Name="page"
+      d:DesignHeight="300" d:DesignWidth="500"
+      KeepAlive="False"
+      FontSize="14"
+      Loaded="Page_Loaded" Unloaded="Page_Unloaded">
+    <Page.Resources>
+        <local:LengthConverter x:Key="lengthConverter"/>
+        <ControlTemplate x:Key="messageItem">
+            <Grid Margin="5" Width="{Binding ElementName=gridMessage, Path=ActualWidth}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="32"/>
+                </Grid.ColumnDefinitions>
+                <Control x:Name="control" Grid.ColumnSpan="3" Height="32" Width="32"
+                         DataContext="{Binding Path=Profile}"
+                         Template="{DynamicResource ClientImageTemplate}"
+                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                         VerticalAlignment="Top"/>
+                <Grid Grid.Column="1" Margin="10,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="0,5" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                        <TextBlock Foreground="#FF808080" FontSize="12">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0} {1:HH:mm:ss}">
+                                    <Binding Path="Profile.Name"/>
+                                    <Binding Path="Timestamp"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Grid>
+                    <Grid Grid.Row="1">
+                        <Border x:Name="borderShow" Grid.Row="1" CornerRadius="2" Background="{TemplateBinding Background}"/>
+                        <Control x:Name="controlShow"/>
+                    </Grid>
+                </Grid>
+                <Grid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="{x:Static local:Commands.CopyText}"/>
+                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                        <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
+                    </ContextMenu>
+                </Grid.ContextMenu>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static local:Interact.ID}">
+                    <Setter Property="Background" Value="#2B3335"/>
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Genre}" Value="MessageText">
+                    <Setter TargetName="controlShow" Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <TextBox Margin="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
+                                         HorizontalAlignment="Left"
+                                         Text="{Binding Path=MessageText, Mode=OneWay}"
+                                         Background="Transparent"
+                                         SelectionBrush="LightGreen"
+                                         Foreground="#C0C0C0"
+                                         ContextMenu="{DynamicResource TextBoxContextMenu}">
+                                </TextBox>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Genre}" Value="MessageImage">
+                    <Setter TargetName="controlShow" Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Image HorizontalAlignment="Left" Source="{Binding Path=MessageImage}" Stretch="None"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Genre}" Value="FileInfo">
+                    <Setter TargetName="controlShow" Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Grid Margin="8,4" DataContext="{Binding Path=Value}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Transport.Name}"/>
+                                    <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="文件大小: {0}, 状态: {1}, 剩余时间: {2:hh\:mm\:ss}">
+                                                <Binding Path="Transport.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
+                                                <Binding Path="Transport.Status" Mode="OneWay"/>
+                                                <Binding Path="Remain" Mode="OneWay"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <ProgressBar x:Name="progressBar" Grid.Row="2" Margin="0,4" Height="2" Minimum="0" Maximum="100" SnapsToDevicePixels="True" Value="{Binding Path=Progress, Mode=OneWay}"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Page.Resources>
+    <Grid x:Name="grid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid x:Name="gridProfile" Grid.Row="0" VerticalAlignment="Top" SnapsToDevicePixels="True">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Control Grid.Column="0" Margin="10" Width="64" Height="64">
+                    <Control.Template>
+                        <ControlTemplate>
+                            <Control x:Name="control"/>
+                            <ControlTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Path=IsClient}" Value="True">
+                                    <Setter TargetName="control" Property="Template" Value="{DynamicResource ClientImageTemplate}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Path=IsGroups}" Value="True">
+                                    <Setter TargetName="control" Property="Template" Value="{DynamicResource GroupsImageTemplate}"/>
+                                </DataTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Control.Template>
+                </Control>
+                <StackPanel Grid.Column="1" Margin="0,10" VerticalAlignment="Bottom">
+                    <TextBlock FontSize="24" Foreground="#C0C0C0" FontWeight="Light" Text="{Binding Path=Name}"/>
+                    <TextBlock FontSize="12" Foreground="#808080" FontStyle="Italic" Text="{Binding Path=Text}"/>
+                </StackPanel>
+            </Grid>
+            <Border Grid.Row="1" Height="1" Background="#202020"/>
+        </Grid>
+        <Grid Margin="5" Grid.Row="1" SnapsToDevicePixels="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="8*" MinWidth="500"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid x:Name="gridMessage" Margin="32,0" Grid.Column="1"/>
+            <ListBox x:Name="listboxMessage" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Background" Value="#202020"/>
+                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                        <Setter Property="Template" Value="{StaticResource ResourceKey=messageItem}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#101010"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+        </Grid>
+        <Grid Grid.Row="2" Width="{Binding ElementName=listboxMessage, Path=ActualWidth}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Background="SteelBlue" Height="1" SnapsToDevicePixels="True"/>
+            <TextBox x:Name="textboxInput" Grid.Column="0" Grid.Row="2" Margin="5" Background="Transparent" Foreground="#C0C0C0" CaretBrush="#808080" BorderThickness="0"
+                     MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字"
+                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop" ContextMenu="{DynamicResource TextBoxContextMenu}">
+            </TextBox>
+            <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button x:Name="buttonFile" VerticalAlignment="Center" Content="{DynamicResource PathDirectory}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="发送文件"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="buttonClean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="清空消息列表"/>
+                    <Button x:Name="buttonSymbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="表情面板"/>
+                    <Button x:Name="buttonImage" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="发送图片"/>
+                    <Button x:Name="buttonText" Margin="10,0,0,0" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="发送"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+        <Grid x:Name="gridSymbol" Grid.RowSpan="2"
+              Width="{Binding ElementName=listboxMessage, Path=ActualWidth}"
+              VerticalAlignment="Bottom" Visibility="Collapsed"
+              SnapsToDevicePixels="True">
+            <Grid Margin="5,0" HorizontalAlignment="Right">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Grid.RowSpan="2" Background="#101010">
+                    <Border.Effect>
+                        <DropShadowEffect Color="#FFFFFF" ShadowDepth="0"/>
+                    </Border.Effect>
+                </Border>
+                <TextBlock Margin="5" Grid.Row="0" HorizontalAlignment="Left" Foreground="#C0C0C0" FontSize="16">表情</TextBlock>
+                <ListBox x:Name="listboxSymbol" Grid.Row="1" Margin="5,0,5,5" Width="342" Height="172" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         Style="{DynamicResource ThinListBox}" 
+                         ItemsSource="{x:Static local:ModuleSymbols.List}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Button FontSize="24" Style="{DynamicResource GeometryButton}" Content="{Binding}" Click="Symbol_Click" Width="34" Height="34"/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>
