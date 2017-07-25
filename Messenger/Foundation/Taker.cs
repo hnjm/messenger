@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Mikodev.Network;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -15,20 +18,20 @@ namespace Messenger.Foundation
         private FileStream _stream = null;
         private Socket _socket = null;
         private Thread _thread = null;
-        private List<string> _ieps = null;
+        private List<IPEndPoint> _ieps = null;
         private Func<string> _callback = null;
 
         /// <summary>
         /// 初始化对象 并设定文件保存路径函数
         /// </summary>
-        public Taker(TransportHeader trans, Func<string> callback)
+        public Taker(PacketReader reader, Func<string> callback)
         {
-            if (trans == null || callback == null)
+            if (reader == null || callback == null)
                 throw new ArgumentNullException();
-            _key = trans.Key;
-            _name = trans.FileName;
-            _ieps = trans.EndPoints;
-            _length = trans.FileLength;
+            _key = reader["guid"].Pull<Guid>();
+            _name = reader["filename"].Pull<string>();
+            _ieps = reader["endpoints"].PullList<IPEndPoint>().ToList();
+            _length = reader["filesize"].Pull<long>();
             _status = TransportStatus.等待;
             _callback = callback;
         }
@@ -60,12 +63,13 @@ namespace Messenger.Foundation
                     str = null;
                 });
 
-            for (var i = 0; i < _ieps.Count && flg == false; i++)
+            foreach (var i in _ieps)
             {
+                if (flg == true)
+                    break;
                 try
                 {
-                    var iep = _ieps[i].ToEndPoint();
-                    Extension.TimeoutInvoke(() => soc.Connect(iep), Server.DefaultTimeout);
+                    Extension.TimeoutInvoke(() => soc.Connect(i), Server.DefaultTimeout);
                     soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
                     flg = true;
                 }

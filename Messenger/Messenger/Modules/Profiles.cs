@@ -144,7 +144,7 @@ namespace Messenger.Modules
                 return val;
             if (create == false)
                 return null;
-            var tmp = new Profile() { ID = id, Name = $"[{id}]" };
+            var tmp = new Profile() { ID = id, Name = $"未知 [{id}]" };
             instance._spaces.Add(new WeakReference<Profile>(tmp));
             return tmp;
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mikodev.Network;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -16,7 +17,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 协议字符串
         /// </summary>
-        public const string Protocol = "miko.sharp.messenger";
+        public const string Protocol = "mikodev.messenger";
         /// <summary>
         /// 默认监听端口
         /// </summary>
@@ -183,78 +184,80 @@ namespace Messenger.Foundation
             }
         }
 
-        /// <summary>
-        /// 处理新传入连接 并将符合条件的连接加入客户端列表
-        /// </summary>
         private void _CheckClient(Socket client)
         {
+            // 检查编号是否冲突
+            ErrorCode check(int id)
+            {
+                lock (_locker)
+                {
+                    if (IsDisposed)
+                        return ErrorCode.Shutdown;
+                    if (_clients.ContainsKey(id))
+                        return ErrorCode.Conflict;
+                    // 空值做占位符
+                    _clients.Add(id, null);
+                    return ErrorCode.Success;
+                }
+            }
+            // 移除占位符
+            void remove(int id)
+            {
+                lock (_locker)
+                {
+                    if (_clients.TryGetValue(id, out var val) && val == null)
+                        _clients.Remove(id);
+                    else throw new ApplicationException("Failed to remove placeholder.");
+                }
+            }
+
             var err = ErrorCode.None;
             var buf = default(byte[]);
-            var req = default(PacketRequest);
-            var res = default(PacketRespond);
-            var iep = default(IPEndPoint);
-            var aes = new AesManaged();
-            var rsa = new RSACryptoServiceProvider();
 
-            // 检查编号是否冲突
-            var chk = new Func<int, ErrorCode>((id) =>
-                {
-                    lock (_locker)
-                    {
-                        if (IsDisposed)
-                            return ErrorCode.Shutdown;
-                        if (_clients.ContainsKey(id))
-                            return ErrorCode.Conflict;
-                        // 空值做占位符
-                        _clients.Add(id, null);
-                        return ErrorCode.Success;
-                    }
-                });
-            // 移除占位符
-            var rem = new Action<int>((id) =>
-                {
-                    lock (_locker)
-                    {
-                        if (_clients.TryGetValue(id, out var val) && val == null)
-                            _clients.Remove(id);
-                        else throw new ApplicationException("移除占位符的条件不满足");
-                    }
-                });
-
-            // 读取客户端报文
             Extension.TimeoutInvoke(() => buf = client.ReceiveExt(), DefaultTimeout);
-            req = Xml.Deserialize<PacketRequest>(buf);
+            var rea = new PacketReader(buf);
+            var req = new
+            {
+                id = rea["id"].Pull<int>(),
+                rsakey = rea["rsakey"].Pull<string>(),
+                protocol = rea["protocol"].Pull<string>(),
+            };
 
-            if (req.Protocol.Equals(Protocol) == false)
-                throw new ApplicationException("协议字符串不匹配");
-
+            if (Protocol.Equals(req.protocol) == false)
+                throw new ApplicationException("Protocol not match.");
             if (_clients.Count >= CountLimited)
                 err = ErrorCode.Filled;
-            else if (req.ID <= ID)
+            else if (req.id <= ID)
                 err = ErrorCode.Invalid;
             else
-                err = chk.Invoke(req.ID);
+                err = check(req.id);
+
+            var aes = new AesManaged();
 
             try
             {
-                // 发送回应包 使用 RSA 公钥加密 AES 密钥
-                iep = (IPEndPoint)client.RemoteEndPoint;
-                rsa.FromXmlString(req.RsaKey);
-                res = new PacketRespond() { Result = err, AesKey = rsa.Encrypt(aes.Key, true), AesIV = rsa.Encrypt(aes.IV, true), EndPoint = $"{iep.Address}:{iep.Port}" };
-                Extension.TimeoutInvoke(() => client.SendExt(Xml.Serialize(res)), DefaultTimeout);
+                var rsa = new RSACryptoServiceProvider();
+                rsa.FromXmlString(req.rsakey);
+                var tmp = PacketWriter.Serialize(new Dictionary<string, object>()
+                {
+                    ["result"] = err,
+                    ["aeskey"] = rsa.Encrypt(aes.Key, true),
+                    ["aesiv"] = rsa.Encrypt(aes.IV, true),
+                    ["endpoint"] = (IPEndPoint)client.RemoteEndPoint,
+                });
+                Extension.TimeoutInvoke(() => client.SendExt(tmp.GetBytes()), DefaultTimeout);
             }
             catch
             {
-                // 移除占位符
                 if (err == ErrorCode.Success)
-                    rem.Invoke(req.ID);
+                    remove(req.id);
                 throw;
             }
 
             if (err != ErrorCode.Success)
                 throw new ConnectException(err);
 
-            var clt = new Client(req.ID);
+            var clt = new Client(req.id);
             clt.Received += Client_Received;
             clt.Shutdown += Client_Shutdown;
             clt.Crypto = aes;
@@ -262,14 +265,15 @@ namespace Messenger.Foundation
             // 调用 Shutdown 之前未被处理的连接在此断开
             lock (_locker)
             {
-                rem.Invoke(req.ID);
+                remove(req.id);
                 if (IsDisposed)
-                    throw new ApplicationException("服务器已被标记为 Disposed, 此连接将拒绝");
-                _clients.Add(req.ID, clt);
-                _groupsc.Add(req.ID, new List<int>());
+                    throw new ApplicationException("Server has been disposed.");
+                _clients.Add(req.id, clt);
+                _groupsc.Add(req.id, new List<int>());
                 _srvbroa += clt.Enqueue;
                 _OnCountChanged();
             }
+
             // 先加入列表再启动 避免客户端查找出现空值
             // 若在调用 Start 前被 Dispose, 异常会被上层捕获并关闭该套接字
             clt.Start(client);

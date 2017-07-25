@@ -27,7 +27,7 @@ namespace Messenger
         /// <summary>
         /// 局域网服务器信息列表
         /// </summary>
-        private BindingList<PacketServer> _hosts = new BindingList<PacketServer>();
+        private BindingList<Host> _hosts = new BindingList<Host>();
 
         public Connection()
         {

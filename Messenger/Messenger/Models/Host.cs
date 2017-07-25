@@ -1,24 +1,42 @@
-﻿using Messenger.Foundation;
-using System;
-using System.Net;
-using System.Xml.Serialization;
+﻿using System.Net;
 
 namespace Messenger.Models
 {
-    [Serializable]
-    [XmlRoot(ElementName = ServerRoot)]
-    public class Host : PacketServer
+    public class Host
     {
+        /// <summary>
+        /// 协议字符串
+        /// </summary>
+        public string Protocol { get; set; }
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// 端口
+        /// </summary>
+        public int Port { get; set; }
+
+        /// <summary>
+        /// 服务器当前连接的客户端数
+        /// </summary>
+        public int Count { get; set; }
+
+        /// <summary>
+        /// 服务器最大客户端数
+        /// </summary>
+        public int CountLimit { get; set; }
+
         /// <summary>
         /// 访问延迟
         /// </summary>
-        [XmlIgnore]
         public long Delay { get; set; } = 0;
 
         /// <summary>
         /// IP 地址
         /// </summary>
-        [XmlIgnore]
         public IPAddress Address { get; set; } = null;
 
         /// <summary>

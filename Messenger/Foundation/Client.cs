@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Mikodev.Network;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -94,56 +96,63 @@ namespace Messenger.Foundation
                 _started = true;
             }
 
-            var buf = default(byte[]);
-            var aes = default(AesManaged);
+            var rsa = new RSACryptoServiceProvider();
             var iep = default(IPEndPoint);
-            var res = default(PacketRespond);
-            var rsa = new RSACryptoServiceProvider(1024);
-            var req = new PacketRequest() { ID = ID, Protocol = Server.Protocol, RsaKey = rsa.ToXmlString(false) };
+            var aes = default(AesManaged);
+            var req = PacketWriter.Serialize(new Dictionary<string, object>()
+            {
+                ["id"] = ID,
+                ["protocol"] = Server.Protocol,
+                ["rsakey"] = rsa.ToXmlString(false),
+            });
 
             var soc = default(Socket);
             var tra = default(Socket);
-            var dis = new Action(() =>
-                {
-                    soc?.Dispose();
-                    soc = null;
-                    tra?.Dispose();
-                    tra = null;
-                });
+            void close()
+            {
+                soc?.Dispose();
+                soc = null;
+                tra?.Dispose();
+                tra = null;
+            }
 
             try
             {
                 soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Extension.TimeoutInvoke(() => soc.Connect(ep), Server.DefaultTimeout);
                 soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
-                // 使用明文发送用户信息和 RSA 公钥
-                buf = Xml.Serialize(req);
-                Extension.TimeoutInvoke(() => soc.SendExt(buf), Server.DefaultTimeout);
-                // 接收服务器返回值
+                Extension.TimeoutInvoke(() => soc.SendExt(req.GetBytes()), Server.DefaultTimeout);
+                var buf = default(byte[]);
                 Extension.TimeoutInvoke(() => buf = soc.ReceiveExt(), Server.DefaultTimeout);
-                res = Xml.Deserialize<PacketRespond>(buf);
-                if (res?.Result != ErrorCode.Success)
-                    throw new ConnectException(res?.Result ?? ErrorCode.InnerError);
-                // 监听套接字绑定
+                var rea = new PacketReader(buf);
+                var res = new
+                {
+                    result = rea["result"].Pull<ErrorCode>(),
+                    aeskey = rea["aeskey"].PullList(),
+                    aesiv = rea["aesiv"].PullList(),
+                    endpoint = rea["endpoint"].Pull<IPEndPoint>(),
+                };
+                if (res.result != ErrorCode.Success)
+                    throw new ConnectException(res.result);
                 tra = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 tra.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 tra.Bind(soc.LocalEndPoint);
                 tra.Listen(DefaultRequest);
 
-                iep = res.EndPoint.ToEndPoint();
-                aes = new AesManaged() { Key = rsa.Decrypt(res.AesKey, true), IV = rsa.Decrypt(res.AesIV, true) };
+                iep = res.endpoint;
+                aes = new AesManaged() { Key = rsa.Decrypt(res.aeskey, true), IV = rsa.Decrypt(res.aesiv, true) };
             }
             catch
             {
-                dis.Invoke();
+                close();
                 throw;
             }
 
             lock (_locker)
             {
-                if (IsDisposed)
+                if (_disposed)
                 {
-                    dis.Invoke();
+                    close();
                     throw new InvalidOperationException();
                 }
 
@@ -151,7 +160,7 @@ namespace Messenger.Foundation
                 OuterEndPoint = iep;
                 _socket = soc;
                 _ftrans = tra;
-                // 除了读写线程外 还有一个监听线程用于与其他客户端建立文件传输
+                // more one thread for file transform
                 _sendth = new Thread(_Maker);
                 _recvth = new Thread(_Taker);
                 _lstnth = new Thread(_Listen);

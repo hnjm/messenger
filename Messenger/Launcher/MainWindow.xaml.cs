@@ -1,5 +1,7 @@
 ﻿using Messenger.Foundation;
+using Mikodev.Network;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -79,17 +81,27 @@ namespace Messenger.Launcher
                     {
                         var fuc = new Func<byte[], byte[]>((buf) =>
                             {
-                                var str = Xml.Deserialize<string>(buf);
+                                var rea = new PacketReader(buf);
+                                var str = rea["protocol"].Pull<string>();
                                 if (!str.Equals(Server.Protocol))
                                     return null;
-                                return Xml.Serialize(new PacketServer()
+                                //return Xml.Serialize(new PacketServer()
+                                //{
+                                //    Protocol = Server.Protocol,
+                                //    Port = port,
+                                //    Name = name,
+                                //    CountLimited = max,
+                                //    Count = ModuleManager.Server.Count
+                                //});
+                                var wtr = PacketWriter.Serialize(new Dictionary<string, object>()
                                 {
-                                    Protocol = Server.Protocol,
-                                    Port = port,
-                                    Name = name,
-                                    CountLimited = max,
-                                    Count = ModuleManager.Server.Count
+                                    ["protocol"] = Server.Protocol,
+                                    ["port"] = port,
+                                    ["name"] = name,
+                                    ["limit"] = max,
+                                    ["count"] = ModuleManager.Server.Count,
                                 });
+                                return wtr.GetBytes();
                             });
                         bro = new Broadcast() { Function = fuc };
                         bro.Start();

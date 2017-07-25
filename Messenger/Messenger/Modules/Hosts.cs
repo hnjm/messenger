@@ -1,6 +1,7 @@
 ﻿using Messenger.Extensions;
 using Messenger.Foundation;
 using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,14 +41,24 @@ namespace Messenger.Modules
             var buf = new byte[DefaultBufferSize];
             var soc = default(Socket);
             var wth = new Stopwatch();
-            var txt = Xml.Serialize(Server.Protocol);
+            var txt = new PacketWriter().Push("protocol", Server.Protocol).GetBytes();
             var act = new Action(() =>
                 {
                     while (soc != null)
                     {
                         var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
                         var len = soc.ReceiveFrom(buf, ref iep);
-                        var inf = Xml.Deserialize<Host>(buf, 0, len);
+                        var tmp = new byte[len];
+                        Array.Copy(buf, 0, tmp, 0, len);
+                        var rea = new PacketReader(tmp);
+                        var inf = new Host()
+                        {
+                            Protocol = rea["protocol"].Pull<string>(),
+                            Port = rea["port"].Pull<int>(),
+                            Name = rea["name"].Pull<string>(),
+                            Count = rea["count"].Pull<int>(),
+                            CountLimit = rea["limit"].Pull<int>(),
+                        };
 
                         if (!inf.Protocol.Equals(Server.Protocol))
                             continue;

@@ -19,24 +19,4 @@ namespace Messenger.Foundation
 
         终态 = 1 << 31,
     }
-
-    /// <summary>
-    /// 文件信息及发送者地址
-    /// </summary>
-    [Serializable]
-    [XmlRoot(ElementName = "fileinfo")]
-    public class TransportHeader
-    {
-        [XmlElement(ElementName = "guid")]
-        public Guid Key { get; set; }
-
-        [XmlElement(ElementName = "name")]
-        public string FileName { get; set; } = null;
-
-        [XmlElement(ElementName = "size")]
-        public long FileLength { get; set; } = 0;
-
-        [XmlElement(ElementName = "addr")]
-        public List<string> EndPoints { get; set; } = null;
-    }
 }

@@ -60,7 +60,7 @@ namespace Messenger.Modules
                 clt = new Client(id);
                 clt.Start(endpoint);
             }
-            catch (Exception ex)
+            catch (SocketException ex)
             {
                 Log.E(nameof(Interact), ex, "连接服务器失败.");
                 clt?.Dispose();

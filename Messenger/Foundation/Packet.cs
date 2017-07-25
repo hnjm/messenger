@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Xml.Serialization;
 
 namespace Messenger.Foundation
 {
@@ -39,7 +38,7 @@ namespace Messenger.Foundation
         /// 文件标志
         /// </summary>
         File = 3 << 8,
-        FileInfo,
+        FileInfo = Raw | File | Binary,
         /// <summary>
         /// 消息标志
         /// </summary>
@@ -223,63 +222,5 @@ namespace Messenger.Foundation
             _memstr?.Dispose();
             _memstr = null;
         }
-    }
-
-    /// <summary>
-    /// 客户端请求包
-    /// </summary>
-    [Serializable]
-    [XmlRoot(ElementName = "request")]
-    public class PacketRequest
-    {
-        /// <summary>
-        /// 协议属性
-        /// </summary>
-        [XmlAttribute(AttributeName = "protocol")]
-        public string Protocol { get; set; }
-
-        /// <summary>
-        /// 客户端 ID
-        /// </summary>
-        [XmlElement(ElementName = "id")]
-        public int ID { get; set; }
-
-        /// <summary>
-        /// RSA 公钥
-        /// </summary>
-        [XmlElement(ElementName = "rsakey")]
-        public string RsaKey { get; set; }
-    }
-
-    /// <summary>
-    /// 服务器回应包
-    /// </summary>
-    [Serializable]
-    [XmlRoot(ElementName = "response")]
-    public class PacketRespond
-    {
-        /// <summary>
-        /// 回应值
-        /// </summary>
-        [XmlElement(ElementName = "res")]
-        public ErrorCode Result { get; set; }
-
-        /// <summary>
-        /// AES 密钥
-        /// </summary>
-        [XmlElement(ElementName = "key")]
-        public byte[] AesKey { get; set; }
-
-        /// <summary>
-        /// AES 填充向量
-        /// </summary>
-        [XmlElement(ElementName = "iv")]
-        public byte[] AesIV { get; set; }
-
-        /// <summary>
-        /// NAT 外部端点
-        /// </summary>
-        [XmlElement(ElementName = "endpoint")]
-        public string EndPoint { get; set; }
     }
 }

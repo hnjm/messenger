@@ -1,11 +1,11 @@
 ﻿using Messenger.Foundation;
 using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -132,11 +132,11 @@ namespace Messenger.Modules
         public static Cargo Take(PacketEventArgs e)
         {
             var fil = default(Taker);
-            var inf = default(TransportHeader);
+            var inf = default(PacketReader);
             try
             {
-                inf = Xml.Deserialize<TransportHeader>(e.Stream);
-                fil = new Taker(inf, () => FindPath(instance._savepath, inf.FileName));
+                inf = new PacketReader(e.Stream.ToArray());
+                fil = new Taker(inf, () => FindPath(instance._savepath, inf["filename"].Pull<string>()));
             }
             catch (Exception ex)
             {
@@ -174,9 +174,12 @@ namespace Messenger.Modules
             }
             var itm = new Cargo(id, fil);
             Application.Current.Dispatcher.Invoke(() => instance._makers.Add(itm));
-            var lst = (from e in Interact.GetEndPoints() select $"{e.Address}:{e.Port}").ToList();
-            var inf = new TransportHeader() { Key = fil.Key, FileName = fil.Name, FileLength = fil.Length, EndPoints = lst };
-            Interact.Enqueue(id, PacketGenre.FileInfo, inf);
+            var inf = new PacketWriter().
+                Push("filename", fil.Name).
+                Push("filesize", fil.Length).
+                Push("guid", fil.Key).
+                PushList("endpoints", Interact.GetEndPoints());
+            Interact.Enqueue(id, PacketGenre.FileInfo, inf.GetBytes());
             return itm;
         }
 

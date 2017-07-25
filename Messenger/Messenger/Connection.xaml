@@ -40,7 +40,7 @@
                         <TextBlock.Text>
                             <MultiBinding StringFormat="[{0} / {1}]">
                                 <Binding Path="Count"/>
-                                <Binding Path="CountLimited"/>
+                                <Binding Path="CountLimit"/>
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
