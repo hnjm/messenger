@@ -1,6 +1,7 @@
 ﻿using Messenger.Extensions;
 using Messenger.Foundation;
 using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -89,7 +90,7 @@ namespace Messenger.Modules
             Enqueue(Server.ID, PacketGenre.UserRequest);
             var lst = Profiles.GroupIDs;
             if (lst != null)
-                Enqueue(Server.ID, PacketGenre.UserGroups, lst.ToList());
+                Enqueue(Server.ID, PacketGenre.UserGroups, new PacketWriter().PushList("groups", lst).GetBytes());
             return;
         }
 

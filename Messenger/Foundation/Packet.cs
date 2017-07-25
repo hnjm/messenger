@@ -33,7 +33,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 用户监听的组列表
         /// </summary>
-        UserGroups,
+        UserGroups = Raw | (User + 5),
         /// <summary>
         /// 文件标志
         /// </summary>

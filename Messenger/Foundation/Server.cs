@@ -1,6 +1,7 @@
 ﻿using Mikodev.Network;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -312,7 +313,8 @@ namespace Messenger.Foundation
 
             if (gen == PacketGenre.UserGroups)
             {
-                var lst = Xml.Deserialize<List<int>>(arg.Stream);
+                var rea = new PacketReader(arg.Stream.ToArray());
+                var lst = rea["groups"].PullList<int>().ToList();
                 lst.RemoveAll(r => r < ID == false);
                 lock (_locker)
                 {

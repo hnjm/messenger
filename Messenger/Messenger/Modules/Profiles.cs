@@ -1,5 +1,6 @@
 ﻿using Messenger.Foundation;
 using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -181,7 +182,7 @@ namespace Messenger.Modules
             instance._grouptags = args;
             instance._groupids = ids;
             var gro = instance._groups;
-            Interact.Enqueue(Server.ID, PacketGenre.UserGroups, ids.ToList());
+            Interact.Enqueue(Server.ID, PacketGenre.UserGroups, new PacketWriter().PushList("groups", ids).GetBytes());
             Application.Current.Dispatcher.Invoke(() =>
                 {
                     var lst = gro.Remove(r => ids.Contains(r.ID) == false);
