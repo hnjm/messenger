@@ -97,6 +97,9 @@
     <Compile Include="MessageWindow.xaml.cs">
       <DependentUpon>MessageWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\AutoAttribute.cs" />
+    <Compile Include="Models\AutoLoadAttribute.cs" />
+    <Compile Include="Models\AutoSaveAttribute.cs" />
     <Compile Include="Modules\Options.cs" />
     <Compile Include="Modules\Settings.cs" />
     <Compile Include="PageClient.xaml.cs">
@@ -131,8 +134,8 @@
     <Compile Include="Tools\StringEmptyConverter.cs" />
     <Compile Include="Tools\LengthConverter.cs" />
     <Compile Include="Tools\PromptConverter.cs" />
-    <Compile Include="Transfer.xaml.cs">
-      <DependentUpon>Transfer.xaml</DependentUpon>
+    <Compile Include="Transport.xaml.cs">
+      <DependentUpon>Transport.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\NativeMethods.cs" />
     <Page Include="Chatter.xaml">
@@ -143,19 +146,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DictionaryContainer.xaml">
+    <Page Include="Resources\Container.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DictionaryGeneral.xaml">
+    <Page Include="Resources\General.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DictionaryGeometry.xaml">
+    <Page Include="Resources\Geometry.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Entrance.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -166,9 +169,9 @@
     <Compile Include="Connection.xaml.cs">
       <DependentUpon>Connection.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Interact.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
+    <Compile Include="Modules\Interact.cs" />
+    <Compile Include="Entrance.xaml.cs">
+      <DependentUpon>Entrance.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Page Include="MessageWindow.xaml">
@@ -199,19 +202,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProfileShower.xaml">
+    <Page Include="Shower.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DictionaryCollection.xaml">
+    <Page Include="Resources\Collection.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Transfer.xaml">
+    <Page Include="Transport.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DictionaryValidation.xaml">
+    <Page Include="Resources\Validation.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -220,8 +223,8 @@
     <Compile Include="Models\Packet.cs" />
     <Compile Include="Models\Profile.cs" />
     <Compile Include="Modules\Profiles.cs" />
-    <Compile Include="ProfileShower.xaml.cs">
-      <DependentUpon>ProfileShower.xaml</DependentUpon>
+    <Compile Include="Shower.xaml.cs">
+      <DependentUpon>Shower.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

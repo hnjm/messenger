@@ -115,11 +115,11 @@ namespace Messenger
             }
             catch (SocketException ex)
             {
-                MainWindow.ShowError("网络连接失败.", ex);
+                Entrance.ShowError("网络连接失败.", ex);
             }
             catch (Exception ex)
             {
-                MainWindow.ShowError("输入信息有误.", ex);
+                Entrance.ShowError("输入信息有误.", ex);
             }
             finally
             {

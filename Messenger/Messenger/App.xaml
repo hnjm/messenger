@@ -1,17 +1,17 @@
 ﻿<Application x:Class="Messenger.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml" Startup="Application_Startup"
+             StartupUri="Entrance.xaml" Startup="Application_Startup"
              DispatcherUnhandledException="Application_DispatcherUnhandledException"
              SessionEnding="Application_SessionEnding">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="DictionaryCollection.xaml"/>
-                <ResourceDictionary Source="DictionaryContainer.xaml"/>
-                <ResourceDictionary Source="DictionaryGeneral.xaml"/>
-                <ResourceDictionary Source="DictionaryGeometry.xaml"/>
-                <ResourceDictionary Source="DictionaryValidation.xaml"/>
+                <ResourceDictionary Source="Resources/Collection.xaml"/>
+                <ResourceDictionary Source="Resources/Container.xaml"/>
+                <ResourceDictionary Source="Resources/General.xaml"/>
+                <ResourceDictionary Source="Resources/Geometry.xaml"/>
+                <ResourceDictionary Source="Resources/Validation.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

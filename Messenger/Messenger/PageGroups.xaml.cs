@@ -33,7 +33,7 @@ namespace Messenger
             {
                 var res = Profiles.SetGroupLabels(textboxEdit.Text);
                 if (res == false)
-                    MainWindow.ShowError($"最多允许使用 {Profiles.GroupLimit} 个群组标签.", null);
+                    Entrance.ShowError($"最多允许使用 {Profiles.GroupLimit} 个群组标签.", null);
                 return;
             }
         }

@@ -164,7 +164,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                MainWindow.ShowError("发送图片失败", ex);
+                Entrance.ShowError("发送图片失败", ex);
             }
         }
 

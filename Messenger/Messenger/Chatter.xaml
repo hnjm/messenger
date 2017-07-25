@@ -4,8 +4,8 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Messenger"
-      xmlns:tools="clr-namespace:Messenger.Tools"
       xmlns:mods="clr-namespace:Messenger.Modules"
+      xmlns:tools="clr-namespace:Messenger.Tools"
       mc:Ignorable="d" 
       x:Name="page"
       d:DesignHeight="300" d:DesignWidth="500"
@@ -48,7 +48,7 @@
                 </Grid>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static local:Interact.ID}">
+                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static mods:Interact.ID}">
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>

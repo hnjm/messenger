@@ -169,7 +169,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                MainWindow.ShowError("发送文件失败", ex);
+                Entrance.ShowError("发送文件失败", ex);
                 return null;
             }
             var itm = new Cargo(id, fil);
@@ -233,6 +233,7 @@ namespace Messenger.Modules
             throw new IOException();
         }
 
+        [AutoLoad(32)]
         public static void Load()
         {
             var pth = Options.GetOption(TransPathKey);
@@ -241,6 +242,7 @@ namespace Messenger.Modules
             instance._savepath = pth;
         }
 
+        [AutoSave(4)]
         public static void Save()
         {
             Options.SetOption(TransPathKey, instance._savepath);

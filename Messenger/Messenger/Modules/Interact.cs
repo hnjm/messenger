@@ -1,7 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Foundation;
 using Messenger.Models;
-using Messenger.Modules;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +10,7 @@ using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace Messenger
+namespace Messenger.Modules
 {
     class Interact
     {
@@ -94,6 +93,7 @@ namespace Messenger
             return;
         }
 
+        [AutoSave(0)]
         public static void Close()
         {
             var clt = default(Client);
@@ -165,7 +165,7 @@ namespace Messenger
 
         private static void Client_Shutdown(object sender, EventArgs e)
         {
-            MainWindow.ShowError("服务器连接已断开", _instance?._client?.Exception);
+            Entrance.ShowError("服务器连接已断开", _instance?._client?.Exception);
         }
 
         private static void Client_Received(object sender, PacketEventArgs e)

@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
 using System;
 
 namespace Messenger.Modules
@@ -13,6 +14,7 @@ namespace Messenger.Modules
 
         public static bool UseCtrlEnter { get => instance.ctrlenter; set => instance.ctrlenter = value; }
 
+        [AutoLoad(8)]
         public static void Load()
         {
             try
@@ -27,6 +29,7 @@ namespace Messenger.Modules
             }
         }
 
+        [AutoSave(16)]
         public static void Save()
         {
             Options.SetOption(KeyCtrlEnter, instance.ctrlenter.ToString());

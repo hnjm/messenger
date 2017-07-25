@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
 using System;
 using System.IO;
 using System.Threading;
@@ -25,6 +26,7 @@ namespace Messenger.Modules
 
         private Options() { }
 
+        [AutoLoad(0)]
         public static void Load()
         {
             if (instance == null)
@@ -52,6 +54,7 @@ namespace Messenger.Modules
             }
         }
 
+        [AutoSave(int.MaxValue)]
         public static void Save()
         {
             var str = default(FileStream);

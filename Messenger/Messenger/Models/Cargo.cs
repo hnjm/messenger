@@ -12,7 +12,7 @@ namespace Messenger.Models
     /// </summary>
     class Cargo : INotifyPropertyChanged
     {
-        private class History
+        private class _Record
         {
             public long TimeTick = 0;
             public long Position = 0;
@@ -24,7 +24,7 @@ namespace Messenger.Models
         protected void OnPropertyChanged(string str = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty));
         #endregion
 
-        private const int Limit = 10;
+        private const int _Limit = 10;
 
         private int _tid = 0;
         private bool _final = false;
@@ -33,7 +33,7 @@ namespace Messenger.Models
         private Profile _profile = null;
         private Transport _trans = null;
         private TimeSpan _remain = TimeSpan.Zero;
-        private List<History> _list = new List<History>();
+        private List<_Record> _list = new List<_Record>();
 
         public double Speed => _speed;
         public double Progress => _progress;
@@ -74,7 +74,7 @@ namespace Messenger.Models
                 return;
             if (_trans.IsDisposed == true)
                 _final = true;
-            
+
             var spd = _AverageSpeed(tick);
             _speed = spd * 1000;  // 毫秒 -> 秒
             _remain = (spd > 0 && _trans.Position > 0) ? TimeSpan.FromMilliseconds((_trans.Length - _trans.Position) / spd) : TimeSpan.Zero;
@@ -89,7 +89,7 @@ namespace Messenger.Models
         private double _AverageSpeed(long tick)
         {
             var sum = 0.0;
-            var cur = new History() { TimeTick = tick, Position = _trans.Position };
+            var cur = new _Record() { TimeTick = tick, Position = _trans.Position };
             if (_list.Count > 0)
             {
                 var pre = _list[_list.Count - 1];
@@ -98,8 +98,8 @@ namespace Messenger.Models
                 cur.Speed = 1.0 * pos / tim;
             }
             _list.Add(cur);
-            if (_list.Count > Limit)
-                _list.RemoveRange(0, _list.Count - Limit);
+            if (_list.Count > _Limit)
+                _list.RemoveRange(0, _list.Count - _Limit);
             foreach (var h in _list)
                 sum += h.Speed;
             return sum / _list.Count;

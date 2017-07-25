@@ -35,7 +35,7 @@ namespace Messenger
             }
             else if (btn == buttonOut)
             {
-                var mai = Application.Current.MainWindow as MainWindow;
+                var mai = Application.Current.MainWindow as Entrance;
                 if (mai == null)
                     return;
                 Interact.Close();

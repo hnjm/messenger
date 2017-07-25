@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Modules;
 using System;
 using System.Diagnostics;
 using System.Windows;

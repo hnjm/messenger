@@ -181,6 +181,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 初始化数据库 (非线程安全)
         /// </summary>
+        [AutoLoad(1)]
         public static void Load()
         {
             if (_instance != null)
@@ -278,6 +279,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 关闭数据库
         /// </summary>
+        [AutoSave(2)]
         public static void Save()
         {
             _instance?._connection?.Dispose();

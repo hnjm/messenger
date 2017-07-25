@@ -1,6 +1,10 @@
-﻿using Messenger.Modules;
+﻿using Messenger.Models;
+using Messenger.Modules;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
 
 namespace Messenger
@@ -8,42 +12,41 @@ namespace Messenger
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class Entrance : Window
     {
-        public MainWindow()
+        public Entrance()
         {
             InitializeComponent();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            try
+            IEnumerable<(MethodInfo, Attribute)> find(Type attribute)
             {
-                Packets.Load();
-            }
-            catch (Exception ex)
-            {
-                MessageWindow.Show(this, $"加载数据库出错, 你可能需要安装与 {nameof(System.Data.SQLite)} 相匹配的 Visual C++ 运行库", ex);
-                Application.Current.Shutdown(1);
-                return;
+                var ass = typeof(Entrance).Assembly;
+                foreach (var t in ass.GetTypes())
+                {
+                    var met = t.GetMethods(BindingFlags.Static | BindingFlags.Public);
+                    foreach (var i in met)
+                    {
+                        var att = i.GetCustomAttributes(attribute).FirstOrDefault();
+                        if (att == null)
+                            continue;
+                        yield return (i, att);
+                    }
+                }
             }
 
-            Options.Load();
-            Hosts.Load();
-            Settings.Load();
-            Profiles.Load();
-            Transports.Load();
+            var aut = find(typeof(AutoLoadAttribute)).Select(r => new { method = r.Item1, attr = (AutoLoadAttribute)r.Item2 }).ToList();
+            aut.Sort((a, b) => a.attr.Level - b.attr.Level);
+            aut.ForEach(m => m.method.Invoke(null, null));
 
             Closed += delegate
-                {
-                    Interact.Close();
-                    Packets.Save();
-                    Transports.Save();
-                    Profiles.Save();
-                    Settings.Save();
-                    Hosts.Save();
-                    Options.Save();
-                };
+            {
+                var sav = find(typeof(AutoSaveAttribute)).Select(r => new { method = r.Item1, attr = (AutoSaveAttribute)r.Item2 }).ToList();
+                sav.Sort((a, b) => a.attr.Level - b.attr.Level);
+                sav.ForEach(m => m.method.Invoke(null, null));
+            };
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -75,7 +78,7 @@ namespace Messenger
             var dis = app.Dispatcher;
             dis.Invoke(() =>
                 {
-                    var win = app.MainWindow as MainWindow;
+                    var win = app.MainWindow as Entrance;
                     if (win == null)
                         return;
                     win.textblockHeader.Text = title;

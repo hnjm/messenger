@@ -45,7 +45,9 @@ namespace Messenger.Models
         /// </summary>
         public override int GetHashCode()
         {
-            return Address == null ? 0 : new IPEndPoint(Address, Port).GetHashCode();
+            return Address != null
+                ? new IPEndPoint(Address, Port).GetHashCode()
+                : 0;
         }
     }
 }

@@ -82,7 +82,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 读取服务器搜索列表
         /// </summary>
-        /// <returns></returns>
+        [AutoLoad(4)]
         public static void Load()
         {
             var lst = new List<IPEndPoint>();
@@ -110,6 +110,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 保存列表到文件
         /// </summary>
+        [AutoSave(32)]
         public static void Save()
         {
             var stb = new StringBuilder();

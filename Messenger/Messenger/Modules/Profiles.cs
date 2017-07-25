@@ -238,6 +238,7 @@ namespace Messenger.Modules
             rec.Add(profile);
         }
 
+        [AutoLoad(16)]
         public static void Load()
         {
             try
@@ -263,6 +264,7 @@ namespace Messenger.Modules
             }
         }
 
+        [AutoSave(8)]
         public static void Save()
         {
             Options.SetOption(KeyCode, instance._local.ID.ToString());

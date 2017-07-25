@@ -81,7 +81,7 @@ namespace Messenger
                         }
                     });
                 if (obj != null)
-                    MainWindow.ShowError("接收文件失败", obj);
+                    Entrance.ShowError("接收文件失败", obj);
                 return;
             }
             if (tag.Equals("Stop"))
