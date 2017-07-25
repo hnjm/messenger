@@ -1,4 +1,6 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
+using Messenger.Modules;
 using System;
 using System.Diagnostics;
 using System.Windows;
@@ -38,7 +40,7 @@ namespace Messenger
 
         private static void LargeImage_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as ItemPacket;
+            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null || msg.Genre != PacketGenre.MessageImage)
                 e.CanExecute = false;
             else
@@ -48,7 +50,7 @@ namespace Messenger
 
         private static void LargeImage_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as ItemPacket;
+            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
                 return;
             var str = msg.Value as string;
@@ -56,7 +58,7 @@ namespace Messenger
                 return;
             try
             {
-                var flp = Cache.GetPath(str);
+                var flp = Caches.GetPath(str);
                 Process.Start(flp);
             }
             catch (Exception ex)
@@ -67,7 +69,7 @@ namespace Messenger
 
         private static void Remove_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as ItemPacket;
+            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
                 e.CanExecute = false;
             else
@@ -77,16 +79,16 @@ namespace Messenger
 
         private static void Remove_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as ItemPacket;
+            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
                 return;
-            ModulePacket.Remove(msg);
+            Packets.Remove(msg);
             e.Handled = true;
         }
 
         private static void Copy_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var val = (e.OriginalSource as FrameworkElement)?.DataContext as ItemPacket;
+            var val = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (val == null || val.Genre != PacketGenre.MessageText)
                 e.CanExecute = false;
             else
@@ -96,7 +98,7 @@ namespace Messenger
 
         private static void Copy_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as ItemPacket;
+            var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg?.MessageText is null)
                 return;
             try
@@ -105,7 +107,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                MainWindow.ShowMessage("复制消息到剪切板出错", ex);
+                MainWindow.ShowError("复制消息到剪切板出错", ex);
             }
             e.Handled = true;
         }

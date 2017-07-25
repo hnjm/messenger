@@ -1,15 +1,16 @@
 ﻿using Messenger.Foundation;
+using Messenger.Modules;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 
-namespace Messenger
+namespace Messenger.Models
 {
     /// <summary>
     /// 包装一个 <see cref="Foundation.Transport"/> 对象 并提供传输控制和界面绑定功能
     /// </summary>
-    class ItemTransport : INotifyPropertyChanged
+    class Cargo : INotifyPropertyChanged
     {
         private class History
         {
@@ -44,12 +45,12 @@ namespace Messenger
             get
             {
                 if (_profile == null)
-                    _profile = ModuleProfile.Query(_tid, true);
+                    _profile = Profiles.Query(_tid, true);
                 return _profile;
             }
         }
 
-        public ItemTransport(int id, Transport val)
+        public Cargo(int id, Transport val)
         {
             _tid = id;
             _trans = val;

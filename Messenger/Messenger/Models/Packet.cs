@@ -1,12 +1,13 @@
 ﻿using Messenger.Foundation;
+using Messenger.Modules;
 using System;
 
-namespace Messenger
+namespace Messenger.Models
 {
     /// <summary>
     /// 消息记录
     /// </summary>
-    public class ItemPacket : IPacketHeader
+    public class Packet : IPacketHeader
     {
         private int _target = 0;
         private int _source = 0;
@@ -63,7 +64,7 @@ namespace Messenger
             get
             {
                 if (_image == null && _value is string str && Genre == PacketGenre.MessageImage)
-                    _image = Cache.GetPath(str);
+                    _image = Caches.GetPath(str);
                 return _image;
             }
         }
@@ -75,7 +76,7 @@ namespace Messenger
             get
             {
                 if (_profile == null)
-                    _profile = ModuleProfile.Query(_source, true);
+                    _profile = Profiles.Query(_source, true);
                 return _profile;
             }
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Messenger.Modules;
+using System;
 using System.ComponentModel;
 using System.Windows;
 
@@ -18,7 +19,7 @@ namespace Messenger
         {
             try
             {
-                ModulePacket.Load();
+                Packets.Load();
             }
             catch (Exception ex)
             {
@@ -27,21 +28,21 @@ namespace Messenger
                 return;
             }
 
-            ModuleOption.Load();
-            ModuleServer.Load();
-            ModuleSetting.Load();
-            ModuleProfile.Load();
-            ModuleTrans.Load();
+            Options.Load();
+            Hosts.Load();
+            Settings.Load();
+            Profiles.Load();
+            Transports.Load();
 
             Closed += delegate
                 {
                     Interact.Close();
-                    ModulePacket.Save();
-                    ModuleTrans.Save();
-                    ModuleProfile.Save();
-                    ModuleSetting.Save();
-                    ModuleServer.Save();
-                    ModuleOption.Save();
+                    Packets.Save();
+                    Transports.Save();
+                    Profiles.Save();
+                    Settings.Save();
+                    Hosts.Save();
+                    Options.Save();
                 };
         }
 
@@ -68,7 +69,7 @@ namespace Messenger
         /// </summary>
         /// <param name="title">标题</param>
         /// <param name="content">内容 (调用 <see cref="object.ToString"/> 方法)</param>
-        public static void ShowMessage(string title, object content)
+        public static void ShowError(string title, object content)
         {
             var app = Application.Current;
             var dis = app.Dispatcher;

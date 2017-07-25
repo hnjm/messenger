@@ -4,6 +4,8 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Messenger"
+      xmlns:tools="clr-namespace:Messenger.Tools"
+      xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       x:Name="page"
       d:DesignHeight="300" d:DesignWidth="500"
@@ -11,7 +13,7 @@
       FontSize="14"
       Loaded="Page_Loaded" Unloaded="Page_Unloaded">
     <Page.Resources>
-        <local:LengthConverter x:Key="lengthConverter"/>
+        <tools:LengthConverter x:Key="lengthConverter"/>
         <ControlTemplate x:Key="messageItem">
             <Grid Margin="5" Width="{Binding ElementName=gridMessage, Path=ActualWidth}">
                 <Grid.ColumnDefinitions>
@@ -44,13 +46,6 @@
                         <Control x:Name="controlShow"/>
                     </Grid>
                 </Grid>
-                <Grid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Command="{x:Static local:Commands.CopyText}"/>
-                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
-                        <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
-                    </ContextMenu>
-                </Grid.ContextMenu>
             </Grid>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static local:Interact.ID}">
@@ -61,13 +56,18 @@
                     <Setter TargetName="controlShow" Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <TextBox Margin="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
-                                         HorizontalAlignment="Left"
+                                <TextBox Padding="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
                                          Text="{Binding Path=MessageText, Mode=OneWay}"
                                          Background="Transparent"
                                          SelectionBrush="LightGreen"
-                                         Foreground="#C0C0C0"
-                                         ContextMenu="{DynamicResource TextBoxContextMenu}">
+                                         Foreground="#C0C0C0">
+                                    <TextBox.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Command="ApplicationCommands.Copy" Header="复制选定内容"/>
+                                            <MenuItem Command="{x:Static local:Commands.CopyText}"/>
+                                            <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                                        </ContextMenu>
+                                    </TextBox.ContextMenu>
                                 </TextBox>
                             </ControlTemplate>
                         </Setter.Value>
@@ -77,7 +77,14 @@
                     <Setter TargetName="controlShow" Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <Image HorizontalAlignment="Left" Source="{Binding Path=MessageImage}" Stretch="None"/>
+                                <Image HorizontalAlignment="Left" Source="{Binding Path=MessageImage}" Stretch="None">
+                                    <Image.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                                            <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
+                                        </ContextMenu>
+                                    </Image.ContextMenu>
+                                </Image>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
@@ -184,7 +191,14 @@
             <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Background="SteelBlue" Height="1" SnapsToDevicePixels="True"/>
             <TextBox x:Name="textboxInput" Grid.Column="0" Grid.Row="2" Margin="5" Background="Transparent" Foreground="#C0C0C0" CaretBrush="#808080" BorderThickness="0"
                      MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字"
-                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop" ContextMenu="{DynamicResource TextBoxContextMenu}">
+                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop" SelectionBrush="LightGreen">
+                <TextBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="ApplicationCommands.Copy" Header="复制"/>
+                        <MenuItem Command="ApplicationCommands.Cut" Header="剪切"/>
+                        <MenuItem Command="ApplicationCommands.Paste" Header="粘贴"/>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
             </TextBox>
             <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -215,7 +229,7 @@
                 <TextBlock Margin="5" Grid.Row="0" HorizontalAlignment="Left" Foreground="#C0C0C0" FontSize="16">表情</TextBlock>
                 <ListBox x:Name="listboxSymbol" Grid.Row="1" Margin="5,0,5,5" Width="342" Height="172" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          Style="{DynamicResource ThinListBox}" 
-                         ItemsSource="{x:Static local:ModuleSymbols.List}">
+                         ItemsSource="{x:Static mods:Symbols.List}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel IsItemsHost="True"/>

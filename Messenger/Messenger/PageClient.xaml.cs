@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Messenger.Modules;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Messenger
@@ -15,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, ModuleProfile.ClientList);
+            PageManager.SetProfilePage(this, listbox, Profiles.ClientList);
         }
     }
 }

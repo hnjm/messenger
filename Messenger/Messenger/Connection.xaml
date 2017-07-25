@@ -3,7 +3,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:local="clr-namespace:Messenger"
+      xmlns:tools="clr-namespace:Messenger.Tools"
       mc:Ignorable="d" 
       d:DesignHeight="320" d:DesignWidth="480"
       KeepAlive="False"
@@ -75,22 +75,14 @@
                     <RowDefinition Height="10"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Label Grid.Column="0" Grid.Row="0" Foreground="#A0A0A0" Target="{Binding ElementName=textboxAddress}">地址(_A)</Label>
-                <TextBox x:Name="textboxAddress" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" Style="{DynamicResource TextBoxWithErrorTip}">
-                    <TextBox.Text>
-                        <Binding Path="A" UpdateSourceTrigger="PropertyChanged" Delay="200">
-                            <Binding.ValidationRules>
-                                <local:IPAddressValidation></local:IPAddressValidation>
-                            </Binding.ValidationRules>
-                        </Binding>
-                    </TextBox.Text>
-                </TextBox>
+                <Label Grid.Column="0" Grid.Row="0" Foreground="#A0A0A0" Target="{Binding ElementName=textboxAddress}">主机(_H)</Label>
+                <TextBox x:Name="textboxHost" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" Style="{DynamicResource TextBoxWithErrorTip}"/>
                 <Label Grid.Column="0" Grid.Row="2" Foreground="#A0A0A0" Target="{Binding ElementName=textboxPort}">端口(_P)</Label>
                 <TextBox x:Name="textboxPort" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Style="{DynamicResource TextBoxWithErrorTip}">
                     <TextBox.Text>
-                        <Binding Path="B" UpdateSourceTrigger="PropertyChanged" Delay="200">
+                        <Binding Path="P" UpdateSourceTrigger="PropertyChanged" Delay="200">
                             <Binding.ValidationRules>
-                                <local:PortValidation></local:PortValidation>
+                                <tools:PortValidation></tools:PortValidation>
                             </Binding.ValidationRules>
                         </Binding>
                     </TextBox.Text>
@@ -98,9 +90,9 @@
                 <Label Grid.Column="0" Grid.Row="4" Foreground="#A0A0A0" Target="{Binding ElementName=textboxNumber}">编号(_N)</Label>
                 <TextBox x:Name="textboxNumber" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Style="{DynamicResource TextBoxWithErrorTip}">
                     <TextBox.Text>
-                        <Binding Path="C" UpdateSourceTrigger="PropertyChanged" Delay="200">
+                        <Binding Path="I" UpdateSourceTrigger="PropertyChanged" Delay="200">
                             <Binding.ValidationRules>
-                                <local:CodeValidation></local:CodeValidation>
+                                <tools:CodeValidation></tools:CodeValidation>
                             </Binding.ValidationRules>
                         </Binding>
                     </TextBox.Text>

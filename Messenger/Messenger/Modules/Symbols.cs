@@ -2,17 +2,17 @@
 using System.ComponentModel;
 using System.Text;
 
-namespace Messenger
+namespace Messenger.Modules
 {
     /// <summary>
     /// 提供 Unicode 表情文字
     /// </summary>
-    class ModuleSymbols
+    class Symbols
     {
         private BindingList<string> list = null;
         private object locker = new object();
 
-        private static ModuleSymbols instance = new ModuleSymbols();
+        private static Symbols instance = new Symbols();
 
         public static BindingList<string> List
         {

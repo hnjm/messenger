@@ -1,4 +1,6 @@
-﻿using Messenger.Foundation;
+﻿using Messenger.Extensions;
+using Messenger.Foundation;
+using Messenger.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,9 +9,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace Messenger
+namespace Messenger.Modules
 {
-    class ModuleServer
+    class Hosts
     {
         public const int DefaultTimeout = 1000;
         public const int DefaultBufferSize = 32 * 1024;
@@ -18,21 +20,23 @@ namespace Messenger
         public const string KeyList = "server-list";
         public const string KeyPort = "server-port";
 
-        private IPEndPoint broadcast = null;
-        private IPEndPoint current = null;
-        private IEnumerable<IPEndPoint> points = new List<IPEndPoint>();
+        private IPEndPoint _broadcast = null;
+        private string _host = null;
+        private int _port = 0;
+        private IEnumerable<IPEndPoint> _points = new List<IPEndPoint>();
 
-        private static ModuleServer instance = new ModuleServer();
+        private static Hosts s_ins = new Hosts();
 
-        public static IPEndPoint Current { get => instance.current; set => instance.current = value; }
+        public static string Name { get => s_ins._host; set => s_ins._host = value; }
+        public static int Port { get => s_ins._port; set => s_ins._port = value; }
 
         /// <summary>
         /// 通过 UDP 广播从搜索列表搜索服务器
         /// </summary>
         /// <returns></returns>
-        public static IEnumerable<ItemServer> Refresh()
+        public static IEnumerable<Host> Refresh()
         {
-            var lst = new List<ItemServer>();
+            var lst = new List<Host>();
             var buf = new byte[DefaultBufferSize];
             var soc = default(Socket);
             var wth = new Stopwatch();
@@ -43,7 +47,7 @@ namespace Messenger
                     {
                         var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
                         var len = soc.ReceiveFrom(buf, ref iep);
-                        var inf = Xml.Deserialize<ItemServer>(buf, 0, len);
+                        var inf = Xml.Deserialize<Host>(buf, 0, len);
 
                         if (!inf.Protocol.Equals(Server.Protocol))
                             continue;
@@ -59,15 +63,15 @@ namespace Messenger
                 soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
                 soc.Bind(new IPEndPoint(IPAddress.Any, 0));
                 wth.Start();
-                foreach (var a in instance.points)
+                foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
                 Extension.TimeoutInvoke(act, DefaultTimeout);
             }
             catch (Exception ex)
             {
                 if (ex.InnerException != null)
-                    Log.E(nameof(ModuleServer), ex.InnerException, "服务器搜索内部异常信息:");
-                Log.E(nameof(ModuleServer), ex, "服务器搜索结束.");
+                    Log.E(nameof(Hosts), ex.InnerException, "服务器搜索内部异常信息:");
+                Log.E(nameof(Hosts), ex, "服务器搜索结束.");
             }
 
             soc?.Dispose();
@@ -84,24 +88,23 @@ namespace Messenger
             var lst = new List<IPEndPoint>();
             try
             {
-                var pot = ModuleOption.GetOption(KeyPort, Broadcast.DefaultPort.ToString());
+                var pot = Options.GetOption(KeyPort, Broadcast.DefaultPort.ToString());
                 if (pot != null)
-                    instance.broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
-                var str = ModuleOption.GetOption(KeyLast);
-                if (str != null)
-                    instance.current = str.ToEndPoint();
-                var sts = ModuleOption.GetOption(KeyList);
+                    s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
+                var str = Options.GetOption(KeyLast);
+                Converts.GetHost(str, out s_ins._host, out s_ins._port);
+                var sts = Options.GetOption(KeyList);
                 var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in arr)
                     lst.Add(s.ToEndPoint());
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModuleServer), ex, "读取配置出错");
+                Log.E(nameof(Hosts), ex, "读取配置出错");
             }
-            if (instance.broadcast != null)
-                lst.Add(instance.broadcast);
-            instance.points = lst.Distinct();
+            if (s_ins._broadcast != null)
+                lst.Add(s_ins._broadcast);
+            s_ins._points = lst.Distinct();
         }
 
         /// <summary>
@@ -110,7 +113,7 @@ namespace Messenger
         public static void Save()
         {
             var stb = new StringBuilder();
-            var eps = instance.points?.ToList();
+            var eps = s_ins._points?.ToList();
             if (eps != null)
             {
                 var idx = 0;
@@ -122,8 +125,9 @@ namespace Messenger
                     idx++;
                 }
             }
-            ModuleOption.SetOption(KeyList, stb.ToString());
-            ModuleOption.SetOption(KeyLast, instance.current?.ToString());
+            if (s_ins._host != null)
+                Options.SetOption(KeyLast, $"{s_ins._host}:{s_ins._port}");
+            Options.SetOption(KeyList, stb.ToString());
         }
     }
 }

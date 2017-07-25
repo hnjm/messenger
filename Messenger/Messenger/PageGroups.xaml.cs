@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Messenger.Modules;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Messenger
@@ -15,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, ModuleProfile.GroupsList);
+            PageManager.SetProfilePage(this, listbox, Profiles.GroupsList);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -28,11 +29,11 @@ namespace Messenger
                 var vis = gridEdit.Visibility;
                 gridEdit.Visibility = vis == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
             }
-            else if (btn == buttonApply && string.Equals(textboxEdit.Text, ModuleProfile.GroupLabels) == false)
+            else if (btn == buttonApply && string.Equals(textboxEdit.Text, Profiles.GroupLabels) == false)
             {
-                var res = ModuleProfile.SetGroupLabels(textboxEdit.Text);
+                var res = Profiles.SetGroupLabels(textboxEdit.Text);
                 if (res == false)
-                    MainWindow.ShowMessage($"最多允许使用 {ModuleProfile.GroupLimit} 个群组标签.", null);
+                    MainWindow.ShowError($"最多允许使用 {Profiles.GroupLimit} 个群组标签.", null);
                 return;
             }
         }

@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Messenger"
+      xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="480" d:DesignWidth="720"
       FontSize="14"
@@ -181,7 +182,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static local:ModuleProfile.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Profiles.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -217,7 +218,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static local:ModuleProfile.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Profiles.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -255,7 +256,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static local:ModuleProfile.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Profiles.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -294,7 +295,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static local:ModuleTrans.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Transports.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -335,7 +336,7 @@
                 </Grid>
             </RadioButton>
             <RadioButton x:Name="radiobuttonMyself" Grid.Row="8">
-                <Grid DataContext="{x:Static local:ModuleProfile.Current}">
+                <Grid DataContext="{x:Static mods:Profiles.Current}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>

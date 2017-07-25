@@ -1,4 +1,6 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
+using Messenger.Modules;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -33,18 +35,18 @@ namespace Messenger
                 };
             borderFull.MouseDown += (s, arg) => act.Invoke();
             borderFull.TouchDown += (s, arg) => act.Invoke();
-            ModulePacket.Receiving += ModulePacket_Receiving;
+            Packets.Receiving += ModulePacket_Receiving;
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
-            ModulePacket.Receiving -= ModulePacket_Receiving;
+            Packets.Receiving -= ModulePacket_Receiving;
         }
 
         /// <summary>
         /// 如果顶层 Frame 有内容 说明下层 Frame 不可见 因此消息提示也应存在
         /// </summary>
-        private void ModulePacket_Receiving(object sender, GenericEventArgs<ItemPacket> e)
+        private void ModulePacket_Receiving(object sender, GenericEventArgs<Packet> e)
         {
             if (_vis == false)
                 return;
@@ -70,7 +72,7 @@ namespace Messenger
             if (_vis == false)
             {
                 frameFull.Content = null;
-                var sco = ModuleProfile.Inscope;
+                var sco = Profiles.Inscope;
                 if (sco != null)
                     sco.Hint = 0;
             }

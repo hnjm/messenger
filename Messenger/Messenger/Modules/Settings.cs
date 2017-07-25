@@ -1,15 +1,15 @@
 ﻿using Messenger.Foundation;
 using System;
 
-namespace Messenger
+namespace Messenger.Modules
 {
-    class ModuleSetting
+    class Settings
     {
         public const string KeyCtrlEnter = "setting-ctrlenter";
 
         private bool ctrlenter = false;
 
-        private static ModuleSetting instance = new ModuleSetting();
+        private static Settings instance = new Settings();
 
         public static bool UseCtrlEnter { get => instance.ctrlenter; set => instance.ctrlenter = value; }
 
@@ -17,19 +17,19 @@ namespace Messenger
         {
             try
             {
-                var str = ModuleOption.GetOption(KeyCtrlEnter);
+                var str = Options.GetOption(KeyCtrlEnter);
                 if (str != null)
                     instance.ctrlenter = bool.Parse(str);
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModuleSetting), ex, "读取配置出错");
+                Log.E(nameof(Settings), ex, "读取配置出错");
             }
         }
 
         public static void Save()
         {
-            ModuleOption.SetOption(KeyCtrlEnter, instance.ctrlenter.ToString());
+            Options.SetOption(KeyCtrlEnter, instance.ctrlenter.ToString());
         }
     }
 }

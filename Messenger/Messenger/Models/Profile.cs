@@ -3,7 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace Messenger
+namespace Messenger.Models
 {
     [Serializable]
     [XmlRoot(ElementName = "profile")]

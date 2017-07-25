@@ -1,7 +1,11 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
+using Messenger.Modules;
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,30 +18,32 @@ namespace Messenger
     /// </summary>
     public partial class Connection : Page
     {
-        private class AnonymousBindingObject
+        private class _TmpObj
         {
-            public string A { get; set; } = string.Empty;
-            public string B { get; set; } = string.Empty;
-            public string C { get; set; } = string.Empty;
+            public string I { get; set; } = string.Empty;
+            public string P { get; set; } = string.Empty;
         }
 
         /// <summary>
         /// 局域网服务器信息列表
         /// </summary>
-        private BindingList<PacketServer> serverList = new BindingList<PacketServer>();
+        private BindingList<PacketServer> _hosts = new BindingList<PacketServer>();
 
         public Connection()
         {
             InitializeComponent();
-            gridTable.DataContext = new AnonymousBindingObject();
+            gridTable.DataContext = new _TmpObj();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            textboxAddress.Text = ModuleServer.Current?.Address?.ToString();
-            textboxPort.Text = ModuleServer.Current?.Port.ToString();
-            textboxNumber.Text = ModuleProfile.Current.ID.ToString();
-            listboxServer.ItemsSource = serverList;
+            if (Hosts.Name != null)
+            {
+                textboxHost.Text = Hosts.Name;
+                textboxPort.Text = Hosts.Port.ToString();
+            }
+            textboxNumber.Text = Profiles.Current.ID.ToString();
+            listboxServer.ItemsSource = _hosts;
             listboxServer.SelectionChanged += ListBox_SelectionChanged;
         }
 
@@ -45,87 +51,82 @@ namespace Messenger
         {
             if (e.AddedItems.Count < 1)
                 return;
-            var itm = e.AddedItems[0] as ItemServer;
+            var itm = e.AddedItems[0] as Host;
             if (itm == null)
                 return;
-            textboxAddress.Text = itm.Address?.ToString();
+            textboxHost.Text = itm.Address?.ToString();
             textboxPort.Text = itm.Port.ToString();
             listboxServer.SelectedIndex = -1;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            async void refresh()
+            {
+                buttonRefresh.IsEnabled = false;
+                var lst = await Task.Run(() => Hosts.Refresh());
+                foreach (var inf in lst)
+                {
+                    int idx = _hosts.IndexOf(inf);
+                    if (idx < 0)
+                        _hosts.Add(inf);
+                    else _hosts[idx] = inf;
+                }
+                buttonRefresh.IsEnabled = true;
+            }
+
             if (sender == buttonBrowser)
             {
                 buttonBrowser.Visibility = Visibility.Collapsed;
                 buttonClear.Visibility =
                 buttonRefresh.Visibility =
                 gridList.Visibility = Visibility.Visible;
-                RefreshAsync();
+                refresh();
                 return;
             }
             else if (sender == buttonRefresh)
             {
-                RefreshAsync();
+                refresh();
                 return;
             }
             else if (sender == buttonClear)
             {
-                serverList.Clear();
+                _hosts.Clear();
                 return;
             }
 
+            var flg = false;
             try
             {
+                buttonConnect.IsEnabled = false;
                 var uid = int.Parse(textboxNumber.Text);
-                var prt = int.Parse(textboxPort.Text);
-                var adr = IPAddress.Parse(textboxAddress.Text);
-                var iep = new IPEndPoint(adr, prt);
-                ConnectAsync(uid, iep);
+                var pot = int.Parse(textboxPort.Text);
+                var hos = textboxHost.Text;
+
+                await Task.Run(() =>
+                {
+                    var hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
+                    var iep = new IPEndPoint(hst, pot);
+                    Interact.Start(uid, iep);
+                    Hosts.Name = hos;
+                    Hosts.Port = pot;
+                    flg = true;
+                });
+            }
+            catch (SocketException ex)
+            {
+                MainWindow.ShowError("网络连接失败.", ex);
             }
             catch (Exception ex)
             {
-                MainWindow.ShowMessage("输入信息有误, 请检查.", ex);
+                MainWindow.ShowError("输入信息有误.", ex);
             }
-        }
-
-        private async void ConnectAsync(int id, IPEndPoint endpoint)
-        {
-            buttonConnect.IsEnabled = false;
-            var exc = await Task.Run(() =>
-                {
-                    try
-                    {
-                        Interact.Start(id, endpoint);
-                        ModuleServer.Current = endpoint;
-                        return null;
-                    }
-                    catch (Exception ex)
-                    {
-                        return ex;
-                    }
-                });
-
-            if (exc == null)
-                NavigationService.Navigate(new ProfileFrame());
-            else
-                MainWindow.ShowMessage("连接服务器失败", exc);
-            buttonConnect.IsEnabled = true;
-        }
-
-        private async void RefreshAsync()
-        {
-            buttonRefresh.IsEnabled = false;
-            var lst = await Task.Run(() => ModuleServer.Refresh());
-            foreach (var inf in lst)
+            finally
             {
-                int idx = serverList.IndexOf(inf);
-                if (idx < 0)
-                    serverList.Add(inf);
-                else
-                    serverList[idx] = inf;
+                if (flg == true)
+                    NavigationService.Navigate(new ProfileFrame());
+                buttonConnect.IsEnabled = true;
             }
-            buttonRefresh.IsEnabled = true;
         }
     }
 }

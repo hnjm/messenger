@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Modules;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,9 +23,9 @@ namespace Messenger
                 return;
             if (src == buttonApply)
             {
-                ModuleProfile.Current.Name = textboxName.Text;
-                ModuleProfile.Current.Text = textboxText.Text;
-                Interact.Enqueue(Server.ID, PacketGenre.UserProfile, ModuleProfile.Current);
+                Profiles.Current.Name = textboxName.Text;
+                Profiles.Current.Text = textboxText.Text;
+                Interact.Enqueue(Server.ID, PacketGenre.UserProfile, Profiles.Current);
             }
             else if (src == buttonImage)
             {
@@ -33,11 +34,11 @@ namespace Messenger
                     return;
                 try
                 {
-                    var buf = Cache.ImageSquare(ofd.FileName);
-                    var str = Cache.SetBuffer(buf, true);
-                    ModuleProfile.ImageSource = ofd.FileName;
-                    ModuleProfile.ImageBuffer = buf;
-                    ModuleProfile.Current.Image = str;
+                    var buf = Caches.ImageSquare(ofd.FileName);
+                    var str = Caches.SetBuffer(buf, true);
+                    Profiles.ImageSource = ofd.FileName;
+                    Profiles.ImageBuffer = buf;
+                    Profiles.Current.Image = str;
                     Interact.Enqueue(Server.ID, PacketGenre.UserImage, buf);
                 }
                 catch (Exception ex)

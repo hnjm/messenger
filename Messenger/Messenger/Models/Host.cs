@@ -3,11 +3,11 @@ using System;
 using System.Net;
 using System.Xml.Serialization;
 
-namespace Messenger
+namespace Messenger.Models
 {
     [Serializable]
     [XmlRoot(ElementName = ServerRoot)]
-    public class ItemServer : PacketServer
+    public class Host : PacketServer
     {
         /// <summary>
         /// 访问延迟
@@ -28,7 +28,7 @@ namespace Messenger
         {
             if (obj == this)
                 return true;
-            var info = obj as ItemServer;
+            var info = obj as Host;
             if (info == null)
                 return false;
             if (Port != info.Port)

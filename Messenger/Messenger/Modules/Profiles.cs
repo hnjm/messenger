@@ -1,13 +1,14 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 
-namespace Messenger
+namespace Messenger.Modules
 {
-    class ModuleProfile : INotifyPropertyChanged
+    class Profiles : INotifyPropertyChanged
     {
         public const int GroupLimit = 32;
         public const string KeyCode = "profile-code";
@@ -63,7 +64,7 @@ namespace Messenger
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private ModuleProfile()
+        private Profiles()
         {
             Profile.StaticPropertyChanged += (s, e) =>
                 {
@@ -92,9 +93,9 @@ namespace Messenger
 
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
 
-        private static ModuleProfile instance = new ModuleProfile();
+        private static Profiles instance = new Profiles();
 
-        public static ModuleProfile Instance => instance;
+        public static Profiles Instance => instance;
         public static Profile Current => instance._local;
         public static Profile Inscope => instance._inscope;
         public static string GroupLabels => instance._grouptags;
@@ -241,34 +242,34 @@ namespace Messenger
         {
             try
             {
-                instance._local.ID = int.Parse(ModuleOption.GetOption(KeyCode, 1.ToString()));
-                instance._local.Name = ModuleOption.GetOption(KeyName);
-                instance._local.Text = ModuleOption.GetOption(KeyText);
-                var lbs = ModuleOption.GetOption(KeyLabel);
+                instance._local.ID = int.Parse(Options.GetOption(KeyCode, 1.ToString()));
+                instance._local.Name = Options.GetOption(KeyName);
+                instance._local.Text = Options.GetOption(KeyText);
+                var lbs = Options.GetOption(KeyLabel);
                 SetGroupLabels(lbs);
-                var pth = ModuleOption.GetOption(KeyImage);
+                var pth = Options.GetOption(KeyImage);
                 if (pth == null)
                     return;
-                var buf = Cache.ImageSquare(pth);
-                var sha = Cache.SetBuffer(buf, false);
-                instance._local.Image = Cache.GetPath(sha);
+                var buf = Caches.ImageSquare(pth);
+                var sha = Caches.SetBuffer(buf, false);
+                instance._local.Image = Caches.GetPath(sha);
                 instance._imagesource = pth;
                 instance._imagebuffer = buf;
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModuleProfile), ex, " 载入用户配置失败.");
+                Log.E(nameof(Profiles), ex, " 载入用户配置失败.");
                 return;
             }
         }
 
         public static void Save()
         {
-            ModuleOption.SetOption(KeyCode, instance._local.ID.ToString());
-            ModuleOption.SetOption(KeyName, instance._local.Name);
-            ModuleOption.SetOption(KeyText, instance._local.Text);
-            ModuleOption.SetOption(KeyImage, instance._imagesource);
-            ModuleOption.SetOption(KeyLabel, instance._grouptags);
+            Options.SetOption(KeyCode, instance._local.ID.ToString());
+            Options.SetOption(KeyName, instance._local.Name);
+            Options.SetOption(KeyText, instance._local.Text);
+            Options.SetOption(KeyImage, instance._imagesource);
+            Options.SetOption(KeyLabel, instance._grouptags);
         }
     }
 }

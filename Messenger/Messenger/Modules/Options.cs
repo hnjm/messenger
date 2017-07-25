@@ -4,9 +4,9 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 
-namespace Messenger
+namespace Messenger.Modules
 {
-    class ModuleOption
+    class Options
     {
         /// <summary>
         /// 允许载入内存的配置文件大小限制
@@ -21,14 +21,14 @@ namespace Messenger
         private object locker = new object();
         private XmlDocument document = null;
 
-        private static ModuleOption instance = null;
+        private static Options instance = null;
 
-        private ModuleOption() { }
+        private Options() { }
 
         public static void Load()
         {
             if (instance == null)
-                Interlocked.CompareExchange(ref instance, new ModuleOption(), null);
+                Interlocked.CompareExchange(ref instance, new Options(), null);
             lock (instance.locker)
             {
                 if (instance.document != null)
@@ -68,7 +68,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModuleOption), ex, "保存配置出错");
+                Log.E(nameof(Options), ex, "保存配置出错");
             }
             finally
             {
@@ -117,7 +117,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModuleOption), ex, "读取配置出错");
+                Log.E(nameof(Options), ex, "读取配置出错");
             }
             return empty;
         }

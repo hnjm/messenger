@@ -1,4 +1,6 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
+using Messenger.Modules;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -14,7 +16,7 @@ namespace Messenger
     public partial class Chatter : Page
     {
         private Profile _profile = null;
-        private BindingList<ItemPacket> _messages = null;
+        private BindingList<Packet> _messages = null;
 
         public Profile Profile => _profile;
 
@@ -25,15 +27,15 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            ModulePacket.Receiving += ModuleMessage_Receiving;
+            Packets.Receiving += ModuleMessage_Receiving;
             (Application.Current as App).TextBoxKeyDown += TextBox_KeyDown;
 
-            _profile = ModuleProfile.Inscope;
+            _profile = Profiles.Inscope;
             if (_profile.ID <= Server.ID)
                 buttonFile.Visibility = Visibility.Collapsed;
             gridProfile.DataContext = _profile;
 
-            _messages = ModulePacket.Query(_profile.ID);
+            _messages = Packets.Query(_profile.ID);
             listboxMessage.ItemsSource = _messages;
             _messages.ListChanged += Messages_ListChanged;
             _ScrollToEnd();
@@ -42,7 +44,7 @@ namespace Messenger
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
             listboxMessage.ItemsSource = null;
-            ModulePacket.Receiving -= ModuleMessage_Receiving;
+            Packets.Receiving -= ModuleMessage_Receiving;
             (Application.Current as App).TextBoxKeyDown -= TextBox_KeyDown;
             _messages.ListChanged -= Messages_ListChanged;
         }
@@ -57,7 +59,7 @@ namespace Messenger
         /// <summary>
         /// 拦截消息通知
         /// </summary>
-        private void ModuleMessage_Receiving(object sender, GenericEventArgs<ItemPacket> e)
+        private void ModuleMessage_Receiving(object sender, GenericEventArgs<Packet> e)
         {
             if (e.Value.Groups != _profile.ID)
                 return;
@@ -68,7 +70,7 @@ namespace Messenger
         {
             if (sender != textboxInput || e.Key != Key.Enter)
                 return;
-            var val = ModuleSetting.UseCtrlEnter;
+            var val = Settings.UseCtrlEnter;
             var mod = e.KeyboardDevice.Modifiers;
             if ((mod & ModifierKeys.Shift) == ModifierKeys.Shift)
                 return;
@@ -99,7 +101,7 @@ namespace Messenger
             else if (sender == buttonImage)
                 _InsertImage();
             else if (sender == buttonClean)
-                ModulePacket.Clear(_profile.ID);
+                Packets.Clear(_profile.ID);
             textboxInput.Focus();
         }
 
@@ -124,8 +126,8 @@ namespace Messenger
         private void _Insert(PacketGenre genre, object value)
         {
             Interact.Enqueue(_profile.ID, genre, value);
-            var rcd = ModulePacket.Insert(_profile.ID, genre, value);
-            ModuleProfile.SetRecent(_profile);
+            var rcd = Packets.Insert(_profile.ID, genre, value);
+            Profiles.SetRecent(_profile);
         }
 
         private void _InsertText(TextBox textbox, string str)
@@ -157,21 +159,21 @@ namespace Messenger
                 return;
             try
             {
-                var buf = Cache.ImageResize(ofd.FileName);
+                var buf = Caches.ImageResize(ofd.FileName);
                 _Insert(PacketGenre.MessageImage, buf);
             }
             catch (Exception ex)
             {
-                MainWindow.ShowMessage("发送图片失败", ex);
+                MainWindow.ShowError("发送图片失败", ex);
             }
         }
 
         private void _InsertTrans(string path)
         {
-            var trs = ModuleTrans.Make(_profile.ID, path);
+            var trs = Transports.Make(_profile.ID, path);
             if (trs == null)
                 return;
-            var pkt = new ItemPacket() { Source = Interact.ID, Target = _profile.ID, Groups = _profile.ID, Genre = PacketGenre.FileInfo, Value = trs };
+            var pkt = new Packet() { Source = Interact.ID, Target = _profile.ID, Groups = _profile.ID, Genre = PacketGenre.FileInfo, Value = trs };
             _messages.Add(pkt);
         }
 

@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using Messenger.Models;
+using Messenger.Modules;
+using System.ComponentModel;
 using System.Windows.Controls;
 
 namespace Messenger
@@ -11,12 +13,12 @@ namespace Messenger
             if (lst.Count < 1)
                 return;
             var itm = lst[0] as Profile;
-            ModuleProfile.SetInscope(itm);
+            Profiles.SetInscope(itm);
         }
 
         public static void SetSelectedProfile(ListBox listbox, BindingList<Profile> list)
         {
-            var idx = list.IndexOf(ModuleProfile.Inscope);
+            var idx = list.IndexOf(Profiles.Inscope);
             listbox.SelectedIndex = idx;
         }
 

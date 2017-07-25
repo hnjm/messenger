@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,12 +8,12 @@ using System.Data.SQLite;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace Messenger
+namespace Messenger.Modules
 {
     /// <summary>
     /// 管理用户聊天记录
     /// </summary>
-    class ModulePacket
+    class Packets
     {
         /// <summary>
         /// 默认数据库路径
@@ -23,30 +24,30 @@ namespace Messenger
         /// 数据库实例 (为 null 说明出错, 此时相当于 "阅后即焚")
         /// </summary>
         private SQLiteConnection _connection = null;
-        private ConcurrentDictionary<int, BindingList<ItemPacket>> _messages = new ConcurrentDictionary<int, BindingList<ItemPacket>>();
-        private event EventHandler<GenericEventArgs<ItemPacket>> _Receiving = null;
-        private event EventHandler<GenericEventArgs<ItemPacket>> _OnHandled = null;
+        private ConcurrentDictionary<int, BindingList<Packet>> _messages = new ConcurrentDictionary<int, BindingList<Packet>>();
+        private event EventHandler<GenericEventArgs<Packet>> _Receiving = null;
+        private event EventHandler<GenericEventArgs<Packet>> _OnHandled = null;
 
-        private static ModulePacket _instance = null;
+        private static Packets _instance = null;
 
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public static event EventHandler<GenericEventArgs<ItemPacket>> Receiving { add => _instance._Receiving += value; remove => _instance._Receiving -= value; }
+        public static event EventHandler<GenericEventArgs<Packet>> Receiving { add => _instance._Receiving += value; remove => _instance._Receiving -= value; }
         /// <summary>
         /// 消息接收事件处理后
         /// </summary>
-        public static event EventHandler<GenericEventArgs<ItemPacket>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
+        public static event EventHandler<GenericEventArgs<Packet>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
 
         /// <summary>
         /// 补全消息记录 (自动判断消息类型)
         /// </summary>
-        private static ItemPacket SetPacket(ItemPacket pkt, PacketGenre genre, object value)
+        private static Packet SetPacket(Packet pkt, PacketGenre genre, object value)
         {
             if (value is string str && genre == PacketGenre.MessageText)
                 pkt.Value = str;
             else if (value is byte[] byt && genre == PacketGenre.MessageImage)
-                pkt.Value = Cache.SetBuffer(byt, false);
+                pkt.Value = Caches.SetBuffer(byt, false);
             else
                 throw new ApplicationException();
             pkt.Genre = genre;
@@ -56,9 +57,9 @@ namespace Messenger
         /// <summary>
         /// 插入一条消息记录
         /// </summary>
-        public static ItemPacket Insert(int gid, PacketGenre type, object obj)
+        public static Packet Insert(int gid, PacketGenre type, object obj)
         {
-            var rcd = new ItemPacket() { Source = Interact.ID, Target = gid, Groups = gid };
+            var rcd = new Packet() { Source = Interact.ID, Target = gid, Groups = gid };
             SetPacket(rcd, type, obj);
             Insert(rcd);
             return rcd;
@@ -67,10 +68,10 @@ namespace Messenger
         /// <summary>
         /// 插入一条消息记录
         /// </summary>
-        public static ItemPacket Insert(IPacketHeader header, object value)
+        public static Packet Insert(IPacketHeader header, object value)
         {
             int gid = (header.Target == Interact.ID) ? header.Source : header.Target;
-            var pkt = new ItemPacket() { Source = header.Source, Target = header.Target, Groups = gid };
+            var pkt = new Packet() { Source = header.Source, Target = header.Target, Groups = gid };
             SetPacket(pkt, header.Genre, value);
             Insert(pkt);
             OnReceived(pkt);
@@ -80,9 +81,9 @@ namespace Messenger
         /// <summary>
         /// 触发事件
         /// </summary>
-        private static void OnReceived(ItemPacket rcd)
+        private static void OnReceived(Packet rcd)
         {
-            var arg = new GenericEventArgs<ItemPacket>() { Value = rcd };
+            var arg = new GenericEventArgs<Packet>() { Value = rcd };
             _instance._Receiving?.Invoke(_instance, arg);
             _instance._OnHandled?.Invoke(_instance, arg);
         }
@@ -90,7 +91,7 @@ namespace Messenger
         /// <summary>
         /// 向数据库写入消息记录
         /// </summary>
-        private static void Insert(ItemPacket pkt)
+        private static void Insert(Packet pkt)
         {
             if (_instance == null)
                 return;
@@ -119,7 +120,7 @@ namespace Messenger
                     }
                     catch (Exception ex)
                     {
-                        Log.E(nameof(ModulePacket), ex, "记录消息出错");
+                        Log.E(nameof(Packets), ex, "记录消息出错");
                     }
                     finally
                     {
@@ -131,9 +132,9 @@ namespace Messenger
         /// <summary>
         /// 依据编号查询 并返回最近的 N 条消息记录 (返回值不会为 null)
         /// </summary>
-        public static BindingList<ItemPacket> Query(int gid, int max = 32)
+        public static BindingList<Packet> Query(int gid, int max = 32)
         {
-            var lst = _instance._messages.GetOrAdd(gid, _ => new BindingList<ItemPacket>());
+            var lst = _instance._messages.GetOrAdd(gid, _ => new BindingList<Packet>());
             if (lst.Count > 0)
                 return lst;
             if (_instance?._connection == null)
@@ -141,7 +142,7 @@ namespace Messenger
 
             var cmd = default(SQLiteCommand);
             var rdr = default(SQLiteDataReader);
-            var lis = new List<ItemPacket>();
+            var lis = new List<Packet>();
             try
             {
                 cmd = new SQLiteCommand(_instance._connection);
@@ -151,7 +152,7 @@ namespace Messenger
                 rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    var rcd = new ItemPacket();
+                    var rcd = new Packet();
                     rcd.Source = rdr.GetInt32(0);
                     rcd.Target = rdr.GetInt32(1);
                     rcd.Groups = rdr.GetInt32(2);
@@ -167,7 +168,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModulePacket), ex, "读取消息出错.");
+                Log.E(nameof(Packets), ex, "读取消息出错.");
                 return lst;
             }
             finally
@@ -184,7 +185,7 @@ namespace Messenger
         {
             if (_instance != null)
                 return;
-            _instance = new ModulePacket();
+            _instance = new Packets();
             var con = default(SQLiteConnection);
             var cmd = default(SQLiteCommand);
             try
@@ -201,7 +202,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModulePacket), ex, "数据库启用失败.");
+                Log.E(nameof(Packets), ex, "数据库启用失败.");
                 con?.Dispose();
             }
             finally
@@ -210,7 +211,7 @@ namespace Messenger
             }
         }
 
-        public static void Remove(ItemPacket record)
+        public static void Remove(Packet record)
         {
             if (_instance == null)
                 return;
@@ -232,7 +233,7 @@ namespace Messenger
                     }
                     catch (Exception ex)
                     {
-                        Log.E(nameof(ModulePacket), ex, "记录移除出错");
+                        Log.E(nameof(Packets), ex, "记录移除出错");
                     }
                     finally
                     {
@@ -242,7 +243,7 @@ namespace Messenger
         }
 
         /// <summary>
-        /// 清除指定 <see cref="ItemPacket.Groups"/> 下的所有消息记录
+        /// 清除指定 <see cref="Packet.Groups"/> 下的所有消息记录
         /// </summary>
         public static void Clear(int gid)
         {
@@ -265,7 +266,7 @@ namespace Messenger
                     }
                     catch (Exception ex)
                     {
-                        Log.E(nameof(ModulePacket), ex, "记录清空出错");
+                        Log.E(nameof(Packets), ex, "记录清空出错");
                     }
                     finally
                     {

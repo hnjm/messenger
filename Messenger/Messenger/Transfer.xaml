@@ -4,12 +4,14 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Messenger"
+      xmlns:tools="clr-namespace:Messenger.Tools"
+      xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
       Background="#FF000000"
       KeepAlive="False" FontSize="12">
     <Page.Resources>
-        <local:LengthConverter x:Key="lengthConverter"/>
+        <tools:LengthConverter x:Key="lengthConverter"/>
         <DataTemplate x:Key="transItem">
             <Grid SnapsToDevicePixels="True">
                 <Border x:Name="border" Background="Transparent"/>
@@ -85,7 +87,7 @@
         <TextBlock Grid.Row="0" Margin="10" FontSize="24" Foreground="#FFC0C0C0" FontWeight="Light">传输列表</TextBlock>
         <ScrollViewer Grid.Row="1" Template="{DynamicResource ThinScrollViewer}">
             <StackPanel>
-                <TextBlock Margin="10,5" HorizontalAlignment="Left" FontSize="16" Foreground="#FFA0A0A0" Text="发送的文件" DataContext="{x:Static local:ModuleTrans.Instance}">
+                <TextBlock Margin="10,5" HorizontalAlignment="Left" FontSize="16" Foreground="#FFA0A0A0" Text="发送的文件" DataContext="{x:Static mods:Transports.Instance}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Style.Triggers>
@@ -96,8 +98,8 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-                <ItemsControl ItemTemplate="{DynamicResource transItem}" ItemsSource="{x:Static local:ModuleTrans.Makers}"/>
-                <TextBlock Margin="10,5" HorizontalAlignment="Left" FontSize="16" Foreground="#FFA0A0A0" Text="接收的文件" DataContext="{x:Static local:ModuleTrans.Instance}">
+                <ItemsControl ItemTemplate="{DynamicResource transItem}" ItemsSource="{x:Static mods:Transports.Makers}"/>
+                <TextBlock Margin="10,5" HorizontalAlignment="Left" FontSize="16" Foreground="#FFA0A0A0" Text="接收的文件" DataContext="{x:Static mods:Transports.Instance}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Style.Triggers>
@@ -108,7 +110,7 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-                <ItemsControl ItemTemplate="{DynamicResource transItem}" ItemsSource="{x:Static local:ModuleTrans.Takers}"/>
+                <ItemsControl ItemTemplate="{DynamicResource transItem}" ItemsSource="{x:Static mods:Transports.Takers}"/>
             </StackPanel>
         </ScrollViewer>
         <Border Grid.Row="2" Background="#FF202020" Height="1"/>

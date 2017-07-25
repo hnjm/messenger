@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Messenger.Modules;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Messenger
@@ -15,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, ModuleProfile.RecentList);
+            PageManager.SetProfilePage(this, listbox, Profiles.RecentList);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -25,7 +26,7 @@ namespace Messenger
                 return;
             if (btn == buttonClear)
             {
-                ModuleProfile.RecentList.Clear();
+                Profiles.RecentList.Clear();
                 return;
             }
         }

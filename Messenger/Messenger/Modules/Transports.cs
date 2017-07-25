@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,12 +9,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace Messenger
+namespace Messenger.Modules
 {
     /// <summary>
     /// 管理传输并提供界面绑定功能
     /// </summary>
-    class ModuleTrans : INotifyPropertyChanged
+    class Transports : INotifyPropertyChanged
     {
         public const string TransPathKey = "transport-path";
 
@@ -26,9 +27,9 @@ namespace Messenger
         private Stopwatch _watch = null;
         private DispatcherTimer _timer = null;
 
-        private BindingList<ItemTransport> _expect = new BindingList<ItemTransport>();
-        private BindingList<ItemTransport> _takers = new BindingList<ItemTransport>();
-        private BindingList<ItemTransport> _makers = new BindingList<ItemTransport>();
+        private BindingList<Cargo> _expect = new BindingList<Cargo>();
+        private BindingList<Cargo> _takers = new BindingList<Cargo>();
+        private BindingList<Cargo> _makers = new BindingList<Cargo>();
 
         public bool HasExcept
         {
@@ -62,7 +63,7 @@ namespace Messenger
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private ModuleTrans()
+        private Transports()
         {
             _expect.ListChanged += BindingList_ListChanged;
             _takers.ListChanged += BindingList_ListChanged;
@@ -98,14 +99,14 @@ namespace Messenger
 
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
 
-        private static ModuleTrans instance = new ModuleTrans();
+        private static Transports instance = new Transports();
 
         public static long TimeTick => instance._watch?.ElapsedMilliseconds ?? 0L;
         public static string SavePath { get => instance._savepath; set => instance._savepath = value; }
-        public static ModuleTrans Instance => instance;
-        public static BindingList<ItemTransport> Expect => instance._expect;
-        public static BindingList<ItemTransport> Takers => instance._takers;
-        public static BindingList<ItemTransport> Makers => instance._makers;
+        public static Transports Instance => instance;
+        public static BindingList<Cargo> Expect => instance._expect;
+        public static BindingList<Cargo> Takers => instance._takers;
+        public static BindingList<Cargo> Makers => instance._makers;
 
         private static void Trans_Changed(object sender, EventArgs e)
         {
@@ -126,9 +127,9 @@ namespace Messenger
         }
 
         /// <summary>
-        /// 尝试解析文件消息 返回 <see cref="ItemTransport"/> 对象 (失败返回 null)
+        /// 尝试解析文件消息 返回 <see cref="Cargo"/> 对象 (失败返回 null)
         /// </summary>
-        public static ItemTransport Take(PacketEventArgs e)
+        public static Cargo Take(PacketEventArgs e)
         {
             var fil = default(Taker);
             var inf = default(TransportHeader);
@@ -139,10 +140,10 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Log.E(nameof(ModuleTrans), ex, "接收文件出错.");
+                Log.E(nameof(Transports), ex, "接收文件出错.");
                 return null;
             }
-            var trs = new ItemTransport(e.Source, fil);
+            var trs = new Cargo(e.Source, fil);
             Application.Current.Dispatcher.Invoke(() =>
                 {
                     // 在注册事件之前加入列表
@@ -155,11 +156,11 @@ namespace Messenger
         }
 
         /// <summary>
-        /// 发送文件 返回 <see cref="ItemTransport"/> 对象 (失败返回 null)
+        /// 发送文件 返回 <see cref="Cargo"/> 对象 (失败返回 null)
         /// </summary>
         /// <param name="id">目标编号</param>
         /// <param name="filepath">文件路径</param>
-        public static ItemTransport Make(int id, string filepath)
+        public static Cargo Make(int id, string filepath)
         {
             var fil = default(Maker);
             try
@@ -168,10 +169,10 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                MainWindow.ShowMessage("发送文件失败", ex);
+                MainWindow.ShowError("发送文件失败", ex);
                 return null;
             }
-            var itm = new ItemTransport(id, fil);
+            var itm = new Cargo(id, fil);
             Application.Current.Dispatcher.Invoke(() => instance._makers.Add(itm));
             var lst = (from e in Interact.GetEndPoints() select $"{e.Address}:{e.Port}").ToList();
             var inf = new TransportHeader() { Key = fil.Key, FileName = fil.Name, FileLength = fil.Length, EndPoints = lst };
@@ -182,10 +183,10 @@ namespace Messenger
         /// <summary>
         /// 移除所有 <see cref="IManager.IsDisposed"/> 为真的项目 返回被移除的项目
         /// </summary>
-        public static List<ItemTransport> Remove()
+        public static List<Cargo> Remove()
         {
-            var lst = new List<ItemTransport>();
-            var act = new Action<IList<ItemTransport>>((r) =>
+            var lst = new List<Cargo>();
+            var act = new Action<IList<Cargo>>((r) =>
                 {
                     var i = 0;
                     while (i < r.Count)
@@ -234,7 +235,7 @@ namespace Messenger
 
         public static void Load()
         {
-            var pth = ModuleOption.GetOption(TransPathKey);
+            var pth = Options.GetOption(TransPathKey);
             if (string.IsNullOrEmpty(pth))
                 pth = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Received");
             instance._savepath = pth;
@@ -242,7 +243,7 @@ namespace Messenger
 
         public static void Save()
         {
-            ModuleOption.SetOption(TransPathKey, instance._savepath);
+            Options.SetOption(TransPathKey, instance._savepath);
         }
     }
 }

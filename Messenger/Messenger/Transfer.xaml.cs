@@ -1,4 +1,6 @@
 ﻿using Messenger.Foundation;
+using Messenger.Models;
+using Messenger.Modules;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -22,22 +24,22 @@ namespace Messenger
         {
             if (sender == buttonClean)
             {
-                ModuleTrans.Remove();
+                Transports.Remove();
             }
             else if (sender == buttonChange)
             {
                 var dfd = new System.Windows.Forms.FolderBrowserDialog();
-                if (Directory.Exists(ModuleTrans.SavePath))
-                    dfd.SelectedPath = ModuleTrans.SavePath;
+                if (Directory.Exists(Transports.SavePath))
+                    dfd.SelectedPath = Transports.SavePath;
                 if (dfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    ModuleTrans.SavePath = dfd.SelectedPath;
+                    Transports.SavePath = dfd.SelectedPath;
             }
             else if (sender == buttonOpen)
             {
                 try
                 {
-                    if (Directory.Exists(ModuleTrans.SavePath))
-                        Process.Start("explorer", "/e," + ModuleTrans.SavePath);
+                    if (Directory.Exists(Transports.SavePath))
+                        Process.Start("explorer", "/e," + Transports.SavePath);
                 }
                 catch (Exception ex)
                 {
@@ -46,9 +48,9 @@ namespace Messenger
             }
             else if (sender == buttonStopAll)
             {
-                foreach (var i in ModuleTrans.Makers)
+                foreach (var i in Transports.Makers)
                     i.Close();
-                foreach (var i in ModuleTrans.Takers)
+                foreach (var i in Transports.Takers)
                     i.Close();
             }
         }
@@ -58,7 +60,7 @@ namespace Messenger
             var btn = sender as Button;
             if (btn == null)
                 return;
-            var con = btn.DataContext as ItemTransport;
+            var con = btn.DataContext as Cargo;
             var tag = btn.Tag as string;
             if (con == null || tag == null)
                 return;
@@ -79,7 +81,7 @@ namespace Messenger
                         }
                     });
                 if (obj != null)
-                    MainWindow.ShowMessage("接收文件失败", obj);
+                    MainWindow.ShowError("接收文件失败", obj);
                 return;
             }
             if (tag.Equals("Stop"))

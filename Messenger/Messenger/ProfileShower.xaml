@@ -4,11 +4,12 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Messenger"
+      xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="420" d:DesignWidth="640"
       KeepAlive="False" FontSize="14"
       Background="#000000">
-    <Grid DataContext="{x:Static local:ModuleProfile.Current}">
+    <Grid DataContext="{x:Static mods:Profiles.Current}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>

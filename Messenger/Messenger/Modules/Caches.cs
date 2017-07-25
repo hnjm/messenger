@@ -5,12 +5,12 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace Messenger
+namespace Messenger.Modules
 {
     /// <summary>
     /// 负责管理图片缓存 (被动初始化)
     /// </summary>
-    public class Cache
+    public class Caches
     {
         public const string CacheFolder = "Cache";
         public const string CacheExtension = ".png";
@@ -23,18 +23,18 @@ namespace Messenger
         private int imagelmt = DefaultLimit;
         private float imageDpi = DefaultDensity;
 
-        private static Cache instance = new Cache();
+        private static Caches instance = new Caches();
 
-        private Cache()
+        private Caches()
         {
             try
             {
-                imagelmt = int.Parse(ModuleOption.GetOption(KeyLimit, DefaultLimit.ToString()));
-                imageDpi = float.Parse(ModuleOption.GetOption(KeyDensity, DefaultDensity.ToString()));
+                imagelmt = int.Parse(Options.GetOption(KeyLimit, DefaultLimit.ToString()));
+                imageDpi = float.Parse(Options.GetOption(KeyDensity, DefaultDensity.ToString()));
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Cache), ex, "读取配置出错");
+                Log.E(nameof(Caches), ex, "读取配置出错");
             }
         }
 
@@ -86,7 +86,7 @@ namespace Messenger
             {
                 if (nothrow == false)
                     throw;
-                Log.E(nameof(Cache), ex, "写入缓存出错.");
+                Log.E(nameof(Caches), ex, "写入缓存出错.");
                 return null;
             }
             finally

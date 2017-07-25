@@ -93,11 +93,12 @@
       <DependentUpon>Chatter.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands.cs" />
+    <Compile Include="Extensions\Converts.cs" />
     <Compile Include="MessageWindow.xaml.cs">
       <DependentUpon>MessageWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModuleOption.cs" />
-    <Compile Include="ModuleSetting.cs" />
+    <Compile Include="Modules\Options.cs" />
+    <Compile Include="Modules\Settings.cs" />
     <Compile Include="PageClient.xaml.cs">
       <DependentUpon>PageClient.xaml</DependentUpon>
     </Compile>
@@ -117,19 +118,23 @@
     <Compile Include="ProfilePage.xaml.cs">
       <DependentUpon>ProfilePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModuleSymbols.cs" />
-    <Compile Include="Converters.cs" />
-    <Compile Include="ModuleTrans.cs" />
-    <Compile Include="ItemTransport.cs" />
-    <Compile Include="ModulePacket.cs" />
-    <Compile Include="ItemServer.cs" />
-    <Compile Include="ModuleServer.cs" />
-    <Compile Include="Cache.cs" />
+    <Compile Include="Modules\Symbols.cs" />
+    <Compile Include="Modules\Transports.cs" />
+    <Compile Include="Models\Cargo.cs" />
+    <Compile Include="Modules\Packets.cs" />
+    <Compile Include="Models\Host.cs" />
+    <Compile Include="Modules\Hosts.cs" />
+    <Compile Include="Modules\Caches.cs" />
+    <Compile Include="Tools\CodeValidation.cs" />
+    <Compile Include="Tools\ImageConverter.cs" />
+    <Compile Include="Tools\PortValidation.cs" />
+    <Compile Include="Tools\StringEmptyConverter.cs" />
+    <Compile Include="Tools\LengthConverter.cs" />
+    <Compile Include="Tools\PromptConverter.cs" />
     <Compile Include="Transfer.xaml.cs">
       <DependentUpon>Transfer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Validation.cs" />
-    <Compile Include="NativeMethods.cs" />
+    <Compile Include="Extensions\NativeMethods.cs" />
     <Page Include="Chatter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -212,9 +217,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ItemPacket.cs" />
-    <Compile Include="Profile.cs" />
-    <Compile Include="ModuleProfile.cs" />
+    <Compile Include="Models\Packet.cs" />
+    <Compile Include="Models\Profile.cs" />
+    <Compile Include="Modules\Profiles.cs" />
     <Compile Include="ProfileShower.xaml.cs">
       <DependentUpon>ProfileShower.xaml</DependentUpon>
     </Compile>

@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Messenger"
+      xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       KeepAlive="False"
       d:DesignHeight="300" d:DesignWidth="300"
@@ -25,7 +26,7 @@
         </Grid>
         <ListBox x:Name="listbox" Grid.Row="1"
                  Style="{DynamicResource ThinListBox}"
-                 ItemsSource="{x:Static local:ModuleProfile.GroupsList}"
+                 ItemsSource="{x:Static mods:Profiles.GroupsList}"
                  ItemContainerStyle="{DynamicResource ProfileItem}">
         </ListBox>
         <Border Grid.Row="2" Background="#404040" Height="1" SnapsToDevicePixels="True"/>
@@ -42,7 +43,7 @@
                     <RowDefinition/>
                     <RowDefinition Height="10"/>
                 </Grid.RowDefinitions>
-                <TextBox x:Name="textboxEdit" Grid.Row="1" Margin="10,0" TextWrapping="WrapWithOverflow" AllowDrop="True" Text="{Binding Source={x:Static local:ModuleProfile.GroupLabels}, Mode=OneTime}" Tag="请输入群组标签 多个标签用空格分隔"/>
+                <TextBox x:Name="textboxEdit" Grid.Row="1" Margin="10,0" TextWrapping="WrapWithOverflow" AllowDrop="True" Text="{Binding Source={x:Static mods:Profiles.GroupLabels}, Mode=OneTime}" Tag="请输入群组标签 多个标签用空格分隔"/>
                 <Button x:Name="buttonApply" Grid.Row="3" Margin="10,0">应用</Button>
             </Grid>
             <Button x:Name="buttonEdit" Grid.Row="0" Background="Transparent" BorderThickness="0" ToolTip="编辑群组标签"

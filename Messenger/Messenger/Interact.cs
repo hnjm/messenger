@@ -1,4 +1,7 @@
-﻿using Messenger.Foundation;
+﻿using Messenger.Extensions;
+using Messenger.Foundation;
+using Messenger.Models;
+using Messenger.Modules;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,7 +20,7 @@ namespace Messenger
 
         private static Interact _instance = new Interact();
 
-        public static int ID => _instance._client?.ID ?? ModuleProfile.Current.ID;
+        public static int ID => _instance._client?.ID ?? Profiles.Current.ID;
 
         public static bool IsRunning
         {
@@ -78,14 +81,14 @@ namespace Messenger
                 _instance._client = clt;
             }
 
-            ModulePacket.OnHandled += ModulePacket_OnHandled;
-            ModuleTrans.Expect.ListChanged += ModuleTrans_ListChanged;
-            ModuleProfile.Current.ID = id;
-            Enqueue(Server.ID, PacketGenre.UserProfile, ModuleProfile.Current);
-            if (ModuleProfile.ImageBuffer != null)
-                Enqueue(Server.ID, PacketGenre.UserImage, ModuleProfile.ImageBuffer);
+            Packets.OnHandled += ModulePacket_OnHandled;
+            Transports.Expect.ListChanged += ModuleTrans_ListChanged;
+            Profiles.Current.ID = id;
+            Enqueue(Server.ID, PacketGenre.UserProfile, Profiles.Current);
+            if (Profiles.ImageBuffer != null)
+                Enqueue(Server.ID, PacketGenre.UserImage, Profiles.ImageBuffer);
             Enqueue(Server.ID, PacketGenre.UserRequest);
-            var lst = ModuleProfile.GroupIDs;
+            var lst = Profiles.GroupIDs;
             if (lst != null)
                 Enqueue(Server.ID, PacketGenre.UserGroups, lst.ToList());
             return;
@@ -106,8 +109,8 @@ namespace Messenger
             clt.Shutdown -= Client_Shutdown;
             clt.Dispose();
 
-            ModulePacket.OnHandled -= ModulePacket_OnHandled;
-            ModuleTrans.Expect.ListChanged -= ModuleTrans_ListChanged;
+            Packets.OnHandled -= ModulePacket_OnHandled;
+            Transports.Expect.ListChanged -= ModuleTrans_ListChanged;
         }
 
         public static void Enqueue(int target, PacketGenre genre, object value = null)
@@ -134,11 +137,11 @@ namespace Messenger
             return res;
         }
 
-        private static void ModulePacket_OnHandled(object sender, GenericEventArgs<ItemPacket> e)
+        private static void ModulePacket_OnHandled(object sender, GenericEventArgs<Packet> e)
         {
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var pro = ModuleProfile.Query(e.Value.Groups);
+                    var pro = Profiles.Query(e.Value.Groups);
                     if (pro == null)
                         return;
                     var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
@@ -151,7 +154,7 @@ namespace Messenger
 
         private static void ModuleTrans_ListChanged(object sender, ListChangedEventArgs e)
         {
-            if (sender == ModuleTrans.Expect && e.ListChangedType == ListChangedType.ItemAdded)
+            if (sender == Transports.Expect && e.ListChangedType == ListChangedType.ItemAdded)
             {
                 if (Application.Current.MainWindow.IsActive == true)
                     return;
@@ -162,7 +165,7 @@ namespace Messenger
 
         private static void Client_Shutdown(object sender, EventArgs e)
         {
-            MainWindow.ShowMessage("服务器连接已断开", _instance?._client?.Exception);
+            MainWindow.ShowError("服务器连接已断开", _instance?._client?.Exception);
         }
 
         private static void Client_Received(object sender, PacketEventArgs e)
@@ -173,45 +176,45 @@ namespace Messenger
                 {
                     case PacketGenre.MessageText:
                         var msg = Xml.Deserialize<string>(e.Stream);
-                        ModulePacket.Insert(e, msg);
+                        Packets.Insert(e, msg);
                         break;
 
                     case PacketGenre.MessageImage:
                         var buf = e.Stream?.ToArray();
-                        ModulePacket.Insert(e, buf);
+                        Packets.Insert(e, buf);
                         break;
 
                     case PacketGenre.UserIDs:
                         var lst = Xml.Deserialize<List<int>>(e.Stream);
-                        ModuleProfile.Remove(lst);
+                        Profiles.Remove(lst);
                         break;
 
                     case PacketGenre.UserImage:
-                        var str = Cache.SetBuffer(e.Stream.ToArray(), true);
-                        var pfl = ModuleProfile.Query(e.Source);
+                        var str = Caches.SetBuffer(e.Stream.ToArray(), true);
+                        var pfl = Profiles.Query(e.Source);
                         if (str != null && pfl != null)
                             pfl.Image = str;
                         break;
 
                     case PacketGenre.UserProfile:
                         var pro = Xml.Deserialize<Profile>(e.Stream);
-                        ModuleProfile.Insert(pro);
+                        Profiles.Insert(pro);
                         break;
 
                     case PacketGenre.UserRequest:
-                        Enqueue(e.Source, PacketGenre.UserProfile, ModuleProfile.Current);
-                        if (ModuleProfile.ImageBuffer != null)
-                            Enqueue(e.Source, PacketGenre.UserImage, ModuleProfile.ImageBuffer);
+                        Enqueue(e.Source, PacketGenre.UserProfile, Profiles.Current);
+                        if (Profiles.ImageBuffer != null)
+                            Enqueue(e.Source, PacketGenre.UserImage, Profiles.ImageBuffer);
                         break;
 
                     case PacketGenre.FileInfo:
-                        var trs = ModuleTrans.Take(e);
+                        var trs = Transports.Take(e);
                         if (trs == null)
                             break;
-                        var pkt = new ItemPacket() { Source = e.Source, Target = ID, Groups = e.Source, Genre = PacketGenre.FileInfo, Value = trs };
+                        var pkt = new Packet() { Source = e.Source, Target = ID, Groups = e.Source, Genre = PacketGenre.FileInfo, Value = trs };
                         Application.Current.Dispatcher.Invoke(() =>
                             {
-                                var pks = ModulePacket.Query(e.Source);
+                                var pks = Packets.Query(e.Source);
                                 pks.Add(pkt);
                             });
                         break;

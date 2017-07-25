@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Messenger.Modules;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Messenger
@@ -15,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            var val = ModuleSetting.UseCtrlEnter;
+            var val = Settings.UseCtrlEnter;
             if (val == false)
                 radioEnter.IsChecked = true;
             else
@@ -38,7 +39,7 @@ namespace Messenger
                 if (mai == null)
                     return;
                 Interact.Close();
-                ModuleProfile.SetInscope(null);
+                Profiles.SetInscope(null);
                 mai.frame.Navigate(new Connection());
             }
         }
@@ -47,9 +48,9 @@ namespace Messenger
         {
             var src = e.OriginalSource;
             if (src == radioEnter)
-                ModuleSetting.UseCtrlEnter = false;
+                Settings.UseCtrlEnter = false;
             else if (src == radioCtrlEnter)
-                ModuleSetting.UseCtrlEnter = true;
+                Settings.UseCtrlEnter = true;
         }
     }
 }
