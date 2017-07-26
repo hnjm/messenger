@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Messenger.Foundation.Extensions;
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -41,28 +42,24 @@ namespace Messenger.Foundation
             }
 
             var soc = default(Socket);
-            var dis = new Action(() =>
-                {
-                    soc?.Dispose();
-                    soc = null;
-                });
+            void close()
+            {
+                soc?.Dispose();
+                soc = null;
+            }
 
-            try
+            Extension.Invoke(() =>
             {
                 soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 soc.Bind(new IPEndPoint(IPAddress.Any, Port));
-            }
-            catch
-            {
-                dis.Invoke();
-                throw;
-            }
+            },
+            () => close());
 
             lock (_locker)
             {
-                if (IsDisposed)
+                if (_disposed)
                 {
-                    dis.Invoke();
+                    close();
                     throw new InvalidOperationException();
                 }
 

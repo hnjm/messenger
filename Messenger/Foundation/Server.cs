@@ -68,7 +68,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 服务器广播调用链
         /// </summary>
-        private EventHandler<GenericEventArgs<byte[]>> _srvbroa = null;
+        private EventHandler<CommonEventArgs<byte[]>> _srvbroa = null;
         /// <summary>
         /// 客户端列表
         /// </summary>
@@ -309,15 +309,15 @@ namespace Messenger.Foundation
                 path = "user.ids",
                 data = idl,
             });
-            _srvbroa?.Invoke(this, new GenericEventArgs<byte[]>() { Source = this, Value = buf.GetBytes() });
+            _srvbroa?.Invoke(this, new CommonEventArgs<byte[]>() { Source = this, Object = buf.GetBytes() });
         }
 
         /// <summary>
         /// 根据 ID 决定处理或转发客户端发来的消息
         /// </summary>
-        private void Client_Received(object sender, GenericEventArgs<byte[]> arg)
+        private void Client_Received(object sender, CommonEventArgs<byte[]> arg)
         {
-            var rea = new PacketReader(arg.Value);
+            var rea = new PacketReader(arg.Object);
             var src = rea["source"].Pull<int>();
             var tar = rea["target"].Pull<int>();
             var pth = rea["path"].Pull<string>();
@@ -338,7 +338,7 @@ namespace Messenger.Foundation
             }
             else if (tar > ID)
             {
-                _clients[tar].Enqueue(arg.Value);
+                _clients[tar].Enqueue(arg.Object);
             }
             else
             {
@@ -349,7 +349,7 @@ namespace Messenger.Foundation
                         if (k == src)
                             continue;
                         if (v.Contains(tar))
-                            _clients[k].Enqueue(arg.Value);
+                            _clients[k].Enqueue(arg.Object);
                     }
                 }
             }

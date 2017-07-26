@@ -36,7 +36,7 @@ namespace Messenger.Modules
             }
         }
 
-        public static event EventHandler<GenericEventArgs<(Guid, Socket)>> Requests
+        public static event EventHandler<CommonEventArgs<(Guid, Socket)>> Requests
         {
             add
             {
@@ -134,17 +134,17 @@ namespace Messenger.Modules
             return res;
         }
 
-        private static void ModulePacket_OnHandled(object sender, GenericEventArgs<Packet> e)
+        private static void ModulePacket_OnHandled(object sender, CommonEventArgs<Packet> e)
         {
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var pro = Profiles.Query(e.Value.Groups);
+                    var pro = Profiles.Query(e.Object.Groups);
                     if (pro == null)
                         return;
                     var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                    if (e.Handled == false || Application.Current.MainWindow.IsActive == false)
+                    if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
                         NativeMethods.FlashWindow(hdl, true);
-                    if (e.Handled == false || e.Cancel == true)
+                    if (e.Finish == false || e.Cancel == true)
                         pro.Hint += 1;
                 });
         }
@@ -162,6 +162,6 @@ namespace Messenger.Modules
 
         private static void Client_Shutdown(object sender, EventArgs e) => Entrance.ShowError("服务器连接已断开", _instance?._client?.Exception);
 
-        private static void Client_Received(object sender, GenericEventArgs<byte[]> e) => Routers.Handle(e.Value);
+        private static void Client_Received(object sender, CommonEventArgs<byte[]> e) => Routers.Handle(e.Object);
     }
 }

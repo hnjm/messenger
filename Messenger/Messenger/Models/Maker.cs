@@ -93,9 +93,9 @@ namespace Messenger.Models
         /// <summary>
         /// 处理传输请求
         /// </summary>
-        public void Transport_Requests(object sender, GenericEventArgs<(Guid, Socket)> e)
+        public void Transport_Requests(object sender, CommonEventArgs<(Guid, Socket)> e)
         {
-            var (key, soc) = e.Value;
+            var (key, soc) = e.Object;
             if (_key.Equals(key) == false || soc == null)
                 return;
             lock (_locker)
@@ -104,7 +104,7 @@ namespace Messenger.Models
                     return;
                 _started = true;
                 _socket = soc;
-                e.Handled = true;
+                e.Finish = true;
 
                 _status = TransportStatus.运行;
                 _OnStarted();

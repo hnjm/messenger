@@ -113,13 +113,9 @@ namespace Messenger
                     flg = true;
                 });
             }
-            catch (SocketException ex)
-            {
-                Entrance.ShowError("网络连接失败.", ex);
-            }
             catch (Exception ex)
             {
-                Entrance.ShowError("输入信息有误.", ex);
+                Entrance.ShowError("连接失败.", ex);
             }
             finally
             {

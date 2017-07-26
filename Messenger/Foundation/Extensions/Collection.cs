@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Messenger.Foundation.Extensions
 {
@@ -15,33 +16,6 @@ namespace Messenger.Foundation.Extensions
         }
 
         /// <summary>
-        /// 判断项目是否在集合中
-        /// </summary>
-        public static bool Contains<T>(this IEnumerable<T> source, Func<T, bool> fun)
-        {
-            foreach (var val in source)
-                if (fun.Invoke(val))
-                    return true;
-            return false;
-        }
-
-        /// <summary>
-        /// 查找集合并输出第一个匹配项
-        /// </summary>
-        public static bool TryFirst<T>(this IEnumerable<T> source, Func<T, bool> fun, out T target)
-        {
-            foreach (var val in source)
-            {
-                if (fun.Invoke(val) == false)
-                    continue;
-                target = val;
-                return true;
-            }
-            target = default(T);
-            return false;
-        }
-
-        /// <summary>
         /// 合并集合中条件相同的项
         /// </summary>
         public static IEnumerable<T> Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> equals)
@@ -49,7 +23,7 @@ namespace Messenger.Foundation.Extensions
             var lst = new List<T>();
             foreach (var val in source)
             {
-                if (Contains(lst, tmp => equals.Invoke(val, tmp)))
+                if (lst.FirstOrDefault(tmp => equals.Invoke(val, tmp)) != null)
                     continue;
                 lst.Add(val);
                 yield return val;

@@ -46,7 +46,7 @@ namespace Messenger
         /// <summary>
         /// 如果顶层 Frame 有内容 说明下层 Frame 不可见 因此消息提示也应存在
         /// </summary>
-        private void ModulePacket_Receiving(object sender, GenericEventArgs<Packet> e)
+        private void ModulePacket_Receiving(object sender, CommonEventArgs<Packet> e)
         {
             if (_vis == false)
                 return;

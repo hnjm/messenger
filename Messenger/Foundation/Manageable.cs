@@ -30,28 +30,4 @@ namespace Messenger.Foundation
         public virtual void Start() { }
         protected abstract void Dispose(bool flag);
     }
-
-    /// <summary>
-    /// 泛型事件参数
-    /// </summary>
-    /// <typeparam name="T">数据类型</typeparam>
-    public class GenericEventArgs<T> : EventArgs
-    {
-        /// <summary>
-        /// 封装数据
-        /// </summary>
-        public T Value { get; set; } = default(T);
-        /// <summary>
-        /// 取消标志
-        /// </summary>
-        public bool Cancel { get; set; } = false;
-        /// <summary>
-        /// 处理标志
-        /// </summary>
-        public bool Handled { get; set; } = false;
-        /// <summary>
-        /// 事件元对象
-        /// </summary>
-        public object Source { get; set; } = null;
-    }
 }

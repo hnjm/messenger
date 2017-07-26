@@ -88,7 +88,7 @@ namespace Messenger.Modules
         {
             var cli = _client.Sum(r => r.Hint);
             var gro = _groups.Sum(r => r.Hint);
-            var rec = _recent.Sum(r => (r.Hint < 1 || _client.Contains(t => t.ID == r.ID) || _groups.Contains(t => t.ID == r.ID)) ? 0 : r.Hint);
+            var rec = _recent.Sum(r => (r.Hint < 1 || _client.FirstOrDefault(t => t.ID == r.ID) != null || _groups.FirstOrDefault(t => t.ID == r.ID) != null) ? 0 : r.Hint);
             HasClient = cli > 0;
             HasGroups = gro > 0;
             HasRecent = rec > 0;
@@ -113,20 +113,17 @@ namespace Messenger.Modules
         /// <summary>
         /// 添加或更新用户信息 (添加返回真, 更新返回假)
         /// </summary>
-        public static bool Insert(Profile profile)
+        public static void Insert(Profile profile)
         {
-            var add = false;
             var clt = instance._client;
             Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var res = Query(profile.ID, true);
-                    res.CopyFrom(profile);
-                    var tmp = clt.Contains(r => r.ID == profile.ID);
-                    if (tmp == false)
-                        clt.Add(res);
-                    add = tmp;
-                });
-            return add;
+            {
+                var res = Query(profile.ID, true);
+                res.CopyFrom(profile);
+                var tmp = clt.FirstOrDefault(r => r.ID == profile.ID);
+                if (tmp == null)
+                    clt.Add(res);
+            });
         }
 
         /// <summary>
@@ -143,7 +140,8 @@ namespace Messenger.Modules
                 if (i.TryGetTarget(out var pro) && pro.ID == id)
                     return pro;
             var res = instance._client.Concat(instance._groups).Concat(instance._recent);
-            if (res.TryFirst(t => t.ID == id, out var val))
+            var val = res.FirstOrDefault(t => t.ID == id);
+            if (val != null)
                 return val;
             if (create == false)
                 return null;
@@ -184,7 +182,6 @@ namespace Messenger.Modules
             instance._grouptags = args;
             instance._groupids = ids;
             var gro = instance._groups;
-            // Interact.Enqueue(Server.ID, PacketGenre.UserGroups, new PacketWriter().PushList("groups", ids).GetBytes());
             Posters.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -192,7 +189,7 @@ namespace Messenger.Modules
                     foreach (var r in lst)
                         if (r.Hint > 0)
                             SetRecent(r);
-                    var add = from r in kvs where gro.Contains(t => t.ID == r.Hash) == false select r;
+                    var add = from r in kvs where gro.FirstOrDefault(t => t.ID == r.Hash) == null select r;
                     foreach (var i in add)
                     {
                         var pro = Query(i.Hash, true);

@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Foundation.Extensions;
+﻿using Messenger.Extensions;
 using System;
 using System.Globalization;
 using System.Windows.Data;
@@ -18,7 +17,7 @@ namespace Messenger.Tools
                 len = obl;
             else if (value is double obd)
                 len = (long)obd;
-            return Extension.GetLength(len);
+            return Converts.GetLength(len);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();

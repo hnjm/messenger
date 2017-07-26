@@ -59,11 +59,11 @@ namespace Messenger
         /// <summary>
         /// 拦截消息通知
         /// </summary>
-        private void ModuleMessage_Receiving(object sender, GenericEventArgs<Packet> e)
+        private void ModuleMessage_Receiving(object sender, CommonEventArgs<Packet> e)
         {
-            if (e.Value.Groups != _profile.ID)
+            if (e.Object.Groups != _profile.ID)
                 return;
-            e.Handled = true;
+            e.Finish = true;
         }
 
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
@@ -119,17 +119,7 @@ namespace Messenger
                 return;
             listboxMessage.ScrollIntoView(_messages[idx]);
         }
-
-        ///// <summary>
-        ///// 向数据库和对话列表插入消息 (偶然内聚)
-        ///// </summary>
-        //private void _Insert(PacketGenre genre, object value)
-        //{
-        //    Interact.Enqueue(_profile.ID, genre, value);
-        //    var rcd = Packets.Insert(_profile.ID, genre, value);
-        //    Profiles.SetRecent(_profile);
-        //}
-
+        
         private void _InsertText(TextBox textbox, string str)
         {
             var txt = textbox.Text;
@@ -149,7 +139,6 @@ namespace Messenger
             if (str.Length < 1)
                 return;
             textboxInput.Text = string.Empty;
-            // _Insert(PacketGenre.MessageText, str);
             Posters.Message(_profile.ID, str);
             Profiles.SetRecent(_profile);
         }
@@ -162,7 +151,6 @@ namespace Messenger
             try
             {
                 var buf = Caches.ImageResize(ofd.FileName);
-                // _Insert(PacketGenre.MessageImage, buf);
                 Posters.Message(_profile.ID, buf);
                 Profiles.SetRecent(_profile);
             }
@@ -174,11 +162,9 @@ namespace Messenger
 
         private void _InsertTrans(string path)
         {
-            // var trs = Transports.Make(_profile.ID, path);
             var trs = Posters.File(_profile.ID, path);
             if (trs == null)
                 return;
-            // var pkt = new Packet() { Source = Interact.ID, Target = _profile.ID, Groups = _profile.ID, Path = PacketGenre.FileInfo, Value = trs };
             var pkt = new Packet() { Source = Interact.ID, Target = _profile.ID, Groups = _profile.ID, Path = "file", Value = trs };
             _messages.Add(pkt);
         }

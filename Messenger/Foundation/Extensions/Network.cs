@@ -68,12 +68,12 @@ namespace Messenger.Foundation.Extensions
             var buf = new byte[len * 3];
             if (enable == true)
             {
-                Array.Copy(ToBytes(1U), 0, buf, 0, len);
-                Array.Copy(ToBytes(before), 0, buf, len, len);
-                Array.Copy(ToBytes(interval), 0, buf, len * 2, len);
+                Array.Copy(BitConverter.GetBytes(1U), 0, buf, 0, len);
+                Array.Copy(BitConverter.GetBytes(before), 0, buf, len, len);
+                Array.Copy(BitConverter.GetBytes(interval), 0, buf, len * 2, len);
             }
             socket.IOControl(IOControlCode.KeepAliveValues, buf, val);
-            return val.ToStruct<int>();
+            return BitConverter.ToInt32(val, 0);
         }
     }
 }

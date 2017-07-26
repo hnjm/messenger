@@ -28,11 +28,11 @@ namespace Messenger.Foundation
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public event EventHandler<GenericEventArgs<byte[]>> Received = null;
+        public event EventHandler<CommonEventArgs<byte[]>> Received = null;
         /// <summary>
         /// 传输请求事件
         /// </summary>
-        public event EventHandler<GenericEventArgs<(Guid, Socket)>> Requests = null;
+        public event EventHandler<CommonEventArgs<(Guid, Socket)>> Requests = null;
         /// <summary>
         /// 连接关闭事件
         /// </summary>
@@ -182,16 +182,12 @@ namespace Messenger.Foundation
         /// <summary>
         /// 向待发队列尾插入一条消息
         /// </summary>
-        public void Enqueue(object sender, GenericEventArgs<byte[]> e)
+        public void Enqueue(object sender, CommonEventArgs<byte[]> e)
         {
-            //if (e.Source == ID && e.Buffer != null)
-            //    return;
-            //_messages.Enqueue(e.Buffer);
-
-            var rea = new PacketReader(e.Value);
+            var rea = new PacketReader(e.Object);
             if (rea["source"].Pull<int>() == ID)
                 return;
-            _messages.Enqueue(e.Value);
+            _messages.Enqueue(e.Object);
         }
 
         /// <summary>
@@ -205,7 +201,7 @@ namespace Messenger.Foundation
                 {
                     var buf = _socket.ReceiveExt();
                     var dst = Crypto.Decrypt(buf);
-                    _OnReceived(new GenericEventArgs<byte[]>() { Source = this, Value = dst });
+                    _OnReceived(new CommonEventArgs<byte[]>() { Source = this, Object = dst });
                 }
             }
             catch (Exception ex)
@@ -245,15 +241,14 @@ namespace Messenger.Foundation
                     soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
                     var buf = soc.ReceiveExt();
                     var key = new PacketReader(buf)["data"].Pull<Guid>();
-                    var req = new GenericEventArgs<(Guid, Socket)>() { Value = (key, soc) };
+                    var req = new CommonEventArgs<(Guid, Socket)>() { Object = (key, soc) };
                     Requests?.Invoke(this, req);
-                    if (req.Handled == false)
+                    if (req.Finish == false)
                         soc.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    if (soc != null)
-                        soc.Dispose();
+                    soc?.Dispose();
                     Trace.WriteLine(ex);
                     continue;
                 }
@@ -263,11 +258,11 @@ namespace Messenger.Foundation
         /// <summary>
         /// 内部信息处理函数 解析 ID 和控制字符串 并决定是否向上发送事件
         /// </summary>
-        private void _OnReceived(GenericEventArgs<byte[]> arg)
+        private void _OnReceived(CommonEventArgs<byte[]> arg)
         {
             try
             {
-                var rea = new PacketReader(arg.Value);
+                var rea = new PacketReader(arg.Object);
                 // 拦截连接控制事件
                 if (rea["source"].Pull<int>() == Server.ID && rea["path"].Pull<string>() == "link.shutdown")
                     _OnShutdown();
