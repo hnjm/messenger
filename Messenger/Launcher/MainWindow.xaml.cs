@@ -85,14 +85,6 @@ namespace Messenger.Launcher
                                 var str = rea["protocol"].Pull<string>();
                                 if (!str.Equals(Server.Protocol))
                                     return null;
-                                //return Xml.Serialize(new PacketServer()
-                                //{
-                                //    Protocol = Server.Protocol,
-                                //    Port = port,
-                                //    Name = name,
-                                //    CountLimited = max,
-                                //    Count = ModuleManager.Server.Count
-                                //});
                                 var wtr = PacketWriter.Serialize(new Dictionary<string, object>()
                                 {
                                     ["protocol"] = Server.Protocol,

@@ -143,8 +143,7 @@ namespace Messenger.Foundation
 
                 iep = res.endpoint;
                 aes = new AesManaged() { Key = rsa.Decrypt(res.aeskey, true), IV = rsa.Decrypt(res.aesiv, true) };
-            },
-            () => close());
+            }, () => close());
 
             lock (_locker)
             {

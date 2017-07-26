@@ -52,8 +52,7 @@ namespace Messenger.Foundation
             {
                 soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 soc.Bind(new IPEndPoint(IPAddress.Any, Port));
-            },
-            () => close());
+            }, () => close());
 
             lock (_locker)
             {

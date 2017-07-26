@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -20,21 +19,21 @@ namespace Messenger.Modules
         public const string DefaultKey = "key";
         public const string DefaultValue = "value";
 
-        private object locker = new object();
-        private XmlDocument document = null;
+        private object _loc = new object();
+        private XmlDocument _doc = null;
 
-        private static Options instance = null;
+        private static Options s_ins = null;
 
         private Options() { }
 
         [AutoLoad(0)]
         public static void Load()
         {
-            if (instance == null)
-                Interlocked.CompareExchange(ref instance, new Options(), null);
-            lock (instance.locker)
+            if (s_ins == null)
+                Interlocked.CompareExchange(ref s_ins, new Options(), null);
+            lock (s_ins._loc)
             {
-                if (instance.document != null)
+                if (s_ins._doc != null)
                     return;
                 var fst = default(FileStream);
                 try
@@ -44,13 +43,13 @@ namespace Messenger.Modules
                     {
                         var doc = new XmlDocument();
                         doc.Load(fst);
-                        instance.document = doc;
+                        s_ins._doc = doc;
                     }
                 }
                 catch { }
                 finally { fst?.Dispose(); }
-                if (instance.document == null)
-                    instance.document = new XmlDocument();
+                if (s_ins._doc == null)
+                    s_ins._doc = new XmlDocument();
                 return;
             }
         }
@@ -63,7 +62,7 @@ namespace Messenger.Modules
             var set = new XmlWriterSettings() { Indent = true };
             try
             {
-                var doc = instance?.document;
+                var doc = s_ins?._doc;
                 if (doc == null)
                     return;
                 str = new FileStream(DefaultPath, FileMode.Create);
@@ -83,7 +82,7 @@ namespace Messenger.Modules
 
         private static XmlElement GetElement(string key)
         {
-            var doc = instance.document;
+            var doc = s_ins._doc;
             var roo = doc.SelectSingleNode($"/{DefaultRoot}") as XmlElement;
             if (roo == null)
             {
@@ -98,7 +97,7 @@ namespace Messenger.Modules
 
         public static string GetOption(string key, string empty = null)
         {
-            var doc = instance?.document;
+            var doc = s_ins?._doc;
             if (doc == null)
                 throw new InvalidOperationException();
             try
@@ -128,7 +127,7 @@ namespace Messenger.Modules
 
         public static bool SetOption(string key, string value)
         {
-            var doc = instance?.document;
+            var doc = s_ins?._doc;
             if (doc == null)
                 throw new InvalidOperationException();
 

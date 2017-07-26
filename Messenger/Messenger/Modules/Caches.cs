@@ -1,9 +1,9 @@
-﻿using Messenger.Foundation;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace Messenger.Modules
@@ -14,9 +14,9 @@ namespace Messenger.Modules
     public class Caches
     {
         public const string CacheFolder = "Cache";
-        public const string CacheExtension = ".png";
+        public const string CacheExtension = ".jpg";
 
-        public const int DefaultLimit = 384;
+        public const int DefaultLimit = 512;
         public const float DefaultDensity = 96;
         public const string KeyLimit = "cache-limit";
         public const string KeyDensity = "cache-density";
@@ -47,8 +47,8 @@ namespace Messenger.Modules
             using (var sha = new SHA1Managed())
             {
                 var buf = sha.ComputeHash(buffer);
-                var fil = BitConverter.ToString(buf).Replace("-", "");
-                return fil;
+                var str = buf.Aggregate(string.Empty, (l, r) => $"{l}{r:x2}");
+                return str;
             }
         }
 
@@ -112,7 +112,7 @@ namespace Messenger.Modules
             var div = 1;
             for (div = 1; len / div > instance.imagelmt; div++) ;
             var dst = new Rectangle(0, 0, len / div, len / div);
-            return LoadImage(bmp, src, dst, ImageFormat.Png);
+            return LoadImage(bmp, src, dst, ImageFormat.Jpeg);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Messenger.Modules
             var src = new Rectangle(0, 0, bmp.Width, bmp.Height);
             var dst = new Rectangle(0, 0, len.Width / div, len.Height / div);
 
-            return LoadImage(bmp, src, dst, ImageFormat.Png);
+            return LoadImage(bmp, src, dst, ImageFormat.Jpeg);
         }
 
         /// <summary>

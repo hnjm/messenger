@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Foundation.Extensions;
 using System;
 using System.IO;
 using System.Net.Sockets;
@@ -28,22 +29,16 @@ namespace Messenger.Models
         {
             var inf = default(FileInfo);
             var str = default(FileStream);
-            var dis = new Action(() =>
-                {
-                    str?.Dispose();
-                    str = null;
-                });
 
-            try
+            Extension.Invoke(() =>
             {
                 inf = new FileInfo(path);
                 str = File.OpenRead(inf.FullName);
-            }
-            catch
+            }, () =>
             {
-                dis.Invoke();
-                throw;
-            }
+                str?.Dispose();
+                str = null;
+            });
 
             _stream = str;
             _name = inf.Name;

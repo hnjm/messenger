@@ -96,29 +96,24 @@ namespace Messenger.Foundation
             }
 
             var soc = default(Socket);
-            var dis = new Action(() =>
-                {
-                    soc?.Dispose();
-                    soc = null;
-                });
+            void close()
+            {
+                soc?.Dispose();
+                soc = null;
+            }
 
-            try
+            Extension.Invoke(() =>
             {
                 soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 soc.Bind(new IPEndPoint(IPAddress.Any, port));
                 soc.Listen(max);
-            }
-            catch
-            {
-                dis.Invoke();
-                throw;
-            }
+            }, () => close());
 
             lock (_locker)
             {
-                if (IsDisposed)
+                if (_disposed)
                 {
-                    dis.Invoke();
+                    close();
                     throw new InvalidOperationException();
                 }
 
@@ -166,24 +161,23 @@ namespace Messenger.Foundation
                 }
                 catch (Exception ex)
                 {
-                    if (soc != null)
-                        soc.Close();
+                    soc?.Dispose();
                     Trace.WriteLine(ex);
                     continue;
                 }
                 // 后台处理新连接 并负责释放出错的连接
                 Task.Run(() =>
+                {
+                    try
                     {
-                        try
-                        {
-                            _CheckClient(soc);
-                        }
-                        catch (Exception ex)
-                        {
-                            Trace.WriteLine(ex);
-                            soc.Dispose();
-                        }
-                    });
+                        _CheckClient(soc);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine(ex);
+                        soc.Dispose();
+                    }
+                });
             }
         }
 
@@ -237,7 +231,7 @@ namespace Messenger.Foundation
 
             var aes = new AesManaged();
 
-            try
+            Extension.Invoke(() =>
             {
                 var rsa = new RSACryptoServiceProvider();
                 rsa.FromXmlString(req.rsakey);
@@ -249,13 +243,13 @@ namespace Messenger.Foundation
                     ["endpoint"] = (IPEndPoint)client.RemoteEndPoint,
                 });
                 Extension.TimeoutInvoke(() => client.SendExt(tmp.GetBytes()), DefaultTimeout);
-            }
-            catch
+            },
+            () =>
             {
-                if (err == ErrorCode.Success)
-                    remove(req.id);
-                throw;
-            }
+                if (err != ErrorCode.Success)
+                    return;
+                remove(req.id);
+            });
 
             if (err != ErrorCode.Success)
                 throw new ConnectException(err);

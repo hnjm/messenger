@@ -1,6 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
-using Mikodev.Network;
+﻿using Messenger.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -125,64 +123,7 @@ namespace Messenger.Modules
                     }
                 });
         }
-
-        ///// <summary>
-        ///// 尝试解析文件消息 返回 <see cref="Cargo"/> 对象 (失败返回 null)
-        ///// </summary>
-        //public static Cargo Take(PacketReader reader)
-        //{
-        //    var fil = default(Taker);
-        //    var inf = default(PacketReader);
-        //    try
-        //    {
-        //        inf = new PacketReader(reader["data"]);
-        //        fil = new Taker(inf, () => FindPath(s_ins._savepath, inf["filename"].Pull<string>()));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.E(nameof(Transports), ex, "接收文件出错.");
-        //        return null;
-        //    }
-        //    var trs = new Cargo(e.Source, fil);
-        //    Application.Current.Dispatcher.Invoke(() =>
-        //        {
-        //            // 在注册事件之前加入列表
-        //            s_ins._expect.Add(trs);
-        //            s_ins._takers.Add(trs);
-        //            fil.Started += Trans_Changed;
-        //            fil.Disposed += Trans_Changed;
-        //        });
-        //    return trs;
-        //}
-
-        ///// <summary>
-        ///// 发送文件 返回 <see cref="Cargo"/> 对象 (失败返回 null)
-        ///// </summary>
-        ///// <param name="id">目标编号</param>
-        ///// <param name="filepath">文件路径</param>
-        //public static Cargo Make(int id, string filepath)
-        //{
-        //    var fil = default(Maker);
-        //    try
-        //    {
-        //        fil = new Maker(filepath);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Entrance.ShowError("发送文件失败", ex);
-        //        return null;
-        //    }
-        //    var itm = new Cargo(id, fil);
-        //    Application.Current.Dispatcher.Invoke(() => s_ins._makers.Add(itm));
-        //    var inf = new PacketWriter().
-        //        Push("filename", fil.Name).
-        //        Push("filesize", fil.Length).
-        //        Push("guid", fil.Key).
-        //        PushList("endpoints", Interact.GetEndPoints());
-        //    // Interact.Enqueue(id, PacketGenre.FileInfo, inf.GetBytes());
-        //    return itm;
-        //}
-
+        
         /// <summary>
         /// 移除所有 <see cref="IManager.IsDisposed"/> 为真的项目 返回被移除的项目
         /// </summary>

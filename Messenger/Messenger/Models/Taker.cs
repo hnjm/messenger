@@ -89,18 +89,13 @@ namespace Messenger.Models
                 throw new ApplicationException("网络不可达或对方已取消发送操作.");
             }
 
-            try
+            Extension.Invoke(() =>
             {
                 var buf = new PacketWriter().Push("data", _key);
                 soc.SendExt(buf.GetBytes());
                 inf = new FileInfo(_callback.Invoke());
                 str = new FileStream(inf.FullName, FileMode.CreateNew);
-            }
-            catch
-            {
-                close();
-                throw;
-            }
+            }, () => close());
 
             _name = inf.Name;
             _filepath = inf.FullName;
