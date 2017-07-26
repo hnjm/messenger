@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Modules;
+﻿using Messenger.Modules;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Security.Cryptography;
 
-namespace Messenger.Foundation
+namespace Messenger.Foundation.Extensions
 {
     /// <summary>
     /// 加密扩展

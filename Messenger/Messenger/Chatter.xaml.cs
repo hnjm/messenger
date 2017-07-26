@@ -59,9 +59,9 @@ namespace Messenger
         /// <summary>
         /// 拦截消息通知
         /// </summary>
-        private void ModuleMessage_Receiving(object sender, CommonEventArgs<Packet> e)
+        private void ModuleMessage_Receiving(object sender, LinkEventArgs<Packet> e)
         {
-            if (e.Object.Groups != _profile.ID)
+            if (e.Record.Groups != _profile.ID)
                 return;
             e.Finish = true;
         }

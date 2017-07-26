@@ -2,7 +2,6 @@
 using Mikodev.Network;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -28,11 +27,11 @@ namespace Messenger.Foundation
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public event EventHandler<CommonEventArgs<byte[]>> Received = null;
+        public event EventHandler<LinkEventArgs<Router>> Received = null;
         /// <summary>
         /// 传输请求事件
         /// </summary>
-        public event EventHandler<CommonEventArgs<(Guid, Socket)>> Requests = null;
+        public event EventHandler<LinkEventArgs<(Guid, Socket)>> Requests = null;
         /// <summary>
         /// 连接关闭事件
         /// </summary>
@@ -72,7 +71,7 @@ namespace Messenger.Foundation
         /// </summary>
         public void Start(Socket client)
         {
-            lock (_locker)
+            lock (_loc)
             {
                 if (_started || _disposed)
                     throw new InvalidOperationException();
@@ -91,7 +90,7 @@ namespace Messenger.Foundation
         /// </summary>
         public void Start(IPEndPoint ep)
         {
-            lock (_locker)
+            lock (_loc)
             {
                 if (_started || _disposed)
                     throw new InvalidOperationException();
@@ -101,11 +100,11 @@ namespace Messenger.Foundation
             var rsa = new RSACryptoServiceProvider();
             var iep = default(IPEndPoint);
             var aes = default(AesManaged);
-            var req = PacketWriter.Serialize(new Dictionary<string, object>()
+            var req = PacketWriter.Serialize(new
             {
-                ["id"] = ID,
-                ["protocol"] = Server.Protocol,
-                ["rsakey"] = rsa.ToXmlString(false),
+                id = ID,
+                protocol = Server.Protocol,
+                rsakey = rsa.ToXmlString(false),
             });
 
             var soc = default(Socket);
@@ -135,7 +134,7 @@ namespace Messenger.Foundation
                     endpoint = rea["endpoint"].Pull<IPEndPoint>(),
                 };
                 if (res.result != ErrorCode.Success)
-                    throw new ConnectException(res.result);
+                    throw new LinkException(res.result);
                 tra = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 tra.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 tra.Bind(soc.LocalEndPoint);
@@ -145,7 +144,7 @@ namespace Messenger.Foundation
                 aes = new AesManaged() { Key = rsa.Decrypt(res.aeskey, true), IV = rsa.Decrypt(res.aesiv, true) };
             }, () => close());
 
-            lock (_locker)
+            lock (_loc)
             {
                 if (_disposed)
                 {
@@ -181,12 +180,12 @@ namespace Messenger.Foundation
         /// <summary>
         /// 向待发队列尾插入一条消息
         /// </summary>
-        public void Enqueue(object sender, CommonEventArgs<byte[]> e)
+        public void Enqueue(object sender, LinkEventArgs<Router> e)
         {
-            var rea = new PacketReader(e.Object);
-            if (rea["source"].Pull<int>() == ID)
+            var rcd = e.Record;
+            if (rcd.Source == ID)
                 return;
-            _messages.Enqueue(e.Object);
+            _messages.Enqueue(rcd.Buffer);
         }
 
         /// <summary>
@@ -200,7 +199,7 @@ namespace Messenger.Foundation
                 {
                     var buf = _socket.ReceiveExt();
                     var dst = Crypto.Decrypt(buf);
-                    _OnReceived(new CommonEventArgs<byte[]>() { Source = this, Object = dst });
+                    _OnReceived(new LinkEventArgs<Router>() { Source = this, Record = new Router().Load(dst) });
                 }
             }
             catch (Exception ex)
@@ -240,7 +239,7 @@ namespace Messenger.Foundation
                     soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
                     var buf = soc.ReceiveExt();
                     var key = new PacketReader(buf)["data"].Pull<Guid>();
-                    var req = new CommonEventArgs<(Guid, Socket)>() { Object = (key, soc) };
+                    var req = new LinkEventArgs<(Guid, Socket)>() { Record = (key, soc) };
                     Requests?.Invoke(this, req);
                     if (req.Finish == false)
                         soc.Dispose();
@@ -257,13 +256,13 @@ namespace Messenger.Foundation
         /// <summary>
         /// 内部信息处理函数 解析 ID 和控制字符串 并决定是否向上发送事件
         /// </summary>
-        private void _OnReceived(CommonEventArgs<byte[]> arg)
+        private void _OnReceived(LinkEventArgs<Router> arg)
         {
             try
             {
-                var rea = new PacketReader(arg.Object);
+                var rcd = arg.Record;
                 // 拦截连接控制事件
-                if (rea["source"].Pull<int>() == Server.ID && rea["path"].Pull<string>() == "link.shutdown")
+                if (rcd.Source == Server.ID && rcd.Path == "link.shutdown")
                     _OnShutdown();
                 else
                     Received?.Invoke(this, arg);
@@ -279,7 +278,7 @@ namespace Messenger.Foundation
         /// </summary>
         private void _OnShutdown(Exception ex = null)
         {
-            lock (_locker)
+            lock (_loc)
             {
                 if (_disposed)
                     return;

@@ -20,14 +20,14 @@ namespace Messenger.Foundation
     {
         protected bool _started = false;
         protected bool _disposed = false;
-        protected object _locker = new object();
+        protected object _loc = new object();
 
         public virtual bool CanStart => IsStarted == false && IsDisposed == false;
         public virtual bool IsStarted => _started;
         public virtual bool IsDisposed => _disposed;
 
-        public void Dispose() { lock (_locker) { Dispose(true); } }
         public virtual void Start() { }
+        public void Dispose() { lock (_loc) { Dispose(true); } }
         protected abstract void Dispose(bool flag);
     }
 }

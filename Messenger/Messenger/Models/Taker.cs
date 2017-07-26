@@ -44,7 +44,7 @@ namespace Messenger.Models
         /// </summary>
         public override void Start()
         {
-            lock (_locker)
+            lock (_loc)
             {
                 if (_started || _disposed)
                     throw new InvalidOperationException();
@@ -100,9 +100,9 @@ namespace Messenger.Models
             _name = inf.Name;
             _filepath = inf.FullName;
 
-            lock (_locker)
+            lock (_loc)
             {
-                if (IsDisposed)
+                if (_disposed)
                 {
                     close();
                     throw new InvalidOperationException();
@@ -145,9 +145,9 @@ namespace Messenger.Models
             }
 
             var res = (exc == null && _position == _length);
-            lock (_locker)
+            lock (_loc)
             {
-                if (IsDisposed == false)
+                if (_disposed == false)
                 {
                     _status = res ? TransportStatus.成功 : TransportStatus.中断;
                     _exception = exc;

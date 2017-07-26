@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
 using System;
 using System.ComponentModel;
@@ -96,16 +95,19 @@ namespace Messenger
             }
 
             var flg = false;
+            buttonConnect.IsEnabled = false;
+
             try
             {
-                buttonConnect.IsEnabled = false;
                 var uid = int.Parse(textboxNumber.Text);
                 var pot = int.Parse(textboxPort.Text);
                 var hos = textboxHost.Text;
 
                 await Task.Run(() =>
                 {
-                    var hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
+                    var add = IPAddress.TryParse(hos, out var hst);
+                    if (add == false)
+                        hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
                     var iep = new IPEndPoint(hst, pot);
                     Interact.Start(uid, iep);
                     Hosts.Name = hos;
@@ -117,12 +119,10 @@ namespace Messenger
             {
                 Entrance.ShowError("连接失败.", ex);
             }
-            finally
-            {
-                if (flg == true)
-                    NavigationService.Navigate(new ProfileFrame());
-                buttonConnect.IsEnabled = true;
-            }
+
+            if (flg == true)
+                NavigationService.Navigate(new PageFrame());
+            buttonConnect.IsEnabled = true;
         }
     }
 }

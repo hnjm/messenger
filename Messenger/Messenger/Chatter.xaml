@@ -31,7 +31,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" Margin="0,5" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                    <Grid Grid.Row="0" Margin="0,5" HorizontalAlignment="Left">
                         <TextBlock Foreground="#FF808080" FontSize="12">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0} {1:HH:mm:ss}">
@@ -166,12 +166,12 @@
             <ListBox x:Name="listboxMessage" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Background" Value="#202020"/>
+                        <Setter Property="Background" Value="#303030"/>
                         <Setter Property="HorizontalAlignment" Value="Left"/>
                         <Setter Property="Template" Value="{StaticResource ResourceKey=messageItem}"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#101010"/>
+                                <Setter Property="Background" Value="#202020"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>

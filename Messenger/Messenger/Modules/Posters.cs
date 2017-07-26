@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace Messenger.Modules
 {
-    public class Posters
+    internal class Posters
     {
         /// <summary>
         /// Post text message or image

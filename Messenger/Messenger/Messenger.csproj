@@ -100,15 +100,14 @@
     <Compile Include="Handlers\Paper.cs" />
     <Compile Include="Handlers\People.cs" />
     <Compile Include="Handlers\Thing.cs" />
-    <Compile Include="MessageWindow.xaml.cs">
-      <DependentUpon>MessageWindow.xaml</DependentUpon>
+    <Compile Include="Fallback.xaml.cs">
+      <DependentUpon>Fallback.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\AutoAttribute.cs" />
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoSaveAttribute.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
     <Compile Include="Models\Maker.cs" />
-    <Compile Include="Models\Router.cs" />
     <Compile Include="Models\Taker.cs" />
     <Compile Include="Models\Transport.cs" />
     <Compile Include="Models\TransportStatus.cs" />
@@ -129,11 +128,11 @@
     <Compile Include="PageRecent.xaml.cs">
       <DependentUpon>PageRecent.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ProfileFrame.xaml.cs">
-      <DependentUpon>ProfileFrame.xaml</DependentUpon>
+    <Compile Include="PageFrame.xaml.cs">
+      <DependentUpon>PageFrame.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ProfilePage.xaml.cs">
-      <DependentUpon>ProfilePage.xaml</DependentUpon>
+    <Compile Include="PageProfile.xaml.cs">
+      <DependentUpon>PageProfile.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modules\Symbols.cs" />
     <Compile Include="Modules\Transports.cs" />
@@ -188,7 +187,7 @@
       <DependentUpon>Entrance.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="MessageWindow.xaml">
+    <Page Include="Fallback.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -208,11 +207,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProfileFrame.xaml">
+    <Page Include="PageFrame.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProfilePage.xaml">
+    <Page Include="PageProfile.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

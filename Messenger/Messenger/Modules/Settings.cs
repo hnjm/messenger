@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using System;
 using System.Diagnostics;
 

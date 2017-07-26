@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Threading;
 
 namespace Messenger
 {
@@ -16,22 +15,24 @@ namespace Messenger
     {
         public event EventHandler<KeyEventArgs> TextBoxKeyDown;
 
-        private void Application_Startup(object sender, StartupEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
-            Trace.Listeners.Add(new Log($"{nameof(Messenger)}-{DateTime.Now:yyyyMMddHHmmss}.log"));
+            base.OnStartup(e);
+
+            Trace.Listeners.Add(new Logger($"{nameof(Messenger)}-{DateTime.Now:yyyyMMdd}.log"));
             EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
-        }
 
-        private void Application_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-        {
-            e.Handled = true;
-            MessageWindow.Show(null, "程序出现未处理异常, 准备退出", e.Exception);
-            Shutdown(1);
-        }
+            DispatcherUnhandledException += (s, arg) =>
+            {
+                arg.Handled = true;
+                Fallback.Show(null, "Unhandled Exception", arg.Exception);
+                Shutdown(1);
+            };
 
-        private void Application_SessionEnding(object sender, SessionEndingCancelEventArgs e)
-        {
-            Interact.Close();
+            SessionEnding += (s, arg) =>
+            {
+                Interact.Close();
+            };
         }
     }
 }

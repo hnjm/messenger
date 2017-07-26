@@ -4,10 +4,7 @@ using System.IO;
 
 namespace Messenger.Foundation
 {
-    /// <summary>
-    /// 日志类 (保存位置为系统临时文件夹)
-    /// </summary>
-    public class Log : TraceListener
+    public class Logger : TraceListener
     {
         private string _path = null;
 
@@ -32,7 +29,7 @@ namespace Messenger.Foundation
             }
         }
 
-        public Log(string filename) => _path = Path.Combine(Path.GetTempPath(), filename);
+        public Logger(string filename) => _path = Path.Combine(Path.GetTempPath(), filename);
 
         public override void Write(string message) => _BufferWriter(message);
 

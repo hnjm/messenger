@@ -12,9 +12,9 @@ namespace Messenger
     /// <summary>
     /// Interaction logic for Transform.xaml
     /// </summary>
-    public partial class Transfer : Page
+    public partial class Transport : Page
     {
-        public Transfer()
+        public Transport()
         {
             InitializeComponent();
         }

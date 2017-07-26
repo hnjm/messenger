@@ -16,18 +16,18 @@ namespace Messenger.Modules
 {
     class Interact
     {
-        private object _locker = new object();
-        private Client _client = null;
+        private object _loc = new object();
+        private Client _clt = null;
 
-        private static Interact _instance = new Interact();
+        private static Interact s_ins = new Interact();
 
-        public static int ID => _instance._client?.ID ?? Profiles.Current.ID;
+        public static int ID => s_ins._clt?.ID ?? Profiles.Current.ID;
 
         public static bool IsRunning
         {
             get
             {
-                var clt = _instance._client;
+                var clt = s_ins._clt;
                 if (clt == null)
                     return false;
                 if (clt.IsStarted == true && clt.IsDisposed == false)
@@ -36,18 +36,18 @@ namespace Messenger.Modules
             }
         }
 
-        public static event EventHandler<CommonEventArgs<(Guid, Socket)>> Requests
+        public static event EventHandler<LinkEventArgs<(Guid, Socket)>> Requests
         {
             add
             {
-                var clt = _instance._client;
+                var clt = s_ins._clt;
                 if (clt == null)
                     return;
                 clt.Requests += value;
             }
             remove
             {
-                var clt = _instance._client;
+                var clt = s_ins._clt;
                 if (clt == null)
                     return;
                 clt.Requests -= value;
@@ -69,17 +69,17 @@ namespace Messenger.Modules
                 throw;
             }
 
-            clt.Received += Client_Received;
-            clt.Shutdown += Client_Shutdown;
+            clt.Received += (s, e) => Routers.Handle(e.Record);
+            clt.Shutdown += (s, e) => Entrance.ShowError("连接已断开", s_ins?._clt?.Exception);
 
-            lock (_instance._locker)
+            lock (s_ins._loc)
             {
-                if (_instance._client != null)
+                if (s_ins._clt != null)
                 {
                     clt.Dispose();
                     throw new InvalidOperationException();
                 }
-                _instance._client = clt;
+                s_ins._clt = clt;
             }
 
             Packets.OnHandled += ModulePacket_OnHandled;
@@ -95,16 +95,14 @@ namespace Messenger.Modules
         public static void Close()
         {
             var clt = default(Client);
-            lock (_instance._locker)
+            lock (s_ins._loc)
             {
-                clt = _instance._client;
-                _instance._client = null;
+                clt = s_ins._clt;
+                s_ins._clt = null;
             }
 
             if (clt == null)
                 return;
-            clt.Received -= Client_Received;
-            clt.Shutdown -= Client_Shutdown;
             clt.Dispose();
 
             Packets.OnHandled -= ModulePacket_OnHandled;
@@ -113,7 +111,7 @@ namespace Messenger.Modules
 
         public static void Enqueue(byte[] buffer)
         {
-            var clt = _instance._client;
+            var clt = s_ins._clt;
             if (clt == null)
                 return;
             clt.Enqueue(buffer);
@@ -125,7 +123,7 @@ namespace Messenger.Modules
         public static List<IPEndPoint> GetEndPoints()
         {
             var lst = new List<IPEndPoint>();
-            var clt = _instance._client;
+            var clt = s_ins._clt;
             if (clt?.InnerEndPoint is IPEndPoint iep)
                 lst.Add(iep);
             if (clt?.OuterEndPoint is IPEndPoint rep)
@@ -134,11 +132,11 @@ namespace Messenger.Modules
             return res;
         }
 
-        private static void ModulePacket_OnHandled(object sender, CommonEventArgs<Packet> e)
+        private static void ModulePacket_OnHandled(object sender, LinkEventArgs<Packet> e)
         {
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var pro = Profiles.Query(e.Object.Groups);
+                    var pro = Profiles.Query(e.Record.Groups);
                     if (pro == null)
                         return;
                     var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
@@ -159,9 +157,5 @@ namespace Messenger.Modules
                 NativeMethods.FlashWindow(hdl, true);
             }
         }
-
-        private static void Client_Shutdown(object sender, EventArgs e) => Entrance.ShowError("服务器连接已断开", _instance?._client?.Exception);
-
-        private static void Client_Received(object sender, CommonEventArgs<byte[]> e) => Routers.Handle(e.Object);
     }
 }

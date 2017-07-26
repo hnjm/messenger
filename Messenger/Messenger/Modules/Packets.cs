@@ -26,19 +26,19 @@ namespace Messenger.Modules
         /// </summary>
         private SQLiteConnection _connection = null;
         private ConcurrentDictionary<int, BindingList<Packet>> _messages = new ConcurrentDictionary<int, BindingList<Packet>>();
-        private event EventHandler<CommonEventArgs<Packet>> _Receiving = null;
-        private event EventHandler<CommonEventArgs<Packet>> _OnHandled = null;
+        private event EventHandler<LinkEventArgs<Packet>> _Receiving = null;
+        private event EventHandler<LinkEventArgs<Packet>> _OnHandled = null;
 
         private static Packets _instance = null;
 
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public static event EventHandler<CommonEventArgs<Packet>> Receiving { add => _instance._Receiving += value; remove => _instance._Receiving -= value; }
+        public static event EventHandler<LinkEventArgs<Packet>> Receiving { add => _instance._Receiving += value; remove => _instance._Receiving -= value; }
         /// <summary>
         /// 消息接收事件处理后
         /// </summary>
-        public static event EventHandler<CommonEventArgs<Packet>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
+        public static event EventHandler<LinkEventArgs<Packet>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
         
         private static Packet SetPacket(Packet pkt, object value)
         {
@@ -79,7 +79,7 @@ namespace Messenger.Modules
         /// </summary>
         private static void OnReceived(Packet rcd)
         {
-            var arg = new CommonEventArgs<Packet>() { Object = rcd };
+            var arg = new LinkEventArgs<Packet>() { Record = rcd };
             _instance._Receiving?.Invoke(_instance, arg);
             _instance._OnHandled?.Invoke(_instance, arg);
         }

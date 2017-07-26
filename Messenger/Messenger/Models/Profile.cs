@@ -5,8 +5,9 @@ namespace Messenger.Models
 {
     public class Profile : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
         public static event PropertyChangedEventHandler StaticPropertyChanged;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string name)
         {
@@ -15,12 +16,12 @@ namespace Messenger.Models
             StaticPropertyChanged?.Invoke(this, arg);
         }
 
-        private int _id = 0;
-        private int _hint = 0;
-        private string _name = null;
-        private string _text = null;
-        private string _imag = null;
-        
+        protected int _id = 0;
+        protected int _hint = 0;
+        protected string _name = null;
+        protected string _text = null;
+        protected string _imag = null;
+
         public int ID
         {
             get => _id;
@@ -30,7 +31,7 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(ID));
             }
         }
-        
+
         public int Hint
         {
             get => _hint;
@@ -40,11 +41,11 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(Hint));
             }
         }
-        
+
         public bool IsClient => _id > Server.ID;
-        
-        public bool IsGroups => _id > Server.ID == false;
-        
+
+        public bool IsGroups => _id < Server.ID;
+
         public string Name
         {
             get => _name;
@@ -54,7 +55,7 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(Name));
             }
         }
-        
+
         public string Text
         {
             get => _text;
@@ -64,7 +65,7 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(Text));
             }
         }
-        
+
         public string Image
         {
             get => _imag;

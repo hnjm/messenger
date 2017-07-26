@@ -3,7 +3,7 @@ using System.Net;
 
 namespace Messenger.Extensions
 {
-    public static class Converts
+    internal static class Converts
     {
         public static bool GetHost(string str, out string host, out int port)
         {

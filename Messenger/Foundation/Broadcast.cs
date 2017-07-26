@@ -34,7 +34,7 @@ namespace Messenger.Foundation
         /// </summary>
         public override void Start()
         {
-            lock (_locker)
+            lock (_loc)
             {
                 if (_started || _disposed)
                     throw new InvalidOperationException();
@@ -54,7 +54,7 @@ namespace Messenger.Foundation
                 soc.Bind(new IPEndPoint(IPAddress.Any, Port));
             }, () => close());
 
-            lock (_locker)
+            lock (_loc)
             {
                 if (_disposed)
                 {

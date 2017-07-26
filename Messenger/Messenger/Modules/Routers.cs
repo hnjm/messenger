@@ -1,5 +1,5 @@
-﻿using Messenger.Models;
-using Mikodev.Network;
+﻿using Messenger.Foundation;
+using Messenger.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Messenger.Modules
 {
-    public class Routers
+    internal class Routers
     {
         private class _Record
         {
@@ -45,12 +45,11 @@ namespace Messenger.Modules
             }
         }
 
-        public static void Handle(byte[] buffer)
+        public static void Handle(Router arg)
         {
-            var pth = new PacketReader(buffer)["path"].Pull<string>();
-            var rcd = s_ins._dic[pth];
+            var rcd = s_ins._dic[arg.Path];
             var obj = rcd.Construct.Invoke();
-            obj.Load(buffer);
+            obj.Load(arg.Buffer);
             rcd.Function.Invoke((dynamic)obj);
         }
 

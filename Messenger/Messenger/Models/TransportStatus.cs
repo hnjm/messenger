@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
-
-namespace Messenger.Models
+﻿namespace Messenger.Models
 {
-    /// <summary>
-    /// 文件传输状态
-    /// </summary>
     public enum TransportStatus : int
     {
         默认 = 0,

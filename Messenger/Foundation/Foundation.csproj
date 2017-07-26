@@ -50,16 +50,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConnectException.cs" />
-    <Compile Include="Crypto.cs" />
+    <Compile Include="LinkException.cs" />
+    <Compile Include="Extensions\Crypto.cs" />
     <Compile Include="ErrorCode.cs" />
     <Compile Include="Extensions\Collection.cs" />
     <Compile Include="Extensions\Network.cs" />
-    <Compile Include="CommonEventArgs.cs" />
+    <Compile Include="LinkEventArgs.cs" />
     <Compile Include="Manageable.cs" />
-    <Compile Include="Log.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Extensions\Common.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Router.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="Broadcast.cs" />

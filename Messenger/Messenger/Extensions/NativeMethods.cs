@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Messenger.Extensions
 {
-    static class NativeMethods
+    internal static class NativeMethods
     {
         /// <summary>
         /// 任务栏闪烁

@@ -10,22 +10,22 @@ namespace Messenger
     /// <summary>
     /// ProfileFrame.xaml 的交互逻辑
     /// </summary>
-    public partial class ProfileFrame : Page
+    public partial class PageFrame : Page
     {
         /// <summary>
         /// 顶层 Frame 是否有内容
         /// </summary>
         private bool _vis = false;
-        private ProfilePage _profPage = null;
+        private PageProfile _profPage = null;
 
-        public ProfileFrame()
+        public PageFrame()
         {
             InitializeComponent();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            _profPage = new ProfilePage();
+            _profPage = new PageProfile();
             _profPage.frameLeft.Navigate(new PageClient());
             frame.Navigate(_profPage);
             var act = (Action)delegate
@@ -46,7 +46,7 @@ namespace Messenger
         /// <summary>
         /// 如果顶层 Frame 有内容 说明下层 Frame 不可见 因此消息提示也应存在
         /// </summary>
-        private void ModulePacket_Receiving(object sender, CommonEventArgs<Packet> e)
+        private void ModulePacket_Receiving(object sender, LinkEventArgs<Packet> e)
         {
             if (_vis == false)
                 return;
@@ -61,9 +61,9 @@ namespace Messenger
 
             _vis = true;
             if (btn == radiobuttonMyself)
-                Navigate<ProfileShower>(frameFull);
+                Navigate<Shower>(frameFull);
             else if (btn == radiobuttonTransf)
-                Navigate<Transfer>(frameFull);
+                Navigate<Transport>(frameFull);
             else if (btn == radiobuttonOption)
                 Navigate<PageOption>(frameFull);
             else if (btn != radiobuttonSwitch)

@@ -11,7 +11,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 负责管理图片缓存 (被动初始化)
     /// </summary>
-    public class Caches
+    internal class Caches
     {
         public const string CacheFolder = "Cache";
         public const string CacheExtension = ".jpg";

@@ -1,4 +1,5 @@
-﻿using Messenger.Models;
+﻿using Messenger.Foundation;
+using Messenger.Models;
 using Messenger.Modules;
 
 namespace Messenger.Handlers

@@ -40,7 +40,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 默认连接限制
         /// </summary>
-        public const int DefaultCountLimited = 32;
+        public const int DefaultCountLimit = 32;
         /// <summary>
         /// 限制的最大连接数
         /// </summary>
@@ -58,17 +58,13 @@ namespace Messenger.Foundation
         /// 最大连接数
         /// </summary>
         public int CountLimited { get; private set; } = 0;
-        /// <summary>
-        /// 连接数变更事件 (后台执行)
-        /// </summary>
-        public event EventHandler CountChanged;
 
         private Socket _socket = null;
         private Thread _thread = null;
         /// <summary>
         /// 服务器广播调用链
         /// </summary>
-        private EventHandler<CommonEventArgs<byte[]>> _srvbroa = null;
+        private EventHandler<LinkEventArgs<Router>> _srvbroa = null;
         /// <summary>
         /// 客户端列表
         /// </summary>
@@ -83,12 +79,12 @@ namespace Messenger.Foundation
         /// </summary>
         /// <param name="port">端口</param>
         /// <param name="max">最大连接数</param>
-        public void Start(int port = DefaultPort, int max = DefaultCountLimited)
+        public void Start(int port = DefaultPort, int max = DefaultCountLimit)
         {
             if (max < 1 || max > DefaultCountOriginal)
-                throw new ArgumentOutOfRangeException(nameof(max), $"服务器最大连接数被限制在 {1} 和 {DefaultCountOriginal} 之间");
+                throw new ArgumentOutOfRangeException(nameof(max), $"The maximum count should between {1} and {DefaultCountOriginal}.");
 
-            lock (_locker)
+            lock (_loc)
             {
                 if (IsStarted || IsDisposed)
                     throw new InvalidOperationException();
@@ -109,7 +105,7 @@ namespace Messenger.Foundation
                 soc.Listen(max);
             }, () => close());
 
-            lock (_locker)
+            lock (_loc)
             {
                 if (_disposed)
                 {
@@ -125,12 +121,12 @@ namespace Messenger.Foundation
         }
 
         /// <summary>
-        /// 执行 <see cref="Dispose(bool)"/> 并断开与所有客户端的连接 (不会触发 <see cref="CountChanged"/> 事件 含 lock 语句)
+        /// 执行 <see cref="Dispose(bool)"/> 并断开与所有客户端的连接 (含 lock 语句)
         /// </summary>
         public void Shutdown()
         {
             var lst = default(Client[]);
-            lock (_locker)
+            lock (_loc)
             {
                 Dispose(true);
                 lst = new Client[_clients.Count];
@@ -141,14 +137,6 @@ namespace Messenger.Foundation
             return;
         }
 
-        /// <summary>
-        /// 触发 <see cref="CountChanged"/> 事件 (后台执行)
-        /// </summary>
-        private void _OnCountChanged() => Task.Run(() => CountChanged?.Invoke(this, new EventArgs()));
-
-        /// <summary>
-        /// 客户端传入连接监听线程
-        /// </summary>
         private void _Listen()
         {
             while (_socket != null)
@@ -186,7 +174,7 @@ namespace Messenger.Foundation
             // 检查编号是否冲突
             ErrorCode check(int id)
             {
-                lock (_locker)
+                lock (_loc)
                 {
                     if (IsDisposed)
                         return ErrorCode.Shutdown;
@@ -200,7 +188,7 @@ namespace Messenger.Foundation
             // 移除占位符
             void remove(int id)
             {
-                lock (_locker)
+                lock (_loc)
                 {
                     if (_clients.TryGetValue(id, out var val) && val == null)
                         _clients.Remove(id);
@@ -235,12 +223,12 @@ namespace Messenger.Foundation
             {
                 var rsa = new RSACryptoServiceProvider();
                 rsa.FromXmlString(req.rsakey);
-                var tmp = PacketWriter.Serialize(new Dictionary<string, object>()
+                var tmp = PacketWriter.Serialize(new
                 {
-                    ["result"] = err,
-                    ["aeskey"] = rsa.Encrypt(aes.Key, true),
-                    ["aesiv"] = rsa.Encrypt(aes.IV, true),
-                    ["endpoint"] = (IPEndPoint)client.RemoteEndPoint,
+                    result = err,
+                    aeskey = rsa.Encrypt(aes.Key, true),
+                    aesiv = rsa.Encrypt(aes.IV, true),
+                    endpoint = (IPEndPoint)client.RemoteEndPoint,
                 });
                 Extension.TimeoutInvoke(() => client.SendExt(tmp.GetBytes()), DefaultTimeout);
             },
@@ -252,7 +240,7 @@ namespace Messenger.Foundation
             });
 
             if (err != ErrorCode.Success)
-                throw new ConnectException(err);
+                throw new LinkException(err);
 
             var clt = new Client(req.id);
             clt.Received += Client_Received;
@@ -260,15 +248,14 @@ namespace Messenger.Foundation
             clt.Crypto = aes;
 
             // 调用 Shutdown 之前未被处理的连接在此断开
-            lock (_locker)
+            lock (_loc)
             {
                 remove(req.id);
-                if (IsDisposed)
+                if (_disposed)
                     throw new ApplicationException("Server has been disposed.");
                 _clients.Add(req.id, clt);
                 _groupsc.Add(req.id, new List<int>());
                 _srvbroa += clt.Enqueue;
-                _OnCountChanged();
             }
 
             // 先加入列表再启动 避免客户端查找出现空值
@@ -276,16 +263,11 @@ namespace Messenger.Foundation
             clt.Start(client);
         }
 
-        /// <summary>
-        /// 客户端关闭事件处理函数
-        /// </summary>
-        /// <param name="sender">发送事件的客户端实例</param>
-        /// <param name="e">表示关闭原因事件参数</param>
         private void Client_Shutdown(object sender, EventArgs e)
         {
             var clt = (Client)sender;
             var idl = new List<int>();
-            lock (_locker)
+            lock (_loc)
             {
                 _clients.Remove(clt.ID);
                 _groupsc.Remove(clt.ID);
@@ -294,7 +276,6 @@ namespace Messenger.Foundation
                     return;
                 foreach (var c in _clients)
                     idl.Add(c.Key);
-                _OnCountChanged();
             }
             var buf = PacketWriter.Serialize(new
             {
@@ -303,47 +284,45 @@ namespace Messenger.Foundation
                 path = "user.ids",
                 data = idl,
             });
-            _srvbroa?.Invoke(this, new CommonEventArgs<byte[]>() { Source = this, Object = buf.GetBytes() });
+            _srvbroa?.Invoke(this, new LinkEventArgs<Router>() { Source = this, Record = new Router().Load(buf.GetBytes()) });
         }
 
-        /// <summary>
-        /// 根据 ID 决定处理或转发客户端发来的消息
-        /// </summary>
-        private void Client_Received(object sender, CommonEventArgs<byte[]> arg)
+        private void Client_Received(object sender, LinkEventArgs<Router> arg)
         {
-            var rea = new PacketReader(arg.Object);
-            var src = rea["source"].Pull<int>();
-            var tar = rea["target"].Pull<int>();
-            var pth = rea["path"].Pull<string>();
+            var rea = arg.Record;
+            var src = rea.Source;
+            var tar = rea.Target;
+            var pth = rea.Path;
 
-            if (tar == ID && pth == "user.groups")
+            if (tar == ID)
             {
-                var lst = rea["data"].PullList<int>().ToList();
-                lst.RemoveAll(r => r < ID == false);
-                lock (_locker)
+                if (pth == "user.groups")
                 {
-                    _groupsc[src].Clear();
-                    _groupsc[src] = lst;
+                    var lst = rea.Data.PullList<int>().ToList();
+                    lst.RemoveAll(r => r < ID == false);
+                    lock (_loc)
+                    {
+                        _groupsc[src].Clear();
+                        _groupsc[src] = lst;
+                    }
+                    return;
                 }
-            }
-            else if (tar == ID)
-            {
                 _srvbroa?.Invoke(this, arg);
             }
             else if (tar > ID)
             {
-                _clients[tar].Enqueue(arg.Object);
+                _clients[tar].Enqueue(rea.Buffer);
             }
             else
             {
-                lock (_locker)
+                lock (_loc)
                 {
                     foreach (var (k, v) in _groupsc)
                     {
                         if (k == src)
                             continue;
                         if (v.Contains(tar))
-                            _clients[k].Enqueue(arg.Object);
+                            _clients[k].Enqueue(rea.Buffer);
                     }
                 }
             }

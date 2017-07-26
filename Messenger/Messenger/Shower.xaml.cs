@@ -8,11 +8,11 @@ using System.Windows.Controls;
 namespace Messenger
 {
     /// <summary>
-    /// Interaction logic for ProfileShower.xaml
+    /// Interaction logic for Shower.xaml
     /// </summary>
-    public partial class ProfileShower : Page
+    public partial class Shower : Page
     {
-        public ProfileShower()
+        public Shower()
         {
             InitializeComponent();
         }

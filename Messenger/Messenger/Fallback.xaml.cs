@@ -2,12 +2,9 @@
 
 namespace Messenger
 {
-    /// <summary>
-    /// Interaction logic for MessageWindow.xaml
-    /// </summary>
-    public partial class MessageWindow : Window
+    public partial class Fallback : Window
     {
-        public MessageWindow()
+        public Fallback()
         {
             InitializeComponent();
         }
@@ -19,11 +16,11 @@ namespace Messenger
 
         public static void Show(Window owner, string title, object content)
         {
-            var msw = new MessageWindow();
+            var msw = new Fallback();
             msw.Owner = owner;
             msw.textblockHeader.Text = title;
             msw.textboxContent.Text = content?.ToString();
-            msw.WindowStartupLocation = (owner is null ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner);
+            msw.WindowStartupLocation = (owner is null) ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner;
             msw.ShowDialog();
         }
     }

@@ -1,13 +1,11 @@
-﻿using Messenger.Foundation;
+﻿using Messenger.Foundation.Extensions;
 using Messenger.Models;
-using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
-using Messenger.Foundation.Extensions;
-using System.Diagnostics;
 
 namespace Messenger.Modules
 {

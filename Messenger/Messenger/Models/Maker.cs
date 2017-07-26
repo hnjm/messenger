@@ -74,7 +74,7 @@ namespace Messenger.Models
             }
 
             var res = (exc == null && _position == _length);
-            lock (_locker)
+            lock (_loc)
             {
                 if (IsDisposed == false)
                 {
@@ -88,12 +88,12 @@ namespace Messenger.Models
         /// <summary>
         /// 处理传输请求
         /// </summary>
-        public void Transport_Requests(object sender, CommonEventArgs<(Guid, Socket)> e)
+        public void Transport_Requests(object sender, LinkEventArgs<(Guid, Socket)> e)
         {
-            var (key, soc) = e.Object;
+            var (key, soc) = e.Record;
             if (_key.Equals(key) == false || soc == null)
                 return;
-            lock (_locker)
+            lock (_loc)
             {
                 if (_started || _disposed)
                     return;

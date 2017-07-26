@@ -11,9 +11,9 @@ namespace Messenger
     /// <summary>
     /// ProfilePage.xaml 的交互逻辑
     /// </summary>
-    public partial class ProfilePage : Page
+    public partial class PageProfile : Page
     {
-        public ProfilePage()
+        public PageProfile()
         {
             InitializeComponent();
         }
