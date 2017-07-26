@@ -1,4 +1,5 @@
 ﻿using Messenger.Foundation;
+using Messenger.Foundation.Extensions;
 using System;
 using System.Globalization;
 using System.Windows.Data;

@@ -1,6 +1,7 @@
 ﻿using Messenger.Foundation;
 using Messenger.Models;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Xml;
@@ -71,7 +72,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Options), ex, "保存配置出错");
+                Trace.WriteLine(ex);
             }
             finally
             {
@@ -120,7 +121,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Options), ex, "读取配置出错");
+                Trace.WriteLine(ex);
             }
             return empty;
         }

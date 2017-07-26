@@ -52,7 +52,7 @@
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Genre}" Value="MessageText">
+                <DataTrigger Binding="{Binding Path=Path}" Value="text">
                     <Setter TargetName="controlShow" Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
@@ -73,7 +73,7 @@
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Genre}" Value="MessageImage">
+                <DataTrigger Binding="{Binding Path=Path}" Value="image">
                     <Setter TargetName="controlShow" Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
@@ -89,7 +89,7 @@
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Genre}" Value="FileInfo">
+                <DataTrigger Binding="{Binding Path=Path}" Value="file">
                     <Setter TargetName="controlShow" Property="Template">
                         <Setter.Value>
                             <ControlTemplate>

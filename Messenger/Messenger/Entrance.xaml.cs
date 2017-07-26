@@ -10,7 +10,7 @@ using System.Windows;
 namespace Messenger
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for Entrance.xaml
     /// </summary>
     public partial class Entrance : Window
     {

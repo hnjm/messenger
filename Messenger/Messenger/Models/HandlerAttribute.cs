@@ -1,18 +1,14 @@
-﻿using Messenger.Foundation;
-using System;
+﻿using System;
 
 namespace Messenger.Models
 {
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class HandlerAttribute : Attribute
     {
-        private PacketGenre _genre = PacketGenre.None;
+        private string _pth = null;
 
-        public PacketGenre Genre => _genre;
+        public string Path => _pth;
 
-        public HandlerAttribute(PacketGenre genre)
-        {
-            _genre = genre;
-        }
+        public HandlerAttribute(string path) => _pth = path;
     }
 }

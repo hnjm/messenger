@@ -1,6 +1,8 @@
-﻿using Mikodev.Network;
+﻿using Messenger.Foundation.Extensions;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -66,7 +68,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 服务器广播调用链
         /// </summary>
-        private EventHandler<PacketEventArgs> _srvbroa = null;
+        private EventHandler<GenericEventArgs<byte[]>> _srvbroa = null;
         /// <summary>
         /// 客户端列表
         /// </summary>
@@ -166,7 +168,7 @@ namespace Messenger.Foundation
                 {
                     if (soc != null)
                         soc.Close();
-                    Log.E(nameof(Server), ex, "接受连接出错.");
+                    Trace.WriteLine(ex);
                     continue;
                 }
                 // 后台处理新连接 并负责释放出错的连接
@@ -178,7 +180,7 @@ namespace Messenger.Foundation
                         }
                         catch (Exception ex)
                         {
-                            Log.E(nameof(Server), ex, "处理连接出错.");
+                            Trace.WriteLine(ex);
                             soc.Dispose();
                         }
                     });
@@ -300,21 +302,29 @@ namespace Messenger.Foundation
                     idl.Add(c.Key);
                 _OnCountChanged();
             }
-            var ids = Extension.GetPacket(ID, ID, PacketGenre.UserIDs, idl);
-            _srvbroa?.Invoke(this, new PacketEventArgs(ids));
+            var buf = PacketWriter.Serialize(new
+            {
+                source = ID,
+                target = ID,
+                path = "user.ids",
+                data = idl,
+            });
+            _srvbroa?.Invoke(this, new GenericEventArgs<byte[]>() { Source = this, Value = buf.GetBytes() });
         }
 
         /// <summary>
         /// 根据 ID 决定处理或转发客户端发来的消息
         /// </summary>
-        private void Client_Received(object sender, PacketEventArgs arg)
+        private void Client_Received(object sender, GenericEventArgs<byte[]> arg)
         {
-            var (tgt, src, gen) = arg;
+            var rea = new PacketReader(arg.Value);
+            var src = rea["source"].Pull<int>();
+            var tar = rea["target"].Pull<int>();
+            var pth = rea["path"].Pull<string>();
 
-            if (gen == PacketGenre.UserGroups)
+            if (tar == ID && pth == "user.groups")
             {
-                var rea = new PacketReader(arg.Stream.ToArray());
-                var lst = rea["groups"].PullList<int>().ToList();
+                var lst = rea["data"].PullList<int>().ToList();
                 lst.RemoveAll(r => r < ID == false);
                 lock (_locker)
                 {
@@ -322,14 +332,13 @@ namespace Messenger.Foundation
                     _groupsc[src] = lst;
                 }
             }
-
-            if (tgt == ID)
+            else if (tar == ID)
             {
                 _srvbroa?.Invoke(this, arg);
             }
-            else if (tgt > ID)
+            else if (tar > ID)
             {
-                _clients[tgt].Enqueue(arg.Buffer);
+                _clients[tar].Enqueue(arg.Value);
             }
             else
             {
@@ -339,8 +348,8 @@ namespace Messenger.Foundation
                     {
                         if (k == src)
                             continue;
-                        if (v.Contains(tgt))
-                            _clients[k].Enqueue(arg.Buffer);
+                        if (v.Contains(tar))
+                            _clients[k].Enqueue(arg.Value);
                     }
                 }
             }

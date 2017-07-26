@@ -1,10 +1,11 @@
 ﻿using Messenger.Extensions;
 using Messenger.Foundation;
+using Messenger.Foundation.Extensions;
 using Messenger.Models;
-using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -63,7 +64,7 @@ namespace Messenger.Modules
             }
             catch (SocketException ex)
             {
-                Log.E(nameof(Interact), ex, "连接服务器失败.");
+                Trace.WriteLine(ex);
                 clt?.Dispose();
                 throw;
             }
@@ -84,14 +85,10 @@ namespace Messenger.Modules
             Packets.OnHandled += ModulePacket_OnHandled;
             Transports.Expect.ListChanged += ModuleTrans_ListChanged;
             Profiles.Current.ID = id;
-            Enqueue(Server.ID, PacketGenre.UserProfile, Profiles.Current);
-            if (Profiles.ImageBuffer != null)
-                Enqueue(Server.ID, PacketGenre.UserImage, Profiles.ImageBuffer);
-            Enqueue(Server.ID, PacketGenre.UserRequest);
-            var lst = Profiles.GroupIDs;
-            if (lst != null)
-                Enqueue(Server.ID, PacketGenre.UserGroups, new PacketWriter().PushList("groups", lst).GetBytes());
-            return;
+
+            Posters.UserProfile(Server.ID);
+            Posters.UserRequest();
+            Posters.UserGroups();
         }
 
         [AutoSave(0)]
@@ -114,13 +111,12 @@ namespace Messenger.Modules
             Transports.Expect.ListChanged -= ModuleTrans_ListChanged;
         }
 
-        public static void Enqueue(int target, PacketGenre genre, object value = null)
+        public static void Enqueue(byte[] buffer)
         {
             var clt = _instance._client;
             if (clt == null)
                 return;
-            var pkt = Extension.GetPacket(target, clt.ID, genre, value);
-            clt.Enqueue(pkt);
+            clt.Enqueue(buffer);
         }
 
         /// <summary>
@@ -164,67 +160,8 @@ namespace Messenger.Modules
             }
         }
 
-        private static void Client_Shutdown(object sender, EventArgs e)
-        {
-            Entrance.ShowError("服务器连接已断开", _instance?._client?.Exception);
-        }
+        private static void Client_Shutdown(object sender, EventArgs e) => Entrance.ShowError("服务器连接已断开", _instance?._client?.Exception);
 
-        private static void Client_Received(object sender, PacketEventArgs e)
-        {
-            try
-            {
-                switch (e.Genre)
-                {
-                    case PacketGenre.MessageText:
-                        var msg = Xml.Deserialize<string>(e.Stream);
-                        Packets.Insert(e, msg);
-                        break;
-
-                    case PacketGenre.MessageImage:
-                        var buf = e.Stream?.ToArray();
-                        Packets.Insert(e, buf);
-                        break;
-
-                    case PacketGenre.UserIDs:
-                        var lst = Xml.Deserialize<List<int>>(e.Stream);
-                        Profiles.Remove(lst);
-                        break;
-
-                    case PacketGenre.UserImage:
-                        var str = Caches.SetBuffer(e.Stream.ToArray(), true);
-                        var pfl = Profiles.Query(e.Source);
-                        if (str != null && pfl != null)
-                            pfl.Image = str;
-                        break;
-
-                    case PacketGenre.UserProfile:
-                        var pro = Xml.Deserialize<Profile>(e.Stream);
-                        Profiles.Insert(pro);
-                        break;
-
-                    case PacketGenre.UserRequest:
-                        Enqueue(e.Source, PacketGenre.UserProfile, Profiles.Current);
-                        if (Profiles.ImageBuffer != null)
-                            Enqueue(e.Source, PacketGenre.UserImage, Profiles.ImageBuffer);
-                        break;
-
-                    case PacketGenre.FileInfo:
-                        var trs = Transports.Take(e);
-                        if (trs == null)
-                            break;
-                        var pkt = new Packet() { Source = e.Source, Target = ID, Groups = e.Source, Genre = PacketGenre.FileInfo, Value = trs };
-                        Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                var pks = Packets.Query(e.Source);
-                                pks.Add(pkt);
-                            });
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.E(nameof(Interact), ex, "处理消息出错.");
-            }
-        }
+        private static void Client_Received(object sender, GenericEventArgs<byte[]> e) => Routers.Handle(e.Value);
     }
 }

@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
 using System;
 using System.Diagnostics;
@@ -43,7 +42,7 @@ namespace Messenger
                 }
                 catch (Exception ex)
                 {
-                    Log.E(nameof(Transfer), ex, "启动资源管理器出错.");
+                    Trace.WriteLine(ex);
                 }
             }
             else if (sender == buttonStopAll)

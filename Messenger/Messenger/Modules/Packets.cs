@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -38,41 +39,36 @@ namespace Messenger.Modules
         /// 消息接收事件处理后
         /// </summary>
         public static event EventHandler<GenericEventArgs<Packet>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
-
-        /// <summary>
-        /// 补全消息记录 (自动判断消息类型)
-        /// </summary>
-        private static Packet SetPacket(Packet pkt, PacketGenre genre, object value)
+        
+        private static Packet SetPacket(Packet pkt, object value)
         {
-            if (value is string str && genre == PacketGenre.MessageText)
+            if (value is string str)
+            {
                 pkt.Value = str;
-            else if (value is byte[] byt && genre == PacketGenre.MessageImage)
-                pkt.Value = Caches.SetBuffer(byt, false);
-            else
-                throw new ApplicationException();
-            pkt.Genre = genre;
+                pkt.Path = "text";
+            }
+            else if (value is byte[] buf)
+            {
+                pkt.Value = Caches.SetBuffer(buf, false);
+                pkt.Path = "image";
+            }
+            else throw new ApplicationException();
             return pkt;
         }
 
-        /// <summary>
-        /// 插入一条消息记录
-        /// </summary>
-        public static Packet Insert(int gid, PacketGenre type, object obj)
+        public static Packet Insert(int gid, object obj)
         {
-            var rcd = new Packet() { Source = Interact.ID, Target = gid, Groups = gid };
-            SetPacket(rcd, type, obj);
-            Insert(rcd);
-            return rcd;
+            var pkt = new Packet() { Source = Interact.ID, Target = gid, Groups = gid };
+            SetPacket(pkt, obj);
+            Insert(pkt);
+            return pkt;
         }
 
-        /// <summary>
-        /// 插入一条消息记录
-        /// </summary>
-        public static Packet Insert(IPacketHeader header, object value)
+        public static Packet Insert(int source, int target, object value)
         {
-            int gid = (header.Target == Interact.ID) ? header.Source : header.Target;
-            var pkt = new Packet() { Source = header.Source, Target = header.Target, Groups = gid };
-            SetPacket(pkt, header.Genre, value);
+            var gid = target == Interact.ID ? source : target;
+            var pkt = new Packet() { Source = source, Target = target, Groups = gid };
+            SetPacket(pkt, value);
             Insert(pkt);
             OnReceived(pkt);
             return pkt;
@@ -109,18 +105,18 @@ namespace Messenger.Modules
                     try
                     {
                         cmd = new SQLiteCommand(_instance._connection);
-                        cmd.CommandText = "insert into Messages values(@sid, @tid, @gid, @tim, @typ, @msg)";
+                        cmd.CommandText = "insert into messages values(@sid, @tid, @gid, @tim, @typ, @msg)";
                         cmd.Parameters.Add(new SQLiteParameter("@sid", pkt.Source));
                         cmd.Parameters.Add(new SQLiteParameter("@tid", pkt.Target));
                         cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Groups));
                         cmd.Parameters.Add(new SQLiteParameter("@tim", pkt.Timestamp.ToBinary()));
-                        cmd.Parameters.Add(new SQLiteParameter("@typ", (long)pkt.Genre));
+                        cmd.Parameters.Add(new SQLiteParameter("@typ", pkt.Path));
                         cmd.Parameters.Add(new SQLiteParameter("@msg", str));
                         cmd.ExecuteNonQuery();
                     }
                     catch (Exception ex)
                     {
-                        Log.E(nameof(Packets), ex, "记录消息出错");
+                        Trace.WriteLine(ex);
                     }
                     finally
                     {
@@ -146,7 +142,7 @@ namespace Messenger.Modules
             try
             {
                 cmd = new SQLiteCommand(_instance._connection);
-                cmd.CommandText = "select * from Messages where GroupsID = @gid order by MessageTime desc limit 0,@max";
+                cmd.CommandText = "select * from messages where groups = @gid order by time desc limit 0,@max";
                 cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                 cmd.Parameters.Add(new SQLiteParameter("@max", max));
                 rdr = cmd.ExecuteReader();
@@ -157,7 +153,7 @@ namespace Messenger.Modules
                     rcd.Target = rdr.GetInt32(1);
                     rcd.Groups = rdr.GetInt32(2);
                     rcd.Timestamp = DateTime.FromBinary(rdr.GetInt64(3));
-                    rcd.Genre = (PacketGenre)rdr.GetInt64(4);
+                    rcd.Path = rdr.GetString(4);
                     rcd.Value = rdr.GetString(5);
                     lis.Add(rcd);
                 }
@@ -168,7 +164,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Packets), ex, "读取消息出错.");
+                Trace.WriteLine(ex);
                 return lst;
             }
             finally
@@ -195,15 +191,15 @@ namespace Messenger.Modules
                 con.Open();
                 cmd = new SQLiteCommand(con);
                 // 消息类型(枚举), 消息时间(时间戳) 均转换成整形存储
-                cmd.CommandText = "create table if not exists Messages(SourceID integer not null, TargetID integer not null, GroupsID integer not null, " +
-                    "MessageTime integer not null, MessageType integer not null, Message varchar not null)";
+                cmd.CommandText = "create table if not exists messages(source integer not null, target integer not null, groups integer not null, " +
+                    "time integer not null, path varchar not null, text varchar not null)";
                 cmd.ExecuteNonQuery();
                 // 确保连接有效
                 _instance._connection = con;
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Packets), ex, "数据库启用失败.");
+                Trace.WriteLine(ex);
                 con?.Dispose();
             }
             finally
@@ -227,14 +223,14 @@ namespace Messenger.Modules
                     try
                     {
                         cmd = new SQLiteCommand(_instance._connection);
-                        cmd.CommandText = "delete from Messages where GroupsID == @gid and MessageTime == @mrt";
+                        cmd.CommandText = "delete from messages where groups == @gid and time == @mrt";
                         cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
                         cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp.ToBinary()));
                         cmd.ExecuteNonQuery();
                     }
                     catch (Exception ex)
                     {
-                        Log.E(nameof(Packets), ex, "记录移除出错");
+                        Trace.WriteLine(ex);
                     }
                     finally
                     {
@@ -261,13 +257,13 @@ namespace Messenger.Modules
                     try
                     {
                         cmd = new SQLiteCommand(_instance._connection);
-                        cmd.CommandText = "delete from Messages where GroupsID == @gid";
+                        cmd.CommandText = "delete from messages where groups == @gid";
                         cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                         cmd.ExecuteNonQuery();
                     }
                     catch (Exception ex)
                     {
-                        Log.E(nameof(Packets), ex, "记录清空出错");
+                        Trace.WriteLine(ex);
                     }
                     finally
                     {

@@ -1,10 +1,9 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Messenger.Foundation
+namespace Messenger.Foundation.Extensions
 {
     /// <summary>
     /// 静态扩展类
@@ -67,7 +66,17 @@ namespace Messenger.Foundation
         public static void TimeoutInvoke(this Action action, int timeout)
         {
             var exc = default(Exception);
-            var thd = new Thread(() => { try { action.Invoke(); } catch (Exception e) { exc = e; } });
+            var thd = new Thread(() =>
+            {
+                try
+                {
+                    action.Invoke();
+                }
+                catch (Exception e)
+                {
+                    exc = e;
+                }
+            });
             thd.Start();
             if (thd.Join(timeout) == false)
                 throw new TimeoutException("委托执行超时.");
@@ -77,32 +86,23 @@ namespace Messenger.Foundation
         }
 
         /// <summary>
-        /// 创建一个数据包 根据消息类型判断使用默认模式 (基于 XML) 或 <see cref="PacketGenre.Raw"/> 模式
+        /// Run an delegate with try-finally, run next delegate if fail
         /// </summary>
-        /// <param name="target">接收者编号</param>
-        /// <param name="source">发送者编号</param>
-        /// <param name="genre">消息类型</param>
-        /// <param name="value">数据对象</param>
-        public static byte[] GetPacket(int target, int source, PacketGenre genre, object value = null)
+        public static void Invoke(Action act, Action fail)
         {
-            var hea = new PacketHeader(target, source, genre);
-            var hdr = ToBytes(hea);
-            if (value == null)
-                return hdr;
-            using (var str = new MemoryStream())
+            var tag = false;
+            try
             {
-                str.Write(hdr, 0, hdr.Length);
-                if ((genre & PacketGenre.Raw) != 0)
-                    if (value is byte[] buf)
-                        str.Write(buf, 0, buf.Length);
-                    else
-                        throw new ArgumentException();
-                else
-                    Xml.Serialize(str, value);
-                return str.ToArray();
+                act.Invoke();
+                tag = true;
+            }
+            finally
+            {
+                if (tag == false)
+                    fail.Invoke();
             }
         }
-
+        
         /// <summary>
         /// 数据大小换算 (保留 2 位小数)
         /// </summary>
@@ -156,16 +156,6 @@ namespace Messenger.Foundation
             var add = str.Substring(0, idx);
             var pot = str.Substring(idx + 1);
             return new IPEndPoint(IPAddress.Parse(add.Trim()), int.Parse(pot.Trim()));
-        }
-
-        /// <summary>
-        /// 解构 IPacketHeader 对象
-        /// </summary>
-        public static void Deconstruct(this IPacketHeader header, out int target, out int source, out PacketGenre genre)
-        {
-            target = header.Target;
-            source = header.Source;
-            genre = header.Genre;
         }
     }
 }

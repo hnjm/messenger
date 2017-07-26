@@ -50,22 +50,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConnectException.cs" />
     <Compile Include="Crypto.cs" />
-    <Compile Include="ExtentGeneric.cs" />
-    <Compile Include="ExtentNetwork.cs" />
+    <Compile Include="ErrorCode.cs" />
+    <Compile Include="Extensions\Collection.cs" />
+    <Compile Include="Extensions\Network.cs" />
     <Compile Include="Manageable.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="ExtentCommon.cs" />
-    <Compile Include="Transport.cs" />
-    <Compile Include="TransportGenre.cs" />
-    <Compile Include="Taker.cs" />
-    <Compile Include="Maker.cs" />
-    <Compile Include="Packet.cs" />
+    <Compile Include="Extensions\Common.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="Broadcast.cs" />
-    <Compile Include="Xml.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

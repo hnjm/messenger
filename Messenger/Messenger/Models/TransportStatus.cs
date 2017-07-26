@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace Messenger.Foundation
+namespace Messenger.Models
 {
     /// <summary>
     /// 文件传输状态

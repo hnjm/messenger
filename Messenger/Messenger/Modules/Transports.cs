@@ -99,25 +99,25 @@ namespace Messenger.Modules
 
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
 
-        private static Transports instance = new Transports();
+        private static Transports s_ins = new Transports();
 
-        public static long TimeTick => instance._watch?.ElapsedMilliseconds ?? 0L;
-        public static string SavePath { get => instance._savepath; set => instance._savepath = value; }
-        public static Transports Instance => instance;
-        public static BindingList<Cargo> Expect => instance._expect;
-        public static BindingList<Cargo> Takers => instance._takers;
-        public static BindingList<Cargo> Makers => instance._makers;
+        public static long TimeTick => s_ins._watch?.ElapsedMilliseconds ?? 0L;
+        public static string SavePath { get => s_ins._savepath; set => s_ins._savepath = value; }
+        public static Transports Instance => s_ins;
+        public static BindingList<Cargo> Expect => s_ins._expect;
+        public static BindingList<Cargo> Takers => s_ins._takers;
+        public static BindingList<Cargo> Makers => s_ins._makers;
 
-        private static void Trans_Changed(object sender, EventArgs e)
+        internal static void Trans_Changed(object sender, EventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    for (var i = 0; i < instance._expect.Count; i++)
+                    for (var i = 0; i < s_ins._expect.Count; i++)
                     {
-                        var tra = instance._expect[i].Transport;
+                        var tra = s_ins._expect[i].Transport;
                         if (tra == sender)
                         {
-                            instance._expect.RemoveAt(i);
+                            s_ins._expect.RemoveAt(i);
                             tra.Started -= Trans_Changed;
                             tra.Disposed -= Trans_Changed;
                             return;
@@ -126,62 +126,62 @@ namespace Messenger.Modules
                 });
         }
 
-        /// <summary>
-        /// 尝试解析文件消息 返回 <see cref="Cargo"/> 对象 (失败返回 null)
-        /// </summary>
-        public static Cargo Take(PacketEventArgs e)
-        {
-            var fil = default(Taker);
-            var inf = default(PacketReader);
-            try
-            {
-                inf = new PacketReader(e.Stream.ToArray());
-                fil = new Taker(inf, () => FindPath(instance._savepath, inf["filename"].Pull<string>()));
-            }
-            catch (Exception ex)
-            {
-                Log.E(nameof(Transports), ex, "接收文件出错.");
-                return null;
-            }
-            var trs = new Cargo(e.Source, fil);
-            Application.Current.Dispatcher.Invoke(() =>
-                {
-                    // 在注册事件之前加入列表
-                    instance._expect.Add(trs);
-                    instance._takers.Add(trs);
-                    fil.Started += Trans_Changed;
-                    fil.Disposed += Trans_Changed;
-                });
-            return trs;
-        }
+        ///// <summary>
+        ///// 尝试解析文件消息 返回 <see cref="Cargo"/> 对象 (失败返回 null)
+        ///// </summary>
+        //public static Cargo Take(PacketReader reader)
+        //{
+        //    var fil = default(Taker);
+        //    var inf = default(PacketReader);
+        //    try
+        //    {
+        //        inf = new PacketReader(reader["data"]);
+        //        fil = new Taker(inf, () => FindPath(s_ins._savepath, inf["filename"].Pull<string>()));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.E(nameof(Transports), ex, "接收文件出错.");
+        //        return null;
+        //    }
+        //    var trs = new Cargo(e.Source, fil);
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //        {
+        //            // 在注册事件之前加入列表
+        //            s_ins._expect.Add(trs);
+        //            s_ins._takers.Add(trs);
+        //            fil.Started += Trans_Changed;
+        //            fil.Disposed += Trans_Changed;
+        //        });
+        //    return trs;
+        //}
 
-        /// <summary>
-        /// 发送文件 返回 <see cref="Cargo"/> 对象 (失败返回 null)
-        /// </summary>
-        /// <param name="id">目标编号</param>
-        /// <param name="filepath">文件路径</param>
-        public static Cargo Make(int id, string filepath)
-        {
-            var fil = default(Maker);
-            try
-            {
-                fil = new Maker(filepath);
-            }
-            catch (Exception ex)
-            {
-                Entrance.ShowError("发送文件失败", ex);
-                return null;
-            }
-            var itm = new Cargo(id, fil);
-            Application.Current.Dispatcher.Invoke(() => instance._makers.Add(itm));
-            var inf = new PacketWriter().
-                Push("filename", fil.Name).
-                Push("filesize", fil.Length).
-                Push("guid", fil.Key).
-                PushList("endpoints", Interact.GetEndPoints());
-            Interact.Enqueue(id, PacketGenre.FileInfo, inf.GetBytes());
-            return itm;
-        }
+        ///// <summary>
+        ///// 发送文件 返回 <see cref="Cargo"/> 对象 (失败返回 null)
+        ///// </summary>
+        ///// <param name="id">目标编号</param>
+        ///// <param name="filepath">文件路径</param>
+        //public static Cargo Make(int id, string filepath)
+        //{
+        //    var fil = default(Maker);
+        //    try
+        //    {
+        //        fil = new Maker(filepath);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Entrance.ShowError("发送文件失败", ex);
+        //        return null;
+        //    }
+        //    var itm = new Cargo(id, fil);
+        //    Application.Current.Dispatcher.Invoke(() => s_ins._makers.Add(itm));
+        //    var inf = new PacketWriter().
+        //        Push("filename", fil.Name).
+        //        Push("filesize", fil.Length).
+        //        Push("guid", fil.Key).
+        //        PushList("endpoints", Interact.GetEndPoints());
+        //    // Interact.Enqueue(id, PacketGenre.FileInfo, inf.GetBytes());
+        //    return itm;
+        //}
 
         /// <summary>
         /// 移除所有 <see cref="IManager.IsDisposed"/> 为真的项目 返回被移除的项目
@@ -206,8 +206,8 @@ namespace Messenger.Modules
 
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    act.Invoke(instance._makers);
-                    act.Invoke(instance._takers);
+                    act.Invoke(s_ins._makers);
+                    act.Invoke(s_ins._takers);
                 });
 
             return lst;
@@ -219,9 +219,9 @@ namespace Messenger.Modules
         /// <param name="dir">目录路径</param>
         /// <param name="name">文件名</param>
         /// <exception cref="IOException"></exception>
-        public static string FindPath(string dir, string name)
+        public static string FindPath(string name)
         {
-            var dif = new DirectoryInfo(dir);
+            var dif = new DirectoryInfo(s_ins._savepath);
             if (!dif.Exists)
                 dif.Create();
             var pth = Path.Combine(dif.FullName, name);
@@ -242,13 +242,13 @@ namespace Messenger.Modules
             var pth = Options.GetOption(TransPathKey);
             if (string.IsNullOrEmpty(pth))
                 pth = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Received");
-            instance._savepath = pth;
+            s_ins._savepath = pth;
         }
 
         [AutoSave(4)]
         public static void Save()
         {
-            Options.SetOption(TransPathKey, instance._savepath);
+            Options.SetOption(TransPathKey, s_ins._savepath);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Messenger.Foundation;
 using Messenger.Modules;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -25,7 +26,8 @@ namespace Messenger
             {
                 Profiles.Current.Name = textboxName.Text;
                 Profiles.Current.Text = textboxText.Text;
-                Interact.Enqueue(Server.ID, PacketGenre.UserProfile, Profiles.Current);
+                // Interact.Enqueue(Server.ID, PacketGenre.UserProfile, Profiles.Current);
+                Posters.UserProfile(Server.ID);
             }
             else if (src == buttonImage)
             {
@@ -39,11 +41,12 @@ namespace Messenger
                     Profiles.ImageSource = ofd.FileName;
                     Profiles.ImageBuffer = buf;
                     Profiles.Current.Image = str;
-                    Interact.Enqueue(Server.ID, PacketGenre.UserImage, buf);
+                    // Interact.Enqueue(Server.ID, PacketGenre.UserImage, buf);
+                    Posters.UserProfile(Server.ID);
                 }
                 catch (Exception ex)
                 {
-                    Log.E(nameof(ProfileShower), ex, "设置头像出错.");
+                    Trace.WriteLine(ex);
                 }
             }
         }

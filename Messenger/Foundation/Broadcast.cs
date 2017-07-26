@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -96,7 +97,7 @@ namespace Messenger.Foundation
                 }
                 catch (Exception ex)
                 {
-                    Log.E(nameof(Broadcast), ex, "处理广播消息出错.");
+                    Trace.WriteLine(ex);
                 }
             }
         }

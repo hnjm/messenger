@@ -1,13 +1,16 @@
-﻿using Mikodev.Network;
+﻿using Messenger.Foundation;
+using Messenger.Foundation.Extensions;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Messenger.Foundation
+namespace Messenger.Models
 {
     /// <summary>
     /// 文件接收类 (线程安全)
@@ -55,13 +58,14 @@ namespace Messenger.Foundation
             var inf = default(FileInfo);
             var str = default(FileStream);
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            var dis = new Action(() =>
-                {
-                    soc?.Dispose();
-                    str?.Dispose();
-                    soc = null;
-                    str = null;
-                });
+
+            void close()
+            {
+                soc?.Dispose();
+                str?.Dispose();
+                soc = null;
+                str = null;
+            }
 
             foreach (var i in _ieps)
             {
@@ -75,25 +79,26 @@ namespace Messenger.Foundation
                 }
                 catch (Exception ex)
                 {
-                    Log.E(nameof(Taker), ex, "无法连接到远程端点.");
+                    Trace.WriteLine(ex);
                 }
             }
 
             if (flg == false)
             {
-                dis.Invoke();
-                throw new ApplicationException("无法与发送者建立连接, 网络不可达或对方已取消发送操作.");
+                close();
+                throw new ApplicationException("网络不可达或对方已取消发送操作.");
             }
 
             try
             {
-                soc.SendExt(Xml.Serialize(_key));
+                var buf = new PacketWriter().Push("data", _key);
+                soc.SendExt(buf.GetBytes());
                 inf = new FileInfo(_callback.Invoke());
                 str = new FileStream(inf.FullName, FileMode.CreateNew);
             }
             catch
             {
-                dis.Invoke();
+                close();
                 throw;
             }
 
@@ -104,7 +109,7 @@ namespace Messenger.Foundation
             {
                 if (IsDisposed)
                 {
-                    dis.Invoke();
+                    close();
                     throw new InvalidOperationException();
                 }
 
@@ -163,7 +168,7 @@ namespace Messenger.Foundation
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Taker), ex, "尝试删除未完全接收的文件出错.");
+                Trace.WriteLine(ex);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using Messenger.Foundation;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -34,7 +35,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Caches), ex, "读取配置出错");
+                Trace.WriteLine(ex);
             }
         }
 
@@ -86,7 +87,7 @@ namespace Messenger.Modules
             {
                 if (nothrow == false)
                     throw;
-                Log.E(nameof(Caches), ex, "写入缓存出错.");
+                Trace.WriteLine(ex);
                 return null;
             }
             finally

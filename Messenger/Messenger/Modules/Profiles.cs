@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using Messenger.Foundation.Extensions;
+using System.Diagnostics;
 
 namespace Messenger.Modules
 {
@@ -118,7 +120,7 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() =>
                 {
                     var res = Query(profile.ID, true);
-                    res.CopyFrom(profile, true);
+                    res.CopyFrom(profile);
                     var tmp = clt.Contains(r => r.ID == profile.ID);
                     if (tmp == false)
                         clt.Add(res);
@@ -182,7 +184,8 @@ namespace Messenger.Modules
             instance._grouptags = args;
             instance._groupids = ids;
             var gro = instance._groups;
-            Interact.Enqueue(Server.ID, PacketGenre.UserGroups, new PacketWriter().PushList("groups", ids).GetBytes());
+            // Interact.Enqueue(Server.ID, PacketGenre.UserGroups, new PacketWriter().PushList("groups", ids).GetBytes());
+            Posters.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
                 {
                     var lst = gro.Remove(r => ids.Contains(r.ID) == false);
@@ -260,7 +263,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Profiles), ex, " 载入用户配置失败.");
+                Trace.WriteLine(ex);
                 return;
             }
         }

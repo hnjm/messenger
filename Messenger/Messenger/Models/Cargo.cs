@@ -10,7 +10,7 @@ namespace Messenger.Models
     /// <summary>
     /// 包装一个 <see cref="Foundation.Transport"/> 对象 并提供传输控制和界面绑定功能
     /// </summary>
-    class Cargo : INotifyPropertyChanged
+    public class Cargo : INotifyPropertyChanged
     {
         private class _Record
         {

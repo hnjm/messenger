@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Messenger.Foundation
+namespace Messenger.Foundation.Extensions
 {
     public static partial class Extension
     {

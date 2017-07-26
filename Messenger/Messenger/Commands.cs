@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
 using System;
 using System.Diagnostics;
@@ -41,7 +40,7 @@ namespace Messenger
         private static void LargeImage_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
-            if (msg is null || msg.Genre != PacketGenre.MessageImage)
+            if (msg is null || msg.Path != "image")
                 e.CanExecute = false;
             else
                 e.CanExecute = true;
@@ -63,7 +62,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Commands), ex);
+                Trace.WriteLine(ex);
             }
         }
 
@@ -89,7 +88,7 @@ namespace Messenger
         private static void Copy_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var val = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
-            if (val == null || val.Genre != PacketGenre.MessageText)
+            if (val == null || val.Path != "text")
                 e.CanExecute = false;
             else
                 e.CanExecute = true;

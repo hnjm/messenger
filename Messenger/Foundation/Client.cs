@@ -1,7 +1,9 @@
-﻿using Mikodev.Network;
+﻿using Messenger.Foundation.Extensions;
+using Mikodev.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -26,7 +28,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public event EventHandler<PacketEventArgs> Received = null;
+        public event EventHandler<GenericEventArgs<byte[]>> Received = null;
         /// <summary>
         /// 传输请求事件
         /// </summary>
@@ -116,7 +118,7 @@ namespace Messenger.Foundation
                 tra = null;
             }
 
-            try
+            Extension.Invoke(() =>
             {
                 soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Extension.TimeoutInvoke(() => soc.Connect(ep), Server.DefaultTimeout);
@@ -141,12 +143,8 @@ namespace Messenger.Foundation
 
                 iep = res.endpoint;
                 aes = new AesManaged() { Key = rsa.Decrypt(res.aeskey, true), IV = rsa.Decrypt(res.aesiv, true) };
-            }
-            catch
-            {
-                close();
-                throw;
-            }
+            },
+            () => close());
 
             lock (_locker)
             {
@@ -184,11 +182,16 @@ namespace Messenger.Foundation
         /// <summary>
         /// 向待发队列尾插入一条消息
         /// </summary>
-        public void Enqueue(object sender, PacketEventArgs e)
+        public void Enqueue(object sender, GenericEventArgs<byte[]> e)
         {
-            if (e.Source == ID && e.Buffer != null)
+            //if (e.Source == ID && e.Buffer != null)
+            //    return;
+            //_messages.Enqueue(e.Buffer);
+
+            var rea = new PacketReader(e.Value);
+            if (rea["source"].Pull<int>() == ID)
                 return;
-            _messages.Enqueue(e.Buffer);
+            _messages.Enqueue(e.Value);
         }
 
         /// <summary>
@@ -200,13 +203,14 @@ namespace Messenger.Foundation
             {
                 while (_socket != null)
                 {
-                    var dst = Crypto.Decrypt(_socket.ReceiveExt());
-                    _OnReceived(new PacketEventArgs(dst));
+                    var buf = _socket.ReceiveExt();
+                    var dst = Crypto.Decrypt(buf);
+                    _OnReceived(new GenericEventArgs<byte[]>() { Source = this, Value = dst });
                 }
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Client), ex, "接收线程异常.");
+                Trace.WriteLine(ex);
                 _OnShutdown(ex);
             }
         }
@@ -225,7 +229,7 @@ namespace Messenger.Foundation
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Client), ex, "发送线程异常.");
+                Trace.WriteLine(ex);
                 _OnShutdown(ex);
             }
         }
@@ -240,7 +244,7 @@ namespace Messenger.Foundation
                     soc = _ftrans.Accept();
                     soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
                     var buf = soc.ReceiveExt();
-                    var key = Xml.Deserialize<Guid>(buf);
+                    var key = new PacketReader(buf)["data"].Pull<Guid>();
                     var req = new GenericEventArgs<(Guid, Socket)>() { Value = (key, soc) };
                     Requests?.Invoke(this, req);
                     if (req.Handled == false)
@@ -250,7 +254,7 @@ namespace Messenger.Foundation
                 {
                     if (soc != null)
                         soc.Dispose();
-                    Log.E(nameof(Client), ex, "监听线程异常.");
+                    Trace.WriteLine(ex);
                     continue;
                 }
             }
@@ -259,19 +263,20 @@ namespace Messenger.Foundation
         /// <summary>
         /// 内部信息处理函数 解析 ID 和控制字符串 并决定是否向上发送事件
         /// </summary>
-        private void _OnReceived(PacketEventArgs arg)
+        private void _OnReceived(GenericEventArgs<byte[]> arg)
         {
             try
             {
+                var rea = new PacketReader(arg.Value);
                 // 拦截连接控制事件
-                if (arg.Source == Server.ID && arg.Genre == PacketGenre.LinkShutdown)
+                if (rea["source"].Pull<int>() == Server.ID && rea["path"].Pull<string>() == "link.shutdown")
                     _OnShutdown();
                 else
                     Received?.Invoke(this, arg);
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Client), ex, "消息处理出错.");
+                Trace.WriteLine(ex);
             }
         }
 

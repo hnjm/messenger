@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Messenger.Foundation;
+using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Messenger.Foundation
+namespace Messenger.Models
 {
     /// <summary>
     /// 文件发送类 (事件驱动 线程安全)

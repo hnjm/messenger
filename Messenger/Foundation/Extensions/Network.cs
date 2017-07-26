@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace Messenger.Foundation
+namespace Messenger.Foundation.Extensions
 {
     public static partial class Extension
     {
@@ -35,8 +35,10 @@ namespace Messenger.Foundation
                 if (sub < 1)
                     break;
                 var len = socket.Receive(stream, length + index - sub, sub, SocketFlags.None, out var err);
-                if (len < 1)
+                if (err != SocketError.Success)
                     throw new SocketException((int)err);
+                if (len < 1)
+                    throw new SocketException((int)SocketError.ConnectionReset);
                 sub -= len;
             }
         }

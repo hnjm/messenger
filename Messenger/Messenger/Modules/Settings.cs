@@ -1,6 +1,7 @@
 ﻿using Messenger.Foundation;
 using Messenger.Models;
 using System;
+using System.Diagnostics;
 
 namespace Messenger.Modules
 {
@@ -25,7 +26,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Settings), ex, "读取配置出错");
+                Trace.WriteLine(ex);
             }
         }
 

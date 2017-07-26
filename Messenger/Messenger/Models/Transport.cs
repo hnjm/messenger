@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Messenger.Foundation;
+using System;
 using System.Threading.Tasks;
 
-namespace Messenger.Foundation
+namespace Messenger.Models
 {
     /// <summary>
     /// 文件传输基类

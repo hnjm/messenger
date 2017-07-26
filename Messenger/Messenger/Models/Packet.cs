@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Modules;
+﻿using Messenger.Modules;
 using System;
 
 namespace Messenger.Models
@@ -7,7 +6,7 @@ namespace Messenger.Models
     /// <summary>
     /// 消息记录
     /// </summary>
-    public class Packet : IPacketHeader
+    public class Packet
     {
         private int _target = 0;
         private int _source = 0;
@@ -16,7 +15,7 @@ namespace Messenger.Models
         private object _value = null;
         private Profile _profile = null;
         private DateTime _time = DateTime.Now;
-        private PacketGenre _genre = PacketGenre.None;
+        private string _path = null;
 
         /// <summary>
         /// 收信人编号
@@ -33,10 +32,10 @@ namespace Messenger.Models
         /// <summary>
         /// 消息类型
         /// </summary>
-        public PacketGenre Genre { get => _genre; set => _genre = value; }
+        public string Path { get => _path; set => _path = value; }
 
         /// <summary>
-        /// 底层数据 (怎么解读取决于 <see cref="Genre"/>)
+        /// 底层数据 (怎么解读取决于 <see cref="Path"/>)
         /// </summary>
         public object Value { get => _value; set => _value = value; }
         /// <summary>
@@ -51,7 +50,7 @@ namespace Messenger.Models
         {
             get
             {
-                if (_value is string str && Genre == PacketGenre.MessageText)
+                if (_value is string str && _path == "text")
                     return str;
                 return null;
             }
@@ -63,7 +62,7 @@ namespace Messenger.Models
         {
             get
             {
-                if (_image == null && _value is string str && Genre == PacketGenre.MessageImage)
+                if (_image == null && _value is string str && _path == "image")
                     _image = Caches.GetPath(str);
                 return _image;
             }

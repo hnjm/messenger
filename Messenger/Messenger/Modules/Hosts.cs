@@ -1,5 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Foundation;
+using Messenger.Foundation.Extensions;
 using Messenger.Models;
 using Mikodev.Network;
 using System;
@@ -81,8 +82,8 @@ namespace Messenger.Modules
             catch (Exception ex)
             {
                 if (ex.InnerException != null)
-                    Log.E(nameof(Hosts), ex.InnerException, "服务器搜索内部异常信息:");
-                Log.E(nameof(Hosts), ex, "服务器搜索结束.");
+                    Trace.WriteLine(ex.InnerException);
+                Trace.WriteLine(ex);
             }
 
             soc?.Dispose();
@@ -111,7 +112,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.E(nameof(Hosts), ex, "读取配置出错");
+                Trace.WriteLine(ex);
             }
             if (s_ins._broadcast != null)
                 lst.Add(s_ins._broadcast);
