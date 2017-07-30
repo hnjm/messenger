@@ -238,7 +238,7 @@ namespace Messenger.Foundation
                     soc = _ftrans.Accept();
                     soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
                     var buf = soc.ReceiveExt();
-                    var key = new PacketReader(buf)["data"].Pull<Guid>();
+                    var key = new PacketReader(buf).Pull<Guid>();
                     var req = new LinkEventArgs<(Guid, Socket)>() { Record = (key, soc) };
                     Requests?.Invoke(this, req);
                     if (req.Finish == false)

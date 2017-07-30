@@ -40,7 +40,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 默认连接限制
         /// </summary>
-        public const int DefaultCountLimit = 32;
+        public const int DefaultCountLimit = 128;
         /// <summary>
         /// 限制的最大连接数
         /// </summary>

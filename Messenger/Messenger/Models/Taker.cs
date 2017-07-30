@@ -17,7 +17,7 @@ namespace Messenger.Models
     /// </summary>
     public class Taker : Transport
     {
-        private string _filepath = null;
+        private string _path = null;
         private FileStream _stream = null;
         private Socket _socket = null;
         private Thread _thread = null;
@@ -40,7 +40,7 @@ namespace Messenger.Models
         }
 
         /// <summary>
-        /// 启动文件接收
+        /// 启动文件接收 失败时自动调用 <see cref="Dispose(bool)"/>
         /// </summary>
         public override void Start()
         {
@@ -54,65 +54,58 @@ namespace Messenger.Models
                 _OnStarted();
             }
 
-            var flg = false;
+            var soc = default(Socket);
             var inf = default(FileInfo);
             var str = default(FileStream);
-            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
-            void close()
+            void _start()
+            {
+                for (int i = 0; i < _ieps.Count && soc == null; i++)
+                {
+                    try
+                    {
+                        soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                        Extension.TimeoutInvoke(() => soc.Connect(_ieps[i]), Server.DefaultTimeout);
+                        soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
+                    }
+                    catch (Exception ex)
+                    {
+                        soc.Dispose();
+                        soc = null;
+                        Trace.WriteLine(ex);
+                    }
+                }
+
+                if (soc == null)
+                    throw new ApplicationException("Network is unreachable.");
+
+                var buf = PacketWriter.Serialize(_key);
+                soc.SendExt(buf.GetBytes());
+                inf = new FileInfo(_callback.Invoke());
+                str = new FileStream(inf.FullName, FileMode.CreateNew);
+
+                _name = inf.Name;
+                _path = inf.FullName;
+
+                lock (_loc)
+                {
+                    if (_disposed)
+                        throw new InvalidOperationException();
+                    _socket = soc;
+                    _stream = str;
+                    _thread = new Thread(_Taker);
+                    _thread.Start();
+                }
+            }
+
+            Extension.Invoke(() => _start(), () =>
             {
                 soc?.Dispose();
                 str?.Dispose();
                 soc = null;
                 str = null;
-            }
-
-            foreach (var i in _ieps)
-            {
-                if (flg == true)
-                    break;
-                try
-                {
-                    Extension.TimeoutInvoke(() => soc.Connect(i), Server.DefaultTimeout);
-                    soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
-                    flg = true;
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine(ex);
-                }
-            }
-
-            if (flg == false)
-            {
-                close();
-                throw new ApplicationException("网络不可达或对方已取消发送操作.");
-            }
-
-            Extension.Invoke(() =>
-            {
-                var buf = new PacketWriter().Push("data", _key);
-                soc.SendExt(buf.GetBytes());
-                inf = new FileInfo(_callback.Invoke());
-                str = new FileStream(inf.FullName, FileMode.CreateNew);
-            }, () => close());
-
-            _name = inf.Name;
-            _filepath = inf.FullName;
-
-            lock (_loc)
-            {
-                if (_disposed)
-                {
-                    close();
-                    throw new InvalidOperationException();
-                }
-
-                _socket = soc;
-                _stream = str;
-                _thread = new Thread(_Taker);
-                _thread.Start();
-            }
+                Dispose();
+            });
         }
 
         /// <summary>
@@ -121,27 +114,28 @@ namespace Messenger.Models
         private void _Taker()
         {
             var exc = default(Exception);
+            void _receive()
+            {
+                _stream.Seek(_position, SeekOrigin.Begin);
+                var sub = (long)short.MaxValue;
+                if (_position + sub > _length)
+                    sub = _length - _position;
+                var buf = new byte[sub];
+                int len = _socket.Receive(buf, 0, (int)sub, SocketFlags.None, out var err);
+                if (len < 1)
+                    throw new SocketException((int)SocketError.ConnectionReset);
+                _stream.Write(buf, 0, len);
+                _position += len;
+            }
+
             try
             {
-                while (_socket != null)
-                {
-                    if (_position >= _length)
-                        break;
-                    _stream.Seek(_position, SeekOrigin.Begin);
-                    var len = (long)short.MaxValue;
-                    if (_position + len > _length)
-                        len = _length - _position;
-                    var buf = new byte[len];
-                    int l = _socket.Receive(buf, 0, (int)len, SocketFlags.None, out var err);
-                    if (l < 1)
-                        throw new SocketException((int)err);
-                    _stream.Write(buf, 0, l);
-                    _position += l;
-                }
+                while (_socket != null && _position < _length)
+                    _receive();
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                exc = ex;
+                exc = e;
             }
 
             var res = (exc == null && _position == _length);
@@ -157,9 +151,8 @@ namespace Messenger.Models
 
             try
             {
-                if (res == false && File.Exists(_filepath))
-                    File.Delete(_filepath);
-                return;
+                if (res == false && File.Exists(_path))
+                    File.Delete(_path);
             }
             catch (Exception ex)
             {

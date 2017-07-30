@@ -24,7 +24,7 @@ namespace Messenger.Launcher
         {
             Trace.Listeners.Add(new Logger($"{nameof(Launcher)}-{ DateTime.Now:yyyyMMdd}.log"));
 
-            var nam = "Messenger Server";
+            var nam = "Default Server";
             var max = Server.DefaultCountLimit;
             var pot = Server.DefaultPort;
             var bro = Broadcast.DefaultPort;

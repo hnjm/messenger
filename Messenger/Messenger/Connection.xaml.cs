@@ -17,7 +17,7 @@ namespace Messenger
     /// </summary>
     public partial class Connection : Page
     {
-        private class _TmpObj
+        private class _Temp
         {
             public string I { get; set; } = string.Empty;
             public string P { get; set; } = string.Empty;
@@ -31,7 +31,7 @@ namespace Messenger
         public Connection()
         {
             InitializeComponent();
-            gridTable.DataContext = new _TmpObj();
+            gridTable.DataContext = new _Temp();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)

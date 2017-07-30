@@ -66,27 +66,18 @@ namespace Messenger
 
             if (tag.Equals("Play"))
             {
-                var obj = await Task.Run(() =>
-                    {
-                        try
-                        {
-                            con.Start();
-                            return null;
-                        }
-                        catch (Exception ex)
-                        {
-                            con.Close();
-                            return ex;
-                        }
-                    });
-                if (obj != null)
-                    Entrance.ShowError("接收文件失败", obj);
-                return;
+                try
+                {
+                    await Task.Run(() => con.Start());
+                }
+                catch (Exception ex)
+                {
+                    Entrance.ShowError("接收文件失败", ex);
+                }
             }
-            if (tag.Equals("Stop"))
+            else if (tag.Equals("Stop"))
             {
                 con.Close();
-                return;
             }
         }
     }

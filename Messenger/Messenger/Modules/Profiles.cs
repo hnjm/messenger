@@ -242,7 +242,7 @@ namespace Messenger.Modules
         {
             try
             {
-                instance._local.ID = int.Parse(Options.GetOption(KeyCode, 1.ToString()));
+                instance._local.ID = int.Parse(Options.GetOption(KeyCode, new Random().Next(1, int.MaxValue).ToString()));
                 instance._local.Name = Options.GetOption(KeyName);
                 instance._local.Text = Options.GetOption(KeyText);
                 var lbs = Options.GetOption(KeyLabel);

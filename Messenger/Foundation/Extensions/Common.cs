@@ -16,18 +16,19 @@ namespace Messenger.Foundation.Extensions
         /// <summary>
         /// Run an delegate with try-finally, run next delegate if fail
         /// </summary>
-        public static void Invoke(Action act, Action fail)
+        public static void Invoke(Action action, params Action[] failure)
         {
-            var tag = false;
+            var result = false;
             try
             {
-                act.Invoke();
-                tag = true;
+                action.Invoke();
+                result = true;
             }
             finally
             {
-                if (tag == false)
-                    fail.Invoke();
+                if (result == false && failure != null)
+                    foreach (var fun in failure)
+                        fun.Invoke();
             }
         }
     }
