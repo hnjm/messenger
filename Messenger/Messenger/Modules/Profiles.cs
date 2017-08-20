@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 
 namespace Messenger.Modules
 {
-    class Profiles : INotifyPropertyChanged
+    class Profiles : INotifyPropertyChanging, INotifyPropertyChanged
     {
         public const int GroupLimit = 32;
         public const string KeyCode = "profile-code";
@@ -36,38 +37,37 @@ namespace Messenger.Modules
         public bool HasClient
         {
             get => _hasclient;
-            set
-            {
-                _hasclient = value;
-                OnPropertyChanged(nameof(HasClient));
-            }
+            set => _EmitChange(ref _hasclient, value);
         }
 
         public bool HasGroups
         {
             get => _hasgroups;
-            set
-            {
-                _hasgroups = value;
-                OnPropertyChanged(nameof(HasGroups));
-            }
+            set => _EmitChange(ref _hasgroups, value);
         }
 
         public bool HasRecent
         {
             get => _hasrecent;
-            set
-            {
-                _hasrecent = value;
-                OnPropertyChanged(nameof(HasRecent));
-            }
+            set => _EmitChange(ref _hasrecent, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        private void _EmitChange<T>(ref T source, T target, [CallerMemberName] string name = null)
+        {
+            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(name));
+            if (Equals(source, target))
+                return;
+            source = target;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
         private Profiles()
         {
-            Profile.StaticPropertyChanged += (s, e) =>
+            Profile.InstancePropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName.Equals(nameof(Profile.Hint)))
                         OnChanged();
@@ -76,8 +76,6 @@ namespace Messenger.Modules
             _groups.ListChanged += (s, e) => OnChanged();
             _recent.ListChanged += (s, e) => OnChanged();
         }
-
-        private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         /// <summary>
         /// 重新计算未读消息数量

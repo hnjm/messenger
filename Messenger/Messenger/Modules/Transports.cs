@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -32,34 +33,33 @@ namespace Messenger.Modules
         public bool HasExcept
         {
             get => _hasexcept;
-            set
-            {
-                _hasexcept = value;
-                OnPropertyChanged(nameof(HasExcept));
-            }
+            set => _EmitChange(ref _hasexcept, value);
         }
 
         public bool HasTakers
         {
             get => _hastakers;
-            set
-            {
-                _hastakers = value;
-                OnPropertyChanged(nameof(HasTakers));
-            }
+            set => _EmitChange(ref _hastakers, value);
         }
 
         public bool HasMakers
         {
             get => _hasmakers;
-            set
-            {
-                _hasmakers = value;
-                OnPropertyChanged(nameof(HasMakers));
-            }
+            set => _EmitChange(ref _hasmakers, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        private void _EmitChange<T>(ref T source, T target, [CallerMemberName] string name = null)
+        {
+            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(name));
+            if (Equals(source, target))
+                return;
+            source = target;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
 
         private Transports()
         {
@@ -93,8 +93,6 @@ namespace Messenger.Modules
                 HasMakers = _makers.Count > 0;
         }
 
-        private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
 
         private static Transports s_ins = new Transports();
@@ -123,7 +121,7 @@ namespace Messenger.Modules
                     }
                 });
         }
-        
+
         /// <summary>
         /// 移除所有 <see cref="IManager.IsDisposed"/> 为真的项目 返回被移除的项目
         /// </summary>

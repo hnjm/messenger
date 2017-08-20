@@ -26,8 +26,8 @@ namespace Messenger.Modules
         /// </summary>
         private SQLiteConnection _connection = null;
         private ConcurrentDictionary<int, BindingList<Packet>> _messages = new ConcurrentDictionary<int, BindingList<Packet>>();
-        private event EventHandler<LinkEventArgs<Packet>> _Receiving = null;
-        private event EventHandler<LinkEventArgs<Packet>> _OnHandled = null;
+        private EventHandler<LinkEventArgs<Packet>> _Receiving = null;
+        private EventHandler<LinkEventArgs<Packet>> _OnHandled = null;
 
         private static Packets _instance = null;
 
@@ -39,7 +39,7 @@ namespace Messenger.Modules
         /// 消息接收事件处理后
         /// </summary>
         public static event EventHandler<LinkEventArgs<Packet>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
-        
+
         private static Packet SetPacket(Packet pkt, object value)
         {
             if (value is string str)

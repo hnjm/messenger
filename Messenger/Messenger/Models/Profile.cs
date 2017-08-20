@@ -1,79 +1,72 @@
 ﻿using Messenger.Foundation;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Messenger.Models
 {
-    public class Profile : INotifyPropertyChanged
+    public class Profile : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        public static event PropertyChangedEventHandler StaticPropertyChanged;
+        public static event PropertyChangedEventHandler InstancePropertyChanged;
+
+        public static event PropertyChangingEventHandler InstancePropertyChanging;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string name)
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        private void _EmitChange<T>(ref T source, T target, [CallerMemberName] string name = null)
         {
-            var arg = new PropertyChangedEventArgs(name);
-            PropertyChanged?.Invoke(this, arg);
-            StaticPropertyChanged?.Invoke(this, arg);
+            var eva = new PropertyChangingEventArgs(name);
+            PropertyChanging?.Invoke(this, eva);
+            InstancePropertyChanging?.Invoke(this, eva);
+
+            if (Equals(source, target))
+                return;
+            source = target;
+
+            var evb = new PropertyChangedEventArgs(name);
+            PropertyChanged?.Invoke(this, evb);
+            InstancePropertyChanged?.Invoke(this, evb);
         }
 
-        protected int _id = 0;
-        protected int _hint = 0;
-        protected string _name = null;
-        protected string _text = null;
-        protected string _imag = null;
-
-        public int ID
-        {
-            get => _id;
-            set
-            {
-                _id = value;
-                OnPropertyChanged(nameof(ID));
-            }
-        }
-
-        public int Hint
-        {
-            get => _hint;
-            set
-            {
-                _hint = value;
-                OnPropertyChanged(nameof(Hint));
-            }
-        }
+        private int _id = 0;
+        private int _hint = 0;
+        private string _name = null;
+        private string _text = null;
+        private string _imag = null;
 
         public bool IsClient => _id > Server.ID;
 
         public bool IsGroups => _id < Server.ID;
 
+        public int ID
+        {
+            get => _id;
+            set => _EmitChange(ref _id, value);
+        }
+
+        public int Hint
+        {
+            get => _hint;
+            set => _EmitChange(ref _hint, value);
+        }
+
         public string Name
         {
             get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged(nameof(Name));
-            }
+            set => _EmitChange(ref _name, value);
         }
 
         public string Text
         {
             get => _text;
-            set
-            {
-                _text = value;
-                OnPropertyChanged(nameof(Text));
-            }
+            set => _EmitChange(ref _text, value);
         }
 
         public string Image
         {
             get => _imag;
-            set
-            {
-                _imag = value;
-                OnPropertyChanged(nameof(Image));
-            }
+            set => _EmitChange(ref _imag, value);
         }
 
         public Profile CopyFrom(Profile profile, bool ignoreid = true)
