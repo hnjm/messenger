@@ -59,8 +59,8 @@
     <ApplicationIcon>Client.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mikodev.Exchange, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mikodev.Exchange.1.1.0\lib\net451\Mikodev.Exchange.dll</HintPath>
+    <Reference Include="Mikodev.Exchange, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mikodev.Exchange.1.1.2\lib\net451\Mikodev.Exchange.dll</HintPath>
     </Reference>
     <Reference Include="PresentationFramework.Aero" />
     <Reference Include="PresentationFramework.Classic" />
@@ -270,6 +270,10 @@
     <ProjectReference Include="..\Foundation\Foundation.csproj">
       <Project>{98b87ff4-c4c7-456e-bc6f-08f6ed238bab}</Project>
       <Name>Foundation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Links\Links.csproj">
+      <Project>{a3ecbe4a-2d6a-490d-b8b5-6768a1253213}</Project>
+      <Name>Links</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
