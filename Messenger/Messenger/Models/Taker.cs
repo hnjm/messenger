@@ -1,6 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Foundation.Extensions;
-using Mikodev.Network;
+﻿using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
@@ -58,15 +57,16 @@ namespace Messenger.Models
             var inf = default(FileInfo);
             var str = default(FileStream);
 
-            void _start()
+            async Task start()
             {
                 for (int i = 0; i < _ieps.Count && soc == null; i++)
                 {
                     try
                     {
                         soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        Extension.TimeoutInvoke(() => soc.Connect(_ieps[i]), Server.DefaultTimeout);
-                        soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
+                        if (Task.Run(() => soc.Connect(_ieps[i])).Wait(Links.Timeout) == false)
+                            throw new TimeoutException("Transport taker timeout.");
+                        soc._SetKeepAlive();
                     }
                     catch (Exception ex)
                     {
@@ -80,7 +80,7 @@ namespace Messenger.Models
                     throw new ApplicationException("Network is unreachable.");
 
                 var buf = PacketWriter.Serialize(_key);
-                soc.SendExt(buf.GetBytes());
+                await soc._SendAsync(buf.GetBytes());
                 inf = new FileInfo(_callback.Invoke());
                 str = new FileStream(inf.FullName, FileMode.CreateNew);
 
@@ -98,13 +98,16 @@ namespace Messenger.Models
                 }
             }
 
-            Extension.Invoke(() => _start(), () =>
+            start().ContinueWith(t =>
             {
-                soc?.Dispose();
-                str?.Dispose();
-                soc = null;
-                str = null;
-                Dispose();
+                if (t.Exception != null)
+                {
+                    soc?.Dispose();
+                    str?.Dispose();
+                    soc = null;
+                    str = null;
+                    Dispose();
+                }
             });
         }
 
@@ -121,7 +124,7 @@ namespace Messenger.Models
                 if (_position + sub > _length)
                     sub = _length - _position;
                 var buf = new byte[sub];
-                int len = _socket.Receive(buf, 0, (int)sub, SocketFlags.None, out var err);
+                int len = _socket.Receive(buf, 0, (int)sub, SocketFlags.None);
                 if (len < 1)
                     throw new SocketException((int)SocketError.ConnectionReset);
                 _stream.Write(buf, 0, len);

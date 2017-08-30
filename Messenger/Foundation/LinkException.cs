@@ -3,7 +3,7 @@
 namespace Messenger.Foundation
 {
     [Serializable]
-    public sealed class LinkException : ApplicationException
+    public sealed class LinkOldException : ApplicationException
     {
         private ErrorCode _error = ErrorCode.None;
 
@@ -11,7 +11,7 @@ namespace Messenger.Foundation
 
         public override string Message => GetMessage(_error);
 
-        public LinkException(ErrorCode code) => _error = code;
+        public LinkOldException(ErrorCode code) => _error = code;
 
         public static string GetMessage(ErrorCode code)
         {

@@ -1,11 +1,11 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Network;
 
 namespace Messenger.Handlers
 {
     [Handler("msg")]
-    public class Paper : Router
+    public class Paper : LinkPacket
     {
         [Handler("text")]
         public void Text()

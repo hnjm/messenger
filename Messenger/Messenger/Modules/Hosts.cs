@@ -1,6 +1,4 @@
 ﻿using Messenger.Extensions;
-using Messenger.Foundation;
-using Messenger.Foundation.Extensions;
 using Messenger.Models;
 using Mikodev.Network;
 using System;
@@ -10,13 +8,13 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Messenger.Modules
 {
     class Hosts
     {
         public const int DefaultTimeout = 1000;
-        public const int DefaultBufferSize = 32 * 1024;
 
         public const string KeyLast = "server-last";
         public const string KeyList = "server-list";
@@ -39,50 +37,48 @@ namespace Messenger.Modules
         public static IEnumerable<Host> Refresh()
         {
             var lst = new List<Host>();
-            var buf = new byte[DefaultBufferSize];
-            var soc = default(Socket);
+            var buf = new byte[Links.Buffer];
+            var soc = new Socket(SocketType.Dgram, ProtocolType.Udp);
             var wth = new Stopwatch();
-            var txt = new PacketWriter().Push("protocol", Server.Protocol).GetBytes();
-            var act = new Action(() =>
+            var txt = new PacketWriter().Push("protocol", Links.Protocol).GetBytes();
+            void action()
+            {
+                while (soc != null)
                 {
-                    while (soc != null)
+                    var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
+                    var len = soc.ReceiveFrom(buf, ref iep);
+                    var tmp = new byte[len];
+                    Array.Copy(buf, 0, tmp, 0, len);
+                    var rea = new PacketReader(tmp);
+                    var inf = new Host()
                     {
-                        var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
-                        var len = soc.ReceiveFrom(buf, ref iep);
-                        var tmp = new byte[len];
-                        Array.Copy(buf, 0, tmp, 0, len);
-                        var rea = new PacketReader(tmp);
-                        var inf = new Host()
-                        {
-                            Protocol = rea["protocol"].Pull<string>(),
-                            Port = rea["port"].Pull<int>(),
-                            Name = rea["name"].Pull<string>(),
-                            Count = rea["count"].Pull<int>(),
-                            CountLimit = rea["limit"].Pull<int>(),
-                        };
+                        Protocol = rea["protocol"].Pull<string>(),
+                        Port = rea["port"].Pull<int>(),
+                        Name = rea["name"].Pull<string>(),
+                        Count = rea["count"].Pull<int>(),
+                        CountLimit = rea["limit"].Pull<int>(),
+                    };
 
-                        if (!inf.Protocol.Equals(Server.Protocol))
-                            continue;
-                        inf.Address = (iep as IPEndPoint).Address;
-                        inf.Delay = wth.ElapsedMilliseconds;
-                        if (lst.Find((r) => r.Equals(inf)) == null)
-                            lst.Add(inf);
-                    }
-                });
+                    if (!inf.Protocol.Equals(Links.Protocol))
+                        continue;
+                    inf.Address = (iep as IPEndPoint).Address;
+                    inf.Delay = wth.ElapsedMilliseconds;
+                    if (lst.Find((r) => r.Equals(inf)) == null)
+                        lst.Add(inf);
+                }
+            }
             try
             {
-                soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
                 soc.Bind(new IPEndPoint(IPAddress.Any, 0));
                 wth.Start();
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                Extension.TimeoutInvoke(act, DefaultTimeout);
+                if (Task.Run(new Action(action)).Wait(DefaultTimeout) == false)
+                    throw new TimeoutException();
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
-                    Trace.WriteLine(ex.InnerException);
                 Trace.WriteLine(ex);
             }
 
@@ -100,7 +96,7 @@ namespace Messenger.Modules
             var lst = new List<IPEndPoint>();
             try
             {
-                var pot = Options.GetOption(KeyPort, Broadcast.DefaultPort.ToString());
+                var pot = Options.GetOption(KeyPort, Links.BroadcastPort.ToString());
                 if (pot != null)
                     s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
                 var str = Options.GetOption(KeyLast);
@@ -108,7 +104,7 @@ namespace Messenger.Modules
                 var sts = Options.GetOption(KeyList) ?? string.Empty;
                 var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in arr)
-                    lst.Add(s.ToEndPoint());
+                    lst.Add(s._ToEndPoint());
             }
             catch (Exception ex)
             {

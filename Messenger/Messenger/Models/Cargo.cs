@@ -56,10 +56,10 @@ namespace Messenger.Models
 
             if (val is Maker mak)
             {
-                Interact.Requests += mak.Transport_Requests;
+                Linkers.Requests += mak.Transport_Requests;
                 val.Disposed += delegate
                     {
-                        Interact.Requests -= mak.Transport_Requests;
+                        Linkers.Requests -= mak.Transport_Requests;
                     };
             }
         }

@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Modules;
+﻿using Messenger.Modules;
 using System;
 using System.Diagnostics;
 using System.Windows;
@@ -19,7 +18,7 @@ namespace Messenger
         {
             base.OnStartup(e);
 
-            Trace.Listeners.Add(new Logger($"{nameof(Messenger)}-{DateTime.Now:yyyyMMdd}.log"));
+            // Trace.Listeners.Add(new Logger($"{nameof(Messenger)}-{DateTime.Now:yyyyMMdd}.log"));
             EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
 
             DispatcherUnhandledException += (s, arg) =>
@@ -31,7 +30,7 @@ namespace Messenger
 
             SessionEnding += (s, arg) =>
             {
-                Interact.Close();
+                Linkers.Close();
             };
         }
     }

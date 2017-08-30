@@ -1,6 +1,6 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Network;
 using System;
 using System.Diagnostics;
 using System.Windows;
@@ -8,7 +8,7 @@ using System.Windows;
 namespace Messenger.Handlers
 {
     [Handler("file")]
-    public class Thing : Router
+    public class Thing : LinkPacket
     {
         [Handler("info")]
         public void Take()
@@ -31,7 +31,7 @@ namespace Messenger.Handlers
                 tak.Started += Transports.Trans_Changed;
                 tak.Disposed += Transports.Trans_Changed;
             });
-            var pkt = new Packet() { Source = Source, Target = Interact.ID, Groups = Source, Path = "file", Value = trs };
+            var pkt = new Packet() { Source = Source, Target = Linkers.ID, Groups = Source, Path = "file", Value = trs };
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var pks = Packets.Query(Source);

@@ -2,7 +2,7 @@
 
 namespace Messenger.Foundation
 {
-    public class LinkEventArgs<T> : EventArgs
+    public class LinkOldEventArgs<T> : EventArgs
     {
         public T Record { get; set; } = default(T);
 

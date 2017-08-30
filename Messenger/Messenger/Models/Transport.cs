@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace Messenger.Models
@@ -7,8 +6,12 @@ namespace Messenger.Models
     /// <summary>
     /// 文件传输基类
     /// </summary>
-    public abstract class Transport : Manageable
+    public abstract class Transport
     {
+        protected bool _started = false;
+        protected bool _disposed = false;
+        protected object _loc = new object();
+
         protected long _length = 0;
         protected long _position = 0;
         protected string _name = null;
@@ -58,5 +61,13 @@ namespace Messenger.Models
         /// 触发 <see cref="Disposed"/> 事件 (后台执行)
         /// </summary>
         protected void _OnDisposed() => Task.Run(() => Disposed?.Invoke(this, new EventArgs()));
+
+        public virtual bool CanStart => IsStarted == false && IsDisposed == false;
+        public virtual bool IsStarted => _started;
+        public virtual bool IsDisposed => _disposed;
+
+        public virtual void Start() { }
+        public void Dispose() { lock (_loc) { Dispose(true); } }
+        protected abstract void Dispose(bool flag);
     }
 }

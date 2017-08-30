@@ -109,7 +109,7 @@ namespace Messenger
                     if (add == false)
                         hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
                     var iep = new IPEndPoint(hst, pot);
-                    Interact.Start(uid, iep);
+                    Linkers.Start(uid, iep);
                     Hosts.Name = hos;
                     Hosts.Port = pot;
                     flg = true;

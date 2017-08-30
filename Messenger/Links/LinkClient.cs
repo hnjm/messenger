@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Network
 {
-    public sealed class LinkClient
+    public sealed class LinkClient : IDisposable
     {
         internal bool _started = false;
         internal bool _disposed = false;
@@ -24,9 +21,10 @@ namespace Mikodev.Network
 
         internal readonly ConcurrentQueue<byte[]> _msgs = new ConcurrentQueue<byte[]>();
         internal Socket _socket = null;
-        internal Socket _trans = null;
 
         public int ID => _id;
+
+        public bool IsRunning => _disposed == false && _started == true;
 
         public Exception Exception => _except;
 
@@ -48,8 +46,8 @@ namespace Mikodev.Network
                     throw new InvalidOperationException();
                 _started = true;
                 _socket = socket;
-                Task.Run(async () => await _Sender()).ContinueWith(t => _Close(t.Exception));
-                Task.Run(async () => await _Receiver()).ContinueWith(t => _Close(t.Exception));
+                _Sender().ContinueWith(t => _Shutdown(t.Exception));
+                _Receiver().ContinueWith(t => _Shutdown(t.Exception));
             }
         }
 
@@ -119,10 +117,8 @@ namespace Mikodev.Network
                 }
 
                 _socket = soc;
-                _trans = tra;
-
-                Task.Run(async () => await _Sender()).ContinueWith(t => _Close(t.Exception));
-                Task.Run(async () => await _Receiver()).ContinueWith(t => _Close(t.Exception));
+                _Sender().ContinueWith(t => _Shutdown(t.Exception));
+                _Receiver().ContinueWith(t => _Shutdown(t.Exception));
             }
         }
 
@@ -131,14 +127,6 @@ namespace Mikodev.Network
             if (buffer == null)
                 throw new LinkException(LinkError.AssertFailed);
             _msgs.Enqueue(buffer);
-        }
-
-        public void Enqueue(object sender, LinkEventArgs<LinkPacket> e)
-        {
-            var rcd = e.Record;
-            if (rcd.Source == _id)
-                return;
-            _msgs.Enqueue(rcd.Buffer);
         }
 
         internal async Task _Sender()
@@ -172,30 +160,33 @@ namespace Mikodev.Network
         internal void _Received(LinkPacket packet)
         {
             if (packet.Source == Links.ID && string.Equals(packet.Path, "link.shutdown"))
-                _Close();
+                _Shutdown();
             else
                 Received?.Invoke(this, new LinkEventArgs<LinkPacket>() { Source = this, Record = packet });
         }
 
-        internal void _Close(object ex = null)
+        internal void _Shutdown(object ex = null)
         {
             if (ex != null)
                 Trace.WriteLine(ex);
             lock (_loc)
-            {
-                if (_disposed == true)
+                if (_disposed)
                     return;
-                _disposed = true;
-                if (ex is Exception exc)
-                    _except = exc;
-                _socket?.Dispose();
-                _socket = null;
-                _trans?.Dispose();
-                _trans = null;
-            }
+            Dispose();
+            if (ex is Exception exc)
+                _except = exc;
             Shutdown?.Invoke(this, new EventArgs());
         }
 
-        public void Dispose() => _Close();
+        public void Dispose()
+        {
+            lock (_loc)
+            {
+                if (_disposed)
+                    return;
+                _socket?.Dispose();
+                _socket = null;
+            }
+        }
     }
 }

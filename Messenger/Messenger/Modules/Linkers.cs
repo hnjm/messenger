@@ -1,7 +1,6 @@
 ﻿using Messenger.Extensions;
-using Messenger.Foundation;
-using Messenger.Foundation.Extensions;
 using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,32 +8,21 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
 
 namespace Messenger.Modules
 {
-    class Interact
+    class Linkers
     {
-        private object _loc = new object();
-        private Client _clt = null;
+        private LinkClient _clt = null;
 
-        private static Interact s_ins = new Interact();
+        private static Linkers s_ins = new Linkers();
 
         public static int ID => s_ins._clt?.ID ?? Profiles.Current.ID;
 
-        public static bool IsRunning
-        {
-            get
-            {
-                var clt = s_ins._clt;
-                if (clt == null)
-                    return false;
-                if (clt.IsStarted == true && clt.IsDisposed == false)
-                    return true;
-                return false;
-            }
-        }
+        public static bool IsRunning => s_ins._clt?.IsRunning ?? false;
 
         public static event EventHandler<LinkEventArgs<(Guid, Socket)>> Requests
         {
@@ -43,50 +31,35 @@ namespace Messenger.Modules
                 var clt = s_ins._clt;
                 if (clt == null)
                     return;
-                clt.Requests += value;
+                // clt.Requests += value;
             }
             remove
             {
                 var clt = s_ins._clt;
                 if (clt == null)
                     return;
-                clt.Requests -= value;
+                // clt.Requests -= value;
             }
         }
 
         public static void Start(int id, IPEndPoint endpoint)
         {
-            var clt = default(Client);
-            try
-            {
-                clt = new Client(id);
-                clt.Start(endpoint);
-            }
-            catch (SocketException ex)
-            {
-                Trace.WriteLine(ex);
-                clt?.Dispose();
-                throw;
-            }
-
+            var clt = new LinkClient(id);
             clt.Received += (s, e) => Routers.Handle(e.Record);
             clt.Shutdown += (s, e) => Entrance.ShowError("连接已断开", s_ins?._clt?.Exception);
+            clt.Start(endpoint);
 
-            lock (s_ins._loc)
+            if (Interlocked.CompareExchange(ref s_ins._clt, clt, null) != null)
             {
-                if (s_ins._clt != null)
-                {
-                    clt.Dispose();
-                    throw new InvalidOperationException();
-                }
-                s_ins._clt = clt;
+                clt.Dispose();
+                throw new InvalidOperationException();
             }
 
             Packets.OnHandled += ModulePacket_OnHandled;
             Transports.Expect.ListChanged += ModuleTrans_ListChanged;
             Profiles.Current.ID = id;
 
-            Posters.UserProfile(Server.ID);
+            Posters.UserProfile(Links.ID);
             Posters.UserRequest();
             Posters.UserGroups();
         }
@@ -94,13 +67,7 @@ namespace Messenger.Modules
         [AutoSave(0)]
         public static void Close()
         {
-            var clt = default(Client);
-            lock (s_ins._loc)
-            {
-                clt = s_ins._clt;
-                s_ins._clt = null;
-            }
-
+            var clt = Interlocked.Exchange(ref s_ins._clt, null);
             if (clt == null)
                 return;
             clt.Dispose();
@@ -109,13 +76,7 @@ namespace Messenger.Modules
             Transports.Expect.ListChanged -= ModuleTrans_ListChanged;
         }
 
-        public static void Enqueue(byte[] buffer)
-        {
-            var clt = s_ins._clt;
-            if (clt == null)
-                return;
-            clt.Enqueue(buffer);
-        }
+        public static void Enqueue(byte[] buffer) => s_ins._clt?.Enqueue(buffer);
 
         /// <summary>
         /// 获取与连接关联的 NAT 内部端点和外部端点 (若二者相同 则只返回一个 且不会返回 null)
@@ -128,7 +89,7 @@ namespace Messenger.Modules
                 lst.Add(iep);
             if (clt?.OuterEndPoint is IPEndPoint rep)
                 lst.Add(rep);
-            var res = lst.Distinct((a, b) => a.Equals(b)).ToList();
+            var res = lst._Distinct((a, b) => a.Equals(b)).ToList();
             return res;
         }
 

@@ -1,37 +1,31 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Network
 {
-    public class LinkListener
+    public sealed partial class LinkListener
     {
-        internal int _started = 0;
-
         internal int _climit = Links.Count;
 
-        internal readonly object _loc = new object();
+        internal int _port = Links.Port;
 
-        internal Socket _socket = null;
+        internal Socket _soc = null;
 
         internal Dictionary<int, LinkClient> _dic = new Dictionary<int, LinkClient>();
 
-        internal Dictionary<int, List<int>> _groups = new Dictionary<int, List<int>>();
+        internal Dictionary<int, List<int>> _gro = new Dictionary<int, List<int>>();
 
-        public void Start(int port = Links.Port, int count = Links.Count)
+        public Task Listen(int port = Links.Port, int count = Links.Count)
         {
             if (count < 1)
-                throw new ArgumentOutOfRangeException(nameof(count), $"The count limit should bigger than zero!");
-            if (Interlocked.CompareExchange(ref _started, 1, 0) != 0)
-                throw new InvalidOperationException("Instance already started!");
+                throw new ArgumentOutOfRangeException(nameof(count), "The count limit must bigger than zero!");
 
             var iep = new IPEndPoint(IPAddress.Any, port);
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -40,23 +34,25 @@ namespace Mikodev.Network
             {
                 soc.Bind(iep);
                 soc.Listen(count);
+                if (Interlocked.CompareExchange(ref _soc, soc, null) != null)
+                    throw new InvalidOperationException();
+                _climit = count;
+                _port = port;
             }
-            catch (SocketException)
+            catch (Exception)
             {
-                soc?.Dispose();
+                soc.Dispose();
                 throw;
             }
 
-            _climit = count;
-            _socket = soc;
-            Task.Run(new Action(_Listen));
+            return Task.Run(new Action(_Listen));
         }
 
         private void _Listen()
         {
-            while (_socket != null)
+            while (_soc != null)
             {
-                var soc = _socket.Accept();
+                var soc = _soc.Accept();
                 soc._SetKeepAlive();
                 Task.Run(() => _Handle(soc)).ContinueWith(t =>
                 {
@@ -77,7 +73,7 @@ namespace Mikodev.Network
                     return LinkError.CodeInvalid;
                 if (_dic.Count >= _climit)
                     return LinkError.CountLimited;
-                lock (_loc)
+                lock (_dic)
                 {
                     if (_dic.ContainsKey(code))
                         return LinkError.CodeConflict;
@@ -88,12 +84,11 @@ namespace Mikodev.Network
 
             void remove(int code)
             {
-                lock (_loc)
+                lock (_dic)
                 {
                     if (_dic.TryGetValue(code, out var val) && val == null)
                         _dic.Remove(code);
-                    else
-                        throw new LinkException(LinkError.AssertFailed);
+                    else throw new LinkException(LinkError.AssertFailed);
                 }
             }
 
@@ -128,7 +123,7 @@ namespace Mikodev.Network
 
             try
             {
-                if (Task.Run(() => client._SendExtendAsync(respond())).Wait(Links.Timeout) == false)
+                if (Task.Run(async () => await client._SendExtendAsync(respond())).Wait(Links.Timeout) == false)
                 {
                     throw new TimeoutException("Listener response timeout.");
                 }
@@ -149,11 +144,19 @@ namespace Mikodev.Network
             clt.Received += _LinkClient_Received;
             clt.Shutdown += _LinkClient_Shutdown;
 
-            lock (_dic)
+            try
             {
+                Monitor.Enter(_dic);
+                Monitor.Enter(_gro);
+
                 remove(cid);
                 _dic.Add(cid, clt);
-                _groups.Add(cid, new List<int>());
+                _gro.Add(cid, new List<int>());
+            }
+            finally
+            {
+                Monitor.Exit(_gro);
+                Monitor.Exit(_dic);
             }
 
             clt.Start(client);
@@ -163,27 +166,29 @@ namespace Mikodev.Network
         {
             var clt = (LinkClient)sender;
             var lst = new List<int>();
-            lock (_loc)
+            var wtr = PacketWriter.Serialize(new
             {
+                source = Links.ID,
+                target = Links.ID,
+                path = "user.ids",
+            });
+
+            try
+            {
+                Monitor.Enter(_dic);
+                Monitor.Enter(_gro);
+
                 _dic.Remove(clt._id);
-                _groups.Remove(clt._id);
-                foreach (var c in _dic)
-                {
-                    lst.Add(c.Key);
-                }
+                _gro.Remove(clt._id);
+                foreach (var c in _dic) lst.Add(c.Key);
 
-                var buf = PacketWriter.Serialize(new
-                {
-                    source = Links.ID,
-                    target = Links.ID,
-                    path = "user.ids",
-                    data = lst,
-                }).GetBytes();
-
-                foreach (var i in _dic)
-                {
-                    i.Value.Enqueue(buf);
-                }
+                var buf = wtr.PushList("data", lst).GetBytes();
+                foreach (var i in _dic) i.Value.Enqueue(buf);
+            }
+            finally
+            {
+                Monitor.Exit(_gro);
+                Monitor.Exit(_dic);
             }
         }
 
@@ -200,18 +205,18 @@ namespace Mikodev.Network
                 {
                     var lst = rea.Data.PullList<int>().ToList();
                     lst.RemoveAll(r => r < Links.ID == false);
-                    lock (_loc)
+                    lock (_gro)
                     {
-                        _groups[src].Clear();
-                        _groups[src] = lst;
+                        _gro[src].Clear();
+                        _gro[src] = lst;
                     }
                     return;
                 }
-                lock (_loc)
+                lock (_dic)
                 {
                     foreach (var i in _dic)
                     {
-                        i.Value.Enqueue(rea.Buffer);
+                        if (i.Key != src) i.Value.Enqueue(rea.Buffer);
                     }
                 }
             }
@@ -224,14 +229,11 @@ namespace Mikodev.Network
             }
             else
             {
-                lock (_loc)
+                lock (_gro)
                 {
-                    foreach (var i in _groups)
+                    foreach (var i in _gro)
                     {
-                        if (i.Key == src)
-                            continue;
-                        if (i.Value.Contains(tar))
-                            _dic[i.Key].Enqueue(rea.Buffer);
+                        if (i.Key != src && i.Value.Contains(tar)) _dic[i.Key].Enqueue(rea.Buffer);
                     }
                 }
             }

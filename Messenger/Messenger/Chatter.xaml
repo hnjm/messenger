@@ -48,7 +48,7 @@
                 </Grid>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static mods:Interact.ID}">
+                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static mods:Linkers.ID}">
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>

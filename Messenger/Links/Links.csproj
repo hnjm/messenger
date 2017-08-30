@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LinkBroadcast.cs" />
     <Compile Include="LinkCrypto.cs" />
     <Compile Include="LinkClient.cs" />
     <Compile Include="LinkError.cs" />

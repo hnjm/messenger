@@ -1,10 +1,9 @@
-﻿using Messenger.Foundation;
-using Mikodev.Network;
+﻿using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Messenger.Launcher
+namespace Launcher
 {
     class Program
     {
@@ -22,12 +21,10 @@ namespace Messenger.Launcher
 
         static void Entrance(string[] args)
         {
-            Trace.Listeners.Add(new Logger($"{nameof(Launcher)}-{ DateTime.Now:yyyyMMdd}.log"));
-
-            var nam = "Default Server";
-            var max = Server.DefaultCountLimit;
-            var pot = Server.DefaultPort;
-            var bro = Broadcast.DefaultPort;
+            var nam = default(string);
+            var max = Links.Count;
+            var pot = Links.Port;
+            var bro = Links.Port;
             var dic = new Dictionary<string, string>();
             foreach (var i in args)
             {
@@ -45,27 +42,9 @@ namespace Messenger.Launcher
             if (dic.TryGetValue("broadcast", out var bad))
                 bro = int.Parse(bad);
 
-            var srv = new Server();
-            srv.Start(pot, max);
-
-            var fuc = new Func<byte[], byte[]>((buf) =>
-            {
-                var rea = new PacketReader(buf);
-                var str = rea["protocol"].Pull<string>();
-                if (!str.Equals(Server.Protocol))
-                    return null;
-                var wtr = PacketWriter.Serialize(new
-                {
-                    protocol = Server.Protocol,
-                    port = pot,
-                    name = nam,
-                    limit = max,
-                    count = srv.Count,
-                });
-                return wtr.GetBytes();
-            });
-            var brs = new Broadcast() { Function = fuc };
-            brs.Start();
+            var lis = new LinkListener();
+            lis.Listen(pot, max);
+            lis.Broadcast(bro, nam).Wait();
         }
     }
 }

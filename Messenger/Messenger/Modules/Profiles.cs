@@ -1,4 +1,4 @@
-﻿using Messenger.Foundation.Extensions;
+﻿using Messenger.Extensions;
 using Messenger.Models;
 using System;
 using System.Collections.Generic;
@@ -131,7 +131,7 @@ namespace Messenger.Modules
         {
             if (id == instance._local.ID)
                 return instance._local;
-            instance._spaces.Remove((r) => r.TryGetTarget(out var _) == false);
+            instance._spaces._Remove((r) => r.TryGetTarget(out var _) == false);
             foreach (var i in instance._spaces)
                 if (i.TryGetTarget(out var pro) && pro.ID == id)
                     return pro;
@@ -156,7 +156,7 @@ namespace Messenger.Modules
             var lst = new List<Profile>() as IList<Profile>;
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    lst = clt.Remove(r => ids.Contains(r.ID) == false);
+                    lst = clt._Remove(r => ids.Contains(r.ID) == false);
                     foreach (var r in lst)
                         if (r.Hint > 0)
                             SetRecent(r);
@@ -171,7 +171,7 @@ namespace Messenger.Modules
         {
             var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
-            var kvs = tmp.Distinct((a, b) => a.Hash == b.Hash).ToList();
+            var kvs = tmp._Distinct((a, b) => a.Hash == b.Hash).ToList();
             if (kvs.Count > GroupLimit)
                 return false;
             var ids = from i in kvs select i.Hash;
@@ -181,7 +181,7 @@ namespace Messenger.Modules
             Posters.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var lst = gro.Remove(r => ids.Contains(r.ID) == false);
+                    var lst = gro._Remove(r => ids.Contains(r.ID) == false);
                     foreach (var r in lst)
                         if (r.Hint > 0)
                             SetRecent(r);

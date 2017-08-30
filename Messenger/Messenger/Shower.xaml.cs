@@ -1,5 +1,5 @@
-﻿using Messenger.Foundation;
-using Messenger.Modules;
+﻿using Messenger.Modules;
+using Mikodev.Network;
 using System;
 using System.Diagnostics;
 using System.Windows;
@@ -26,8 +26,7 @@ namespace Messenger
             {
                 Profiles.Current.Name = textboxName.Text;
                 Profiles.Current.Text = textboxText.Text;
-                // Interact.Enqueue(Server.ID, PacketGenre.UserProfile, Profiles.Current);
-                Posters.UserProfile(Server.ID);
+                Posters.UserProfile(Links.ID);
             }
             else if (src == buttonImage)
             {
@@ -41,8 +40,7 @@ namespace Messenger
                     Profiles.ImageSource = ofd.FileName;
                     Profiles.ImageBuffer = buf;
                     Profiles.Current.Image = str;
-                    // Interact.Enqueue(Server.ID, PacketGenre.UserImage, buf);
-                    Posters.UserProfile(Server.ID);
+                    Posters.UserProfile(Links.ID);
                 }
                 catch (Exception ex)
                 {

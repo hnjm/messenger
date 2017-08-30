@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{875067CE-5717-451E-AEDB-22FDF3AD3C03}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Messenger.Launcher</RootNamespace>
+    <RootNamespace>Launcher</RootNamespace>
     <AssemblyName>Launcher</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -84,12 +84,6 @@
     <Resource Include="Prompt.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Foundation\Foundation.csproj">
-      <Project>{98b87ff4-c4c7-456e-bc6f-08f6ed238bab}</Project>
-      <Name>Foundation</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.5.2 %28x86 and x64%29</ProductName>
@@ -100,6 +94,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Links\Links.csproj">
+      <Project>{a3ecbe4a-2d6a-490d-b8b5-6768a1253213}</Project>
+      <Name>Links</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

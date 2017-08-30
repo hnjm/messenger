@@ -27,11 +27,11 @@ namespace Messenger.Foundation
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public event EventHandler<LinkEventArgs<Router>> Received = null;
+        public event EventHandler<LinkOldEventArgs<Router>> Received = null;
         /// <summary>
         /// 传输请求事件
         /// </summary>
-        public event EventHandler<LinkEventArgs<(Guid, Socket)>> Requests = null;
+        public event EventHandler<LinkOldEventArgs<(Guid, Socket)>> Requests = null;
         /// <summary>
         /// 连接关闭事件
         /// </summary>
@@ -134,7 +134,7 @@ namespace Messenger.Foundation
                     endpoint = rea["endpoint"].Pull<IPEndPoint>(),
                 };
                 if (res.result != ErrorCode.Success)
-                    throw new LinkException(res.result);
+                    throw new LinkOldException(res.result);
                 tra = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 tra.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 tra.Bind(soc.LocalEndPoint);
@@ -180,7 +180,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 向待发队列尾插入一条消息
         /// </summary>
-        public void Enqueue(object sender, LinkEventArgs<Router> e)
+        public void Enqueue(object sender, LinkOldEventArgs<Router> e)
         {
             var rcd = e.Record;
             if (rcd.Source == ID)
@@ -199,7 +199,7 @@ namespace Messenger.Foundation
                 {
                     var buf = _socket.ReceiveExt();
                     var dst = Crypto.Decrypt(buf);
-                    _OnReceived(new LinkEventArgs<Router>() { Source = this, Record = new Router().Load(dst) });
+                    _OnReceived(new LinkOldEventArgs<Router>() { Source = this, Record = new Router().Load(dst) });
                 }
             }
             catch (Exception ex)
@@ -239,7 +239,7 @@ namespace Messenger.Foundation
                     soc.SetKeepAlive(true, Server.DefaultKeepBefore, Server.DefaultKeepInterval);
                     var buf = soc.ReceiveExt();
                     var key = new PacketReader(buf).Pull<Guid>();
-                    var req = new LinkEventArgs<(Guid, Socket)>() { Record = (key, soc) };
+                    var req = new LinkOldEventArgs<(Guid, Socket)>() { Record = (key, soc) };
                     Requests?.Invoke(this, req);
                     if (req.Finish == false)
                         soc.Dispose();
@@ -256,7 +256,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 内部信息处理函数 解析 ID 和控制字符串 并决定是否向上发送事件
         /// </summary>
-        private void _OnReceived(LinkEventArgs<Router> arg)
+        private void _OnReceived(LinkOldEventArgs<Router> arg)
         {
             try
             {

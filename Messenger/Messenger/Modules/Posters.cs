@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Mikodev.Network;
 using System;
 using System.Diagnostics;
@@ -24,13 +23,13 @@ namespace Messenger.Modules
 
             var wtr = PacketWriter.Serialize(new
             {
-                source = Interact.ID,
+                source = Linkers.ID,
                 target = target,
                 path = pth,
                 data = val,
             });
             var buf = wtr.GetBytes();
-            Interact.Enqueue(buf);
+            Linkers.Enqueue(buf);
             Packets.Insert(target, val);
         }
 
@@ -39,7 +38,7 @@ namespace Messenger.Modules
             var pro = Profiles.Current;
             var wtr = PacketWriter.Serialize(new
             {
-                source = Interact.ID,
+                source = Linkers.ID,
                 target = target,
                 path = "user.profile",
                 data = new
@@ -51,32 +50,32 @@ namespace Messenger.Modules
                 },
             });
             var buf = wtr.GetBytes();
-            Interact.Enqueue(buf);
+            Linkers.Enqueue(buf);
         }
 
         public static void UserRequest()
         {
             var wtr = PacketWriter.Serialize(new
             {
-                source = Interact.ID,
-                target = Server.ID,
+                source = Linkers.ID,
+                target = Links.ID,
                 path = "user.request",
             });
             var buf = wtr.GetBytes();
-            Interact.Enqueue(buf);
+            Linkers.Enqueue(buf);
         }
 
         public static void UserGroups()
         {
             var wtr = PacketWriter.Serialize(new
             {
-                source = Interact.ID,
-                target = Server.ID,
+                source = Linkers.ID,
+                target = Links.ID,
                 path = "user.groups",
                 data = Profiles.GroupIDs?.ToList(),
             });
             var buf = wtr.GetBytes();
-            Interact.Enqueue(buf);
+            Linkers.Enqueue(buf);
         }
 
         public static Cargo File(int target, string filepath)
@@ -95,7 +94,7 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() => Transports.Makers.Add(car));
             var wtr = PacketWriter.Serialize(new
             {
-                source = Interact.ID,
+                source = Linkers.ID,
                 target = target,
                 path = "file.info",
                 data = new
@@ -103,11 +102,11 @@ namespace Messenger.Modules
                     filename = mak.Name,
                     filesize = mak.Length,
                     guid = mak.Key,
-                    endpoints = Interact.GetEndPoints(),
+                    endpoints = Linkers.GetEndPoints(),
                 }
             });
             var buf = wtr.GetBytes();
-            Interact.Enqueue(buf);
+            Linkers.Enqueue(buf);
             return car;
         }
     }

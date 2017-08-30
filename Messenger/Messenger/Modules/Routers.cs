@@ -1,5 +1,5 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace Messenger.Modules
     {
         private class _Record
         {
-            public Func<Router> Construct = null;
+            public Func<LinkPacket> Construct = null;
             public dynamic Function = null;
         }
 
@@ -27,7 +27,7 @@ namespace Messenger.Modules
             var ass = typeof(Routers).Assembly;
             foreach (var t in ass.GetTypes())
             {
-                if (t.IsSubclassOf(typeof(Router)) == false)
+                if (t.IsSubclassOf(typeof(LinkPacket)) == false)
                     continue;
                 var att = t.GetCustomAttributes(typeof(HandlerAttribute)).FirstOrDefault() as HandlerAttribute;
                 if (att == null)
@@ -39,17 +39,17 @@ namespace Messenger.Modules
                     if (atr == null)
                         continue;
                     var act = Delegate.CreateDelegate(typeof(Action<>).MakeGenericType(t), i) as dynamic;
-                    var con = (Func<Router>)Expression.Lambda(Expression.New(t)).Compile();
+                    var con = (Func<LinkPacket>)Expression.Lambda(Expression.New(t)).Compile();
                     _dic.Add($"{att.Path}.{atr.Path}", new _Record() { Construct = con, Function = act });
                 }
             }
         }
 
-        public static void Handle(Router arg)
+        public static void Handle(LinkPacket arg)
         {
             var rcd = s_ins._dic[arg.Path];
             var obj = rcd.Construct.Invoke();
-            obj.Load(arg.Buffer);
+            obj._Load(arg.Buffer);
             rcd.Function.Invoke((dynamic)obj);
         }
 

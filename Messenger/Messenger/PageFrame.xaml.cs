@@ -1,6 +1,6 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Network;
 using System;
 using System.Windows;
 using System.Windows.Controls;

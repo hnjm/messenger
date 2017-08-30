@@ -64,7 +64,7 @@ namespace Messenger.Foundation
         /// <summary>
         /// 服务器广播调用链
         /// </summary>
-        private EventHandler<LinkEventArgs<Router>> _srvbroa = null;
+        private EventHandler<LinkOldEventArgs<Router>> _srvbroa = null;
         /// <summary>
         /// 客户端列表
         /// </summary>
@@ -240,7 +240,7 @@ namespace Messenger.Foundation
             });
 
             if (err != ErrorCode.Success)
-                throw new LinkException(err);
+                throw new LinkOldException(err);
 
             var clt = new Client(req.id);
             clt.Received += Client_Received;
@@ -284,10 +284,10 @@ namespace Messenger.Foundation
                 path = "user.ids",
                 data = idl,
             });
-            _srvbroa?.Invoke(this, new LinkEventArgs<Router>() { Source = this, Record = new Router().Load(buf.GetBytes()) });
+            _srvbroa?.Invoke(this, new LinkOldEventArgs<Router>() { Source = this, Record = new Router().Load(buf.GetBytes()) });
         }
 
-        private void Client_Received(object sender, LinkEventArgs<Router> arg)
+        private void Client_Received(object sender, LinkOldEventArgs<Router> arg)
         {
             var rea = arg.Record;
             var src = rea.Source;

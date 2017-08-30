@@ -1,5 +1,5 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -58,7 +58,7 @@ namespace Messenger.Modules
 
         public static Packet Insert(int gid, object obj)
         {
-            var pkt = new Packet() { Source = Interact.ID, Target = gid, Groups = gid };
+            var pkt = new Packet() { Source = Linkers.ID, Target = gid, Groups = gid };
             SetPacket(pkt, obj);
             Insert(pkt);
             return pkt;
@@ -66,7 +66,7 @@ namespace Messenger.Modules
 
         public static Packet Insert(int source, int target, object value)
         {
-            var gid = target == Interact.ID ? source : target;
+            var gid = target == Linkers.ID ? source : target;
             var pkt = new Packet() { Source = source, Target = target, Groups = gid };
             SetPacket(pkt, value);
             Insert(pkt);

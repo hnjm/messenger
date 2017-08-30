@@ -1,6 +1,6 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Network;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -31,7 +31,7 @@ namespace Messenger
             (Application.Current as App).TextBoxKeyDown += TextBox_KeyDown;
 
             _profile = Profiles.Inscope;
-            if (_profile.ID <= Server.ID)
+            if (_profile.ID <= Links.ID)
                 buttonFile.Visibility = Visibility.Collapsed;
             gridProfile.DataContext = _profile;
 
@@ -165,13 +165,13 @@ namespace Messenger
             var trs = Posters.File(_profile.ID, path);
             if (trs == null)
                 return;
-            var pkt = new Packet() { Source = Interact.ID, Target = _profile.ID, Groups = _profile.ID, Path = "file", Value = trs };
+            var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "file", Value = trs };
             _messages.Add(pkt);
         }
 
         private void TextBox_PreviewDragOver(object sender, DragEventArgs e)
         {
-            if (_profile.ID <= Server.ID || e.Data.GetDataPresent(DataFormats.FileDrop) == false)
+            if (_profile.ID <= Links.ID || e.Data.GetDataPresent(DataFormats.FileDrop) == false)
                 e.Effects = DragDropEffects.None;
             else
                 e.Effects = DragDropEffects.Copy;
@@ -180,7 +180,7 @@ namespace Messenger
 
         private void TextBox_PreviewDrop(object sender, DragEventArgs e)
         {
-            if (_profile.ID <= Server.ID || e.Data.GetDataPresent(DataFormats.FileDrop) == false)
+            if (_profile.ID <= Links.ID || e.Data.GetDataPresent(DataFormats.FileDrop) == false)
                 return;
             var fil = e.Data.GetData(DataFormats.FileDrop) as string[];
             if (fil == null || fil.Length < 1)

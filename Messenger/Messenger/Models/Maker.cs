@@ -1,5 +1,4 @@
-﻿using Messenger.Foundation;
-using Messenger.Foundation.Extensions;
+﻿using Mikodev.Network;
 using System;
 using System.IO;
 using System.Net.Sockets;
@@ -30,15 +29,16 @@ namespace Messenger.Models
             var inf = default(FileInfo);
             var str = default(FileStream);
 
-            Extension.Invoke(() =>
+            try
             {
                 inf = new FileInfo(path);
                 str = File.OpenRead(inf.FullName);
-            }, () =>
+            }
+            catch (Exception)
             {
                 str?.Dispose();
                 str = null;
-            });
+            }
 
             _stream = str;
             _name = inf.Name;

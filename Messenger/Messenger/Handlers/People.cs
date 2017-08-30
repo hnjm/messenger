@@ -1,12 +1,12 @@
-﻿using Messenger.Foundation;
-using Messenger.Models;
+﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Network;
 using System.Linq;
 
 namespace Messenger.Handlers
 {
     [Handler("user")]
-    public class People : Router
+    public class People : LinkPacket
     {
         [Handler("request")]
         public void Request()

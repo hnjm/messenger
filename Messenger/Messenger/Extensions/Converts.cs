@@ -69,7 +69,7 @@ namespace Messenger.Extensions
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="FormatException"/>
         /// <exception cref="OverflowException"/>
-        public static IPEndPoint ToEndPoint(this string str)
+        public static IPEndPoint _ToEndPoint(this string str)
         {
             if (str == null)
                 throw new ArgumentNullException();

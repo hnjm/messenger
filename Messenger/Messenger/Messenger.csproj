@@ -96,6 +96,7 @@
       <DependentUpon>Chatter.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands.cs" />
+    <Compile Include="Extensions\Collections.cs" />
     <Compile Include="Extensions\Converts.cs" />
     <Compile Include="Handlers\Paper.cs" />
     <Compile Include="Handlers\People.cs" />
@@ -182,7 +183,7 @@
     <Compile Include="Connection.xaml.cs">
       <DependentUpon>Connection.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modules\Interact.cs" />
+    <Compile Include="Modules\Linkers.cs" />
     <Compile Include="Entrance.xaml.cs">
       <DependentUpon>Entrance.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -267,10 +268,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Foundation\Foundation.csproj">
-      <Project>{98b87ff4-c4c7-456e-bc6f-08f6ed238bab}</Project>
-      <Name>Foundation</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Links\Links.csproj">
       <Project>{a3ecbe4a-2d6a-490d-b8b5-6768a1253213}</Project>
       <Name>Links</Name>

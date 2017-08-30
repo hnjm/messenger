@@ -1,4 +1,4 @@
-﻿using Messenger.Foundation;
+﻿using Mikodev.Network;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -35,9 +35,9 @@ namespace Messenger.Models
         private string _text = null;
         private string _imag = null;
 
-        public bool IsClient => _id > Server.ID;
+        public bool IsClient => _id > Links.ID;
 
-        public bool IsGroups => _id < Server.ID;
+        public bool IsGroups => _id < Links.ID;
 
         public int ID
         {
