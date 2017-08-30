@@ -19,7 +19,7 @@ namespace Mikodev.Network
 
             try
             {
-                if (name == null)
+                if (string.IsNullOrEmpty(name))
                     name = Dns.GetHostName();
                 soc.Bind(new IPEndPoint(IPAddress.Any, port));
                 if (Interlocked.CompareExchange(ref _broad, soc, null) != null)
@@ -51,7 +51,7 @@ namespace Mikodev.Network
                 var ava = _broad.Available;
                 if (ava < 1)
                 {
-                    await Task.Delay(1);
+                    await Task.Delay(Links.Delay);
                     continue;
                 }
 

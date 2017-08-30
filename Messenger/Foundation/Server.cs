@@ -281,7 +281,7 @@ namespace Messenger.Foundation
             {
                 source = ID,
                 target = ID,
-                path = "user.ids",
+                path = "user.list",
                 data = idl,
             });
             _srvbroa?.Invoke(this, new LinkOldEventArgs<Router>() { Source = this, Record = new Router().Load(buf.GetBytes()) });

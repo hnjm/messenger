@@ -13,10 +13,10 @@ namespace Messenger.Handlers
         [Handler("info")]
         public void Take()
         {
-            var tak = default(Taker);
+            var tak = default(TransportReceiver);
             try
             {
-                tak = new Taker(Data, () => Transports.FindPath(Data["filename"].Pull<string>()));
+                tak = new TransportReceiver(Data, () => Transports.FindPath(Data["filename"].Pull<string>()));
             }
             catch (Exception ex)
             {

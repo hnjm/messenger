@@ -30,7 +30,7 @@ namespace Messenger.Handlers
             Profiles.Insert(pro);
         }
 
-        [Handler("ids")]
+        [Handler("list")]
         public void List()
         {
             var lst = Data.PullList<int>().ToList();

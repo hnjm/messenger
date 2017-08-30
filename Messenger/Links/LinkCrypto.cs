@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Mikodev.Network
 {
-    public static class LinkCrypto
+    internal static class LinkCrypto
     {
         public static byte[] _Encrypt(this AesManaged aes, byte[] buffer) => _BufferWriter(buffer, 0, buffer.Length, aes.CreateEncryptor());
 

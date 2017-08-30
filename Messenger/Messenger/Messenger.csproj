@@ -108,8 +108,8 @@
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoSaveAttribute.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
-    <Compile Include="Models\Maker.cs" />
-    <Compile Include="Models\Taker.cs" />
+    <Compile Include="Models\TransportSender.cs" />
+    <Compile Include="Models\TransportReceiver.cs" />
     <Compile Include="Models\Transport.cs" />
     <Compile Include="Models\TransportStatus.cs" />
     <Compile Include="Modules\Options.cs" />

@@ -30,7 +30,7 @@ namespace Messenger
 
             SessionEnding += (s, arg) =>
             {
-                Linkers.Close();
+                Linkers.Shutdown();
             };
         }
     }

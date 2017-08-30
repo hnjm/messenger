@@ -80,10 +80,10 @@ namespace Messenger.Modules
 
         public static Cargo File(int target, string filepath)
         {
-            var mak = default(Maker);
+            var mak = default(TransportSender);
             try
             {
-                mak = new Maker(filepath);
+                mak = new TransportSender(filepath);
             }
             catch (Exception ex)
             {

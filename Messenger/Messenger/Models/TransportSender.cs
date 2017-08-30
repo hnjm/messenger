@@ -2,18 +2,17 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
     /// <summary>
     /// 文件发送类 (事件驱动 线程安全)
     /// </summary>
-    public class Maker : Transport
+    public class TransportSender : Transport
     {
         private FileStream _stream = null;
         private Socket _socket = null;
-        private Thread _thread = null;
 
         /// <summary>
         /// 由事件触发 不可直接启动
@@ -24,7 +23,7 @@ namespace Messenger.Models
         /// 创建文件发送对象
         /// </summary>
         /// <param name="path">文件路径</param>
-        public Maker(string path)
+        public TransportSender(string path)
         {
             var inf = default(FileInfo);
             var str = default(FileStream);
@@ -49,63 +48,64 @@ namespace Messenger.Models
         /// <summary>
         /// 循环发送文件
         /// </summary>
-        private void _Maker()
+        private async Task _Read()
         {
-            var exc = default(Exception);
-            try
+            while (_socket != null)
             {
-                while (_socket != null)
-                {
-                    if (_position >= _length)
-                        break;
+                if (_position >= _length)
+                    break;
+                if (_stream.Position != _position)
                     _stream.Seek(_position, SeekOrigin.Begin);
-                    var len = (long)short.MaxValue;
-                    if (_position + len > _length)
-                        len = _length - _position;
-                    var buf = new byte[len];
-                    _stream.Read(buf, 0, buf.Length);
-                    _socket.Send(buf);
-                    _position += len;
-                }
-            }
-            catch (Exception ex)
-            {
-                exc = ex;
-            }
-
-            var res = (exc == null && _position == _length);
-            lock (_loc)
-            {
-                if (IsDisposed == false)
+                var len = (long)Links.Buffer;
+                if (_length - _position < len)
+                    len = _length - _position;
+                var buf = new byte[len];
+                var sub = await _stream.ReadAsync(buf, 0, buf.Length);
+                if (sub < buf.Length)
                 {
-                    _status = res ? TransportStatus.成功 : TransportStatus.中断;
-                    _exception = exc;
-                    Dispose(true);
+                    if (sub < 1)
+                        throw new IOException("Read file error!");
+                    var tmp = new byte[sub];
+                    Buffer.BlockCopy(buf, 0, tmp, 0, sub);
+                    buf = tmp;
                 }
+                await _socket._SendAsync(buf);
+                _position += sub;
             }
         }
 
         /// <summary>
         /// 处理传输请求
         /// </summary>
-        public void Transport_Requests(object sender, LinkEventArgs<(Guid, Socket)> e)
+        public void Transport_Requests(object sender, LinkEventArgs<Guid> e)
         {
-            var (key, soc) = e.Record;
+            var key = e.Record;
+            var soc = e.Source as Socket;
             if (_key.Equals(key) == false || soc == null)
                 return;
+            e.Source = null;
             lock (_loc)
             {
                 if (_started || _disposed)
                     return;
                 _started = true;
                 _socket = soc;
-                e.Finish = true;
-
                 _status = TransportStatus.运行;
-                _OnStarted();
-                _thread = new Thread(_Maker);
-                _thread.Start();
             }
+            _Started();
+            _Read().ContinueWith(t =>
+            {
+                var res = (t.Exception == null && _position == _length);
+                lock (_loc)
+                {
+                    if (_disposed == false)
+                    {
+                        _status = res ? TransportStatus.成功 : TransportStatus.中断;
+                        _exception = t.Exception;
+                        Dispose(true);
+                    }
+                }
+            });
         }
 
         #region 实现 IDisposable
@@ -127,7 +127,7 @@ namespace Messenger.Models
             _stream = null;
 
             _disposed = true;
-            _OnDisposed();
+            _Disposed();
         }
         #endregion
     }

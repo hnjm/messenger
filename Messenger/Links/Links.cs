@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Mikodev.Network
+﻿namespace Mikodev.Network
 {
     public static class Links
     {
@@ -29,5 +23,7 @@ namespace Mikodev.Network
         public const int BufferLimit = 1024 * 1024;
 
         public const int Queue = 4 * 1024 * 1024;
+
+        public const int Delay = 4;
     }
 }

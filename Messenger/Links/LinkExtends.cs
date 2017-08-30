@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using static System.BitConverter;
 
 namespace Mikodev.Network
@@ -28,19 +24,17 @@ namespace Mikodev.Network
             return ToInt32(val, 0);
         }
 
-        public static Task<Socket> _AcceptAsync(this Socket socket) => Task.Factory.FromAsync(socket.BeginAccept, socket.EndAccept, null);
-
         public static async Task<byte[]> _ReceiveExtendAsync(this Socket socket)
         {
-            var buf = await socket._ReceiveAsync(sizeof(int));
+            var buf = await _ReceiveAsync(socket, sizeof(int));
             var len = ToInt32(buf, 0);
             if (len < 1 || len > Links.BufferLimit)
                 throw new LinkException(LinkError.Overflow);
-            var res = await socket._ReceiveAsync(len);
+            var res = await _ReceiveAsync(socket, len);
             return res;
         }
 
-        public static async Task<byte[]> _ReceiveAsync(this Socket socket, int length)
+        public static async Task<byte[]> _ReceiveAsync(Socket socket, int length)
         {
             if (length < 1 || length > Links.BufferLimit)
                 throw new LinkException(LinkError.AssertFailed, "Buffer size out of range!");
@@ -56,12 +50,12 @@ namespace Mikodev.Network
             }
             return buf;
         }
-        
+
         public static async Task _SendExtendAsync(this Socket socket, byte[] buffer)
         {
             var len = GetBytes(buffer.Length);
-            await socket._SendAsync(len);
-            await socket._SendAsync(buffer);
+            await _SendAsync(socket, len);
+            await _SendAsync(socket, buffer);
         }
 
         public static async Task _SendAsync(this Socket socket, byte[] buffer)

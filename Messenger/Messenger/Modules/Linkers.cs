@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -16,7 +16,13 @@ namespace Messenger.Modules
 {
     class Linkers
     {
+        private readonly object _loc = new object();
+
         private LinkClient _clt = null;
+
+        private EventHandler<LinkEventArgs<Guid>> _Request = null;
+
+        private Socket _soc = null;
 
         private static Linkers s_ins = new Linkers();
 
@@ -24,39 +30,46 @@ namespace Messenger.Modules
 
         public static bool IsRunning => s_ins._clt?.IsRunning ?? false;
 
-        public static event EventHandler<LinkEventArgs<(Guid, Socket)>> Requests
-        {
-            add
-            {
-                var clt = s_ins._clt;
-                if (clt == null)
-                    return;
-                // clt.Requests += value;
-            }
-            remove
-            {
-                var clt = s_ins._clt;
-                if (clt == null)
-                    return;
-                // clt.Requests -= value;
-            }
-        }
+        public static event EventHandler<LinkEventArgs<Guid>> Requests { add => s_ins._Request += value; remove => s_ins._Request -= value; }
 
         public static void Start(int id, IPEndPoint endpoint)
         {
             var clt = new LinkClient(id);
             clt.Received += (s, e) => Routers.Handle(e.Record);
-            clt.Shutdown += (s, e) => Entrance.ShowError("连接已断开", s_ins?._clt?.Exception);
-            clt.Start(endpoint);
+            clt.Shutdown += (s, e) => Entrance.ShowError("连接已断开", s_ins._clt?.Exception);
+            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-            if (Interlocked.CompareExchange(ref s_ins._clt, clt, null) != null)
+            try
+            {
+                clt.Start(endpoint);
+                soc.Bind(clt.InnerEndPoint);
+                soc.Listen(Links.Count);
+                lock (s_ins._loc)
+                {
+                    lock (s_ins._loc)
+                        if (s_ins._clt != null || s_ins._soc != null)
+                            throw new InvalidOperationException();
+                    s_ins._clt = clt;
+                    s_ins._soc = soc;
+                }
+            }
+            catch (Exception)
             {
                 clt.Dispose();
-                throw new InvalidOperationException();
+                soc.Dispose();
+                throw;
             }
 
-            Packets.OnHandled += ModulePacket_OnHandled;
-            Transports.Expect.ListChanged += ModuleTrans_ListChanged;
+            Task.Run(() => _Listen(soc)).ContinueWith(t =>
+            {
+                if (t.Exception == null)
+                    return;
+                Trace.WriteLine(t.Exception);
+            });
+
+            Packets.OnHandled += _Packets_OnHandled;
+            Transports.Expect.ListChanged += _Transports_ListChanged;
             Profiles.Current.ID = id;
 
             Posters.UserProfile(Links.ID);
@@ -64,16 +77,51 @@ namespace Messenger.Modules
             Posters.UserGroups();
         }
 
-        [AutoSave(0)]
-        public static void Close()
+        private static void _Listen(Socket socket)
         {
-            var clt = Interlocked.Exchange(ref s_ins._clt, null);
-            if (clt == null)
-                return;
-            clt.Dispose();
+            while (true)
+            {
+                var clt = default(Socket);
+                var arg = default(LinkEventArgs<Guid>);
+                var buf = default(byte[]);
 
-            Packets.OnHandled -= ModulePacket_OnHandled;
-            Transports.Expect.ListChanged -= ModuleTrans_ListChanged;
+                try
+                {
+                    clt = socket.Accept();
+                    if (Task.Run(async () => buf = await clt._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
+                        throw new TimeoutException("Timeout when accept transport header.");
+                    var rea = new PacketReader(buf);
+                    var key = rea.Pull<Guid>();
+                    arg = new LinkEventArgs<Guid>() { Record = key, Source = clt };
+                }
+                catch (Exception ex) when (ex is SocketException || ex is PacketException)
+                {
+                    clt?.Dispose();
+                    Trace.WriteLine(ex);
+                    continue;
+                }
+
+                s_ins._Request?.Invoke(clt, arg);
+                if (arg.Source != null)
+                {
+                    clt.Dispose();
+                }
+            }
+        }
+
+        [AutoSave(0)]
+        public static void Shutdown()
+        {
+            lock (s_ins._loc)
+            {
+                s_ins._clt?.Dispose();
+                s_ins._clt = null;
+                s_ins._soc?.Dispose();
+                s_ins._soc = null;
+            }
+
+            Packets.OnHandled -= _Packets_OnHandled;
+            Transports.Expect.ListChanged -= _Transports_ListChanged;
         }
 
         public static void Enqueue(byte[] buffer) => s_ins._clt?.Enqueue(buffer);
@@ -93,22 +141,22 @@ namespace Messenger.Modules
             return res;
         }
 
-        private static void ModulePacket_OnHandled(object sender, LinkEventArgs<Packet> e)
+        private static void _Packets_OnHandled(object sender, LinkEventArgs<Packet> e)
         {
             Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var pro = Profiles.Query(e.Record.Groups);
-                    if (pro == null)
-                        return;
-                    var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                    if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
-                        NativeMethods.FlashWindow(hdl, true);
-                    if (e.Finish == false || e.Cancel == true)
-                        pro.Hint += 1;
-                });
+            {
+                var pro = Profiles.Query(e.Record.Groups);
+                if (pro == null)
+                    return;
+                var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
+                if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
+                    NativeMethods.FlashWindow(hdl, true);
+                if (e.Finish == false || e.Cancel == true)
+                    pro.Hint += 1;
+            });
         }
 
-        private static void ModuleTrans_ListChanged(object sender, ListChangedEventArgs e)
+        private static void _Transports_ListChanged(object sender, ListChangedEventArgs e)
         {
             if (sender == Transports.Expect && e.ListChangedType == ListChangedType.ItemAdded)
             {

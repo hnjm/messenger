@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Mikodev.Network
+﻿namespace Mikodev.Network
 {
     public class LinkPacket
     {
@@ -16,10 +10,15 @@ namespace Mikodev.Network
         internal PacketReader _dat = null;
 
         public int Source => _src;
+
         public int Target => _tar;
+
         public string Path => _pth;
+
         public byte[] Buffer => _buf;
+
         public PacketReader Origin => _ori;
+
         public PacketReader Data => _dat;
     }
 }

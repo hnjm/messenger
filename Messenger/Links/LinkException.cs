@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.Serialization;
 
 namespace Mikodev.Network
@@ -19,5 +15,11 @@ namespace Mikodev.Network
         public LinkException(LinkError error, string message, Exception inner) : base(message, inner) => error = _error;
 
         protected LinkException(SerializationInfo info, StreamingContext context) : base(info, context) => _error = (LinkError)info.GetValue(nameof(LinkError), typeof(LinkError));
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue(nameof(LinkError), _error);
+            base.GetObjectData(info, context);
+        }
     }
 }

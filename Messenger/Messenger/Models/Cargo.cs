@@ -54,7 +54,7 @@ namespace Messenger.Models
             _tid = id;
             _trans = val;
 
-            if (val is Maker mak)
+            if (val is TransportSender mak)
             {
                 Linkers.Requests += mak.Transport_Requests;
                 val.Disposed += delegate

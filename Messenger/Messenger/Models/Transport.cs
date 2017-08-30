@@ -55,12 +55,12 @@ namespace Messenger.Models
         /// <summary>
         /// 触发 <see cref="Started"/> 事件 (后台执行)
         /// </summary>
-        protected void _OnStarted() => Task.Run(() => Started?.Invoke(this, new EventArgs()));
+        protected void _Started() => Task.Run(() => Started?.Invoke(this, new EventArgs()));
 
         /// <summary>
         /// 触发 <see cref="Disposed"/> 事件 (后台执行)
         /// </summary>
-        protected void _OnDisposed() => Task.Run(() => Disposed?.Invoke(this, new EventArgs()));
+        protected void _Disposed() => Task.Run(() => Disposed?.Invoke(this, new EventArgs()));
 
         public virtual bool CanStart => IsStarted == false && IsDisposed == false;
         public virtual bool IsStarted => _started;

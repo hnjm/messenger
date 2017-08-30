@@ -69,24 +69,15 @@ namespace Mikodev.Network
                 rsakey = rsa.ToXmlString(false),
             });
 
-            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            var tra = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            void close()
-            {
-                soc?.Dispose();
-                soc = null;
-                tra?.Dispose();
-                tra = null;
-            }
-
             try
             {
-                if (Task.Run(() => soc.Connect(ep)).Wait(Links.Timeout) == false)
+                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                if (Task.Run(() => _socket.Connect(ep)).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when connect to server.");
-                soc._SetKeepAlive();
-                if (Task.Run(async () => await soc._SendExtendAsync(req.GetBytes())).Wait(Links.Timeout) == false)
+                _socket._SetKeepAlive();
+                if (Task.Run(async () => await _socket._SendExtendAsync(req.GetBytes())).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when client request.");
-                if (Task.Run(async () => buf = await soc._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
+                if (Task.Run(async () => buf = await _socket._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when client response.");
 
                 var rea = new PacketReader(buf);
@@ -97,29 +88,15 @@ namespace Mikodev.Network
                 var aesiv = rea["aesiv"].PullList();
                 _iep = rea["endpoint"].Pull<IPEndPoint>();
                 _aes = new AesManaged() { Key = rsa.Decrypt(aeskey, true), IV = rsa.Decrypt(aesiv, true) };
-
-                tra.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                tra.Bind(soc.LocalEndPoint);
-                tra.Listen(Links.Count);
             }
             catch (Exception)
             {
-                close();
+                Dispose();
                 throw;
             }
 
-            lock (_loc)
-            {
-                if (_disposed)
-                {
-                    close();
-                    throw new InvalidOperationException();
-                }
-
-                _socket = soc;
-                _Sender().ContinueWith(t => _Shutdown(t.Exception));
-                _Receiver().ContinueWith(t => _Shutdown(t.Exception));
-            }
+            _Sender().ContinueWith(t => _Shutdown(t.Exception));
+            _Receiver().ContinueWith(t => _Shutdown(t.Exception));
         }
 
         public void Enqueue(byte[] buffer)
@@ -143,7 +120,7 @@ namespace Mikodev.Network
                 var len = _msgs.Sum(r => r.Length);
                 if (len > Links.Queue)
                     throw new LinkException(LinkError.Overflow);
-                await Task.Delay(1);
+                await Task.Delay(Links.Delay);
             }
         }
 
@@ -172,9 +149,9 @@ namespace Mikodev.Network
             lock (_loc)
                 if (_disposed)
                     return;
-            Dispose();
             if (ex is Exception exc)
                 _except = exc;
+            Dispose();
             Shutdown?.Invoke(this, new EventArgs());
         }
 
@@ -184,6 +161,7 @@ namespace Mikodev.Network
             {
                 if (_disposed)
                     return;
+                _disposed = true;
                 _socket?.Dispose();
                 _socket = null;
             }

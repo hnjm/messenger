@@ -30,7 +30,7 @@ namespace Messenger
                 return;
             if (btn == buttonExit)
             {
-                Linkers.Close();
+                Linkers.Shutdown();
                 Application.Current.MainWindow.Close();
             }
             else if (btn == buttonOut)
@@ -38,7 +38,7 @@ namespace Messenger
                 var mai = Application.Current.MainWindow as Entrance;
                 if (mai == null)
                     return;
-                Linkers.Close();
+                Linkers.Shutdown();
                 Profiles.SetInscope(null);
                 mai.frame.Navigate(new Connection());
             }

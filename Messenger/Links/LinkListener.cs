@@ -52,14 +52,25 @@ namespace Mikodev.Network
         {
             while (_soc != null)
             {
-                var soc = _soc.Accept();
-                soc._SetKeepAlive();
-                Task.Run(() => _Handle(soc)).ContinueWith(t =>
+                var clt = default(Socket);
+
+                try
+                {
+                    clt = _soc.Accept();
+                    clt._SetKeepAlive();
+                }
+                catch (SocketException ex)
+                {
+                    Trace.WriteLine(ex);
+                    continue;
+                }
+
+                Task.Run(() => _Handle(clt)).ContinueWith(t =>
                 {
                     if (t.Exception != null)
                     {
                         Trace.WriteLine(t.Exception);
-                        soc.Dispose();
+                        clt.Dispose();
                     }
                 });
             }
@@ -170,7 +181,7 @@ namespace Mikodev.Network
             {
                 source = Links.ID,
                 target = Links.ID,
-                path = "user.ids",
+                path = "user.list",
             });
 
             try

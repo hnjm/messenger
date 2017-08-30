@@ -14,7 +14,7 @@ namespace Messenger.Models
     /// <summary>
     /// 文件接收类 (线程安全)
     /// </summary>
-    public class Taker : Transport
+    public class TransportReceiver : Transport
     {
         private string _path = null;
         private FileStream _stream = null;
@@ -26,7 +26,7 @@ namespace Messenger.Models
         /// <summary>
         /// 初始化对象 并设定文件保存路径函数
         /// </summary>
-        public Taker(PacketReader reader, Func<string> callback)
+        public TransportReceiver(PacketReader reader, Func<string> callback)
         {
             if (reader == null || callback == null)
                 throw new ArgumentNullException();
@@ -50,7 +50,7 @@ namespace Messenger.Models
                 _started = true;
 
                 _status = TransportStatus.运行;
-                _OnStarted();
+                _Started();
             }
 
             var soc = default(Socket);
@@ -65,10 +65,11 @@ namespace Messenger.Models
                     {
                         soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
                         if (Task.Run(() => soc.Connect(_ieps[i])).Wait(Links.Timeout) == false)
-                            throw new TimeoutException("Transport taker timeout.");
+                            throw new TimeoutException("Transport receiver timeout.");
                         soc._SetKeepAlive();
+                        break;
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is SocketException || ex is TimeoutException)
                     {
                         soc.Dispose();
                         soc = null;
@@ -77,10 +78,12 @@ namespace Messenger.Models
                 }
 
                 if (soc == null)
-                    throw new ApplicationException("Network is unreachable.");
+                {
+                    throw new ApplicationException("Network unreachable.");
+                }
 
                 var buf = PacketWriter.Serialize(_key);
-                await soc._SendAsync(buf.GetBytes());
+                await soc._SendExtendAsync(buf.GetBytes());
                 inf = new FileInfo(_callback.Invoke());
                 str = new FileStream(inf.FullName, FileMode.CreateNew);
 
@@ -182,7 +185,7 @@ namespace Messenger.Models
             _stream = null;
 
             _disposed = true;
-            _OnDisposed();
+            _Disposed();
         }
         #endregion
     }
