@@ -14,7 +14,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理用户聊天记录
     /// </summary>
-    class Packets
+    internal class Packets
     {
         /// <summary>
         /// 默认数据库路径
@@ -177,7 +177,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 初始化数据库 (非线程安全)
         /// </summary>
-        [AutoLoad(1)]
+        [AutoLoad(1, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             if (_instance != null)
@@ -275,7 +275,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 关闭数据库
         /// </summary>
-        [AutoSave(2)]
+        [AutoLoad(2, AutoLoadFlag.OnExit)]
         public static void Save()
         {
             _instance?._connection?.Dispose();

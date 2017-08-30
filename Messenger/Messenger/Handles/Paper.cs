@@ -2,19 +2,19 @@
 using Messenger.Modules;
 using Mikodev.Network;
 
-namespace Messenger.Handlers
+namespace Messenger.Handles
 {
-    [Handler("msg")]
+    [Handle("msg")]
     public class Paper : LinkPacket
     {
-        [Handler("text")]
+        [Handle("text")]
         public void Text()
         {
             var txt = Data.Pull<string>();
             Packets.Insert(Source, Target, txt);
         }
 
-        [Handler("image")]
+        [Handle("image")]
         public void Image()
         {
             var buf = Data.PullList();

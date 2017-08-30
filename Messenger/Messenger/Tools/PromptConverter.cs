@@ -7,7 +7,7 @@ namespace Messenger.Tools
     /// <summary>
     /// 当未读消息过多时 标注 "+" 号
     /// </summary>
-    class PromptConverter : IValueConverter
+    internal class PromptConverter : IValueConverter
     {
         public int MaxShowValue { get; set; } = 9;
 

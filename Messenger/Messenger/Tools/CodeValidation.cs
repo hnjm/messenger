@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace Messenger.Tools
 {
-    class CodeValidation : ValidationRule
+    internal class CodeValidation : ValidationRule
     {
         public override ValidationResult Validate(object value, CultureInfo cultureInfo)
         {

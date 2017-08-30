@@ -58,9 +58,6 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mikodev.Exchange, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mikodev.Exchange.1.1.2\lib\net451\Mikodev.Exchange.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -78,7 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Prompt.ico" />

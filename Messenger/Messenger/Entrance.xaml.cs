@@ -1,6 +1,5 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -17,7 +16,7 @@ namespace Messenger
         private class _Info
         {
             internal MethodInfo info;
-            internal Attribute attribute;
+            internal AutoLoadAttribute attribute;
         }
 
         public Entrance()
@@ -27,7 +26,7 @@ namespace Messenger
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            IEnumerable<_Info> find(Type attribute)
+            IEnumerable<_Info> find()
             {
                 var ass = typeof(Entrance).Assembly;
                 foreach (var t in ass.GetTypes())
@@ -35,25 +34,22 @@ namespace Messenger
                     var met = t.GetMethods(BindingFlags.Static | BindingFlags.Public);
                     foreach (var i in met)
                     {
-                        var att = i.GetCustomAttributes(attribute).FirstOrDefault();
+                        var att = i.GetCustomAttributes(typeof(AutoLoadAttribute)).FirstOrDefault();
                         if (att == null)
                             continue;
 
-                        yield return new _Info() { info = i, attribute = att };
+                        yield return new _Info() { info = i, attribute = (AutoLoadAttribute)att };
                     }
                 }
             }
 
-            var aut = find(typeof(AutoLoadAttribute)).Select(r => new { method = r.info, attr = (AutoLoadAttribute)r.attribute }).ToList();
-            aut.Sort((a, b) => a.attr.Level - b.attr.Level);
-            aut.ForEach(m => m.method.Invoke(null, null));
+            var loa = find().Where(r => r.attribute.Flag == AutoLoadFlag.OnLoad).ToList();
+            loa.Sort((a, b) => a.attribute.Level - b.attribute.Level);
+            var sav = find().Where(r => r.attribute.Flag == AutoLoadFlag.OnExit).ToList();
+            sav.Sort((a, b) => a.attribute.Level - b.attribute.Level);
 
-            Closed += delegate
-            {
-                var sav = find(typeof(AutoSaveAttribute)).Select(r => new { method = r.info, attr = (AutoSaveAttribute)r.attribute }).ToList();
-                sav.Sort((a, b) => a.attr.Level - b.attr.Level);
-                sav.ForEach(m => m.method.Invoke(null, null));
-            };
+            loa.ForEach(m => m.info.Invoke(null, null));
+            Closed += (s, arg) => sav.ForEach(m => m.info.Invoke(null, null));
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)

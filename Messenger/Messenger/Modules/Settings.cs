@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Messenger.Modules
 {
-    class Settings
+    internal class Settings
     {
         public const string KeyCtrlEnter = "setting-ctrlenter";
 
@@ -14,7 +14,7 @@ namespace Messenger.Modules
 
         public static bool UseCtrlEnter { get => instance.ctrlenter; set => instance.ctrlenter = value; }
 
-        [AutoLoad(8)]
+        [AutoLoad(8, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             try
@@ -29,7 +29,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoSave(16)]
+        [AutoLoad(16, AutoLoadFlag.OnExit)]
         public static void Save()
         {
             Options.SetOption(KeyCtrlEnter, instance.ctrlenter.ToString());

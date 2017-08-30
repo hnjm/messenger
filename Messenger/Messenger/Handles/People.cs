@@ -3,18 +3,18 @@ using Messenger.Modules;
 using Mikodev.Network;
 using System.Linq;
 
-namespace Messenger.Handlers
+namespace Messenger.Handles
 {
-    [Handler("user")]
+    [Handle("user")]
     public class People : LinkPacket
     {
-        [Handler("request")]
+        [Handle("request")]
         public void Request()
         {
             Posters.UserProfile(Source);
         }
 
-        [Handler("profile")]
+        [Handle("profile")]
         public void Profile()
         {
             var pro = new Profile()
@@ -30,7 +30,7 @@ namespace Messenger.Handlers
             Profiles.Insert(pro);
         }
 
-        [Handler("list")]
+        [Handle("list")]
         public void List()
         {
             var lst = Data.PullList<int>().ToList();

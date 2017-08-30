@@ -14,7 +14,7 @@ using System.Windows.Interop;
 
 namespace Messenger.Modules
 {
-    class Linkers
+    internal class Linkers
     {
         private readonly object _loc = new object();
 
@@ -109,7 +109,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoSave(0)]
+        [AutoLoad(0, AutoLoadFlag.OnExit)]
         public static void Shutdown()
         {
             lock (s_ins._loc)

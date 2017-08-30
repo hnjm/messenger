@@ -13,7 +13,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理传输并提供界面绑定功能
     /// </summary>
-    class Transports : INotifyPropertyChanged
+    internal class Transports : INotifyPropertyChanged
     {
         public const string TransPathKey = "transport-path";
 
@@ -175,7 +175,7 @@ namespace Messenger.Modules
             throw new IOException();
         }
 
-        [AutoLoad(32)]
+        [AutoLoad(32, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             var pth = Options.GetOption(TransPathKey);
@@ -184,7 +184,7 @@ namespace Messenger.Modules
             s_ins._savepath = pth;
         }
 
-        [AutoSave(4)]
+        [AutoLoad(4, AutoLoadFlag.OnExit)]
         public static void Save()
         {
             Options.SetOption(TransPathKey, s_ins._savepath);

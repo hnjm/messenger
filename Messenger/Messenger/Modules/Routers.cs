@@ -29,13 +29,13 @@ namespace Messenger.Modules
             {
                 if (t.IsSubclassOf(typeof(LinkPacket)) == false)
                     continue;
-                var att = t.GetCustomAttributes(typeof(HandlerAttribute)).FirstOrDefault() as HandlerAttribute;
+                var att = t.GetCustomAttributes(typeof(HandleAttribute)).FirstOrDefault() as HandleAttribute;
                 if (att == null)
                     continue;
                 var met = t.GetMethods(BindingFlags.Instance | BindingFlags.Public);
                 foreach (var i in met)
                 {
-                    var atr = i.GetCustomAttributes(typeof(HandlerAttribute)).FirstOrDefault() as HandlerAttribute;
+                    var atr = i.GetCustomAttributes(typeof(HandleAttribute)).FirstOrDefault() as HandleAttribute;
                     if (atr == null)
                         continue;
                     var act = Delegate.CreateDelegate(typeof(Action<>).MakeGenericType(t), i) as dynamic;
@@ -53,7 +53,7 @@ namespace Messenger.Modules
             rcd.Function.Invoke((dynamic)obj);
         }
 
-        [AutoLoad(1)]
+        [AutoLoad(1, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             if (s_ins != null)

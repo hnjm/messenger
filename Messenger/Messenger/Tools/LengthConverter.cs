@@ -8,7 +8,7 @@ namespace Messenger.Tools
     /// <summary>
     /// 将大小转化为带单位的字符串
     /// </summary>
-    class LengthConverter : IValueConverter
+    internal class LengthConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

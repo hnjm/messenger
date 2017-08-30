@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace Messenger.Modules
 {
-    class Options
+    internal class Options
     {
         /// <summary>
         /// 允许载入内存的配置文件大小限制
@@ -26,7 +26,7 @@ namespace Messenger.Modules
 
         private Options() { }
 
-        [AutoLoad(0)]
+        [AutoLoad(0, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             if (s_ins == null)
@@ -54,7 +54,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoSave(int.MaxValue)]
+        [AutoLoad(int.MaxValue, AutoLoadFlag.OnExit)]
         public static void Save()
         {
             var str = default(FileStream);

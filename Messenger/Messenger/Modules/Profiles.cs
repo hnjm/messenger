@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Messenger.Modules
 {
-    class Profiles : INotifyPropertyChanging, INotifyPropertyChanged
+    internal class Profiles : INotifyPropertyChanging, INotifyPropertyChanged
     {
         public const int GroupLimit = 32;
         public const string KeyCode = "profile-code";
@@ -235,7 +235,7 @@ namespace Messenger.Modules
             rec.Add(profile);
         }
 
-        [AutoLoad(16)]
+        [AutoLoad(16, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             try
@@ -261,7 +261,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoSave(8)]
+        [AutoLoad(8, AutoLoadFlag.OnExit)]
         public static void Save()
         {
             Options.SetOption(KeyCode, instance._local.ID.ToString());

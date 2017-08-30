@@ -6,12 +6,6 @@ namespace Messenger.Extensions
 {
     internal static class Collections
     {
-        public static void Deconstruct<TK, TV>(this KeyValuePair<TK, TV> pair, out TK key, out TV val)
-        {
-            key = pair.Key;
-            val = pair.Value;
-        }
-
         public static IEnumerable<T> _Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> equals)
         {
             var lst = new List<T>();

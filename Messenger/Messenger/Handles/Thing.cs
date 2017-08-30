@@ -5,12 +5,12 @@ using System;
 using System.Diagnostics;
 using System.Windows;
 
-namespace Messenger.Handlers
+namespace Messenger.Handles
 {
-    [Handler("file")]
+    [Handle("file")]
     public class Thing : LinkPacket
     {
-        [Handler("info")]
+        [Handle("info")]
         public void Take()
         {
             var tak = default(TransportReceiver);

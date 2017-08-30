@@ -7,7 +7,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 提供 Unicode 表情文字
     /// </summary>
-    class Symbols
+    internal class Symbols
     {
         private BindingList<string> list = null;
         private object locker = new object();

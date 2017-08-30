@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Messenger.Modules
 {
-    class Hosts
+    internal class Hosts
     {
         public const int DefaultTimeout = 1000;
 
@@ -90,7 +90,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 读取服务器搜索列表
         /// </summary>
-        [AutoLoad(4)]
+        [AutoLoad(4, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
             var lst = new List<IPEndPoint>();
@@ -118,7 +118,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 保存列表到文件
         /// </summary>
-        [AutoSave(32)]
+        [AutoLoad(32, AutoLoadFlag.OnExit)]
         public static void Save()
         {
             var stb = new StringBuilder();

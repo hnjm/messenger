@@ -95,15 +95,14 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Extensions\Collections.cs" />
     <Compile Include="Extensions\Converts.cs" />
-    <Compile Include="Handlers\Paper.cs" />
-    <Compile Include="Handlers\People.cs" />
-    <Compile Include="Handlers\Thing.cs" />
+    <Compile Include="Handles\Paper.cs" />
+    <Compile Include="Handles\People.cs" />
+    <Compile Include="Handles\Thing.cs" />
     <Compile Include="Fallback.xaml.cs">
       <DependentUpon>Fallback.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\AutoAttribute.cs" />
     <Compile Include="Models\AutoLoadAttribute.cs" />
-    <Compile Include="Models\AutoSaveAttribute.cs" />
+    <Compile Include="Models\AutoLoadFlag.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
     <Compile Include="Models\TransportSender.cs" />
     <Compile Include="Models\TransportReceiver.cs" />

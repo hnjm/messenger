@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace Messenger.Tools
 {
-    class StringEmptyConverter : IValueConverter
+    internal class StringEmptyConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => string.IsNullOrEmpty(value?.ToString());
 

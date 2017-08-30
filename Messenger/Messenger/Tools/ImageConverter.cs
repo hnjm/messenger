@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace Messenger.Tools
 {
-    class ImageConverter : IValueConverter
+    internal class ImageConverter : IValueConverter
     {
         private const int _limit = 3;
         private const int _short = 2;

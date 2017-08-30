@@ -3,12 +3,12 @@
 namespace Messenger.Models
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class HandlerAttribute : Attribute
+    public class HandleAttribute : Attribute
     {
         private string _pth = null;
 
         public string Path => _pth;
 
-        public HandlerAttribute(string path) => _pth = path;
+        public HandleAttribute(string path) => _pth = path;
     }
 }
