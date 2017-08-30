@@ -14,6 +14,12 @@ namespace Messenger
     /// </summary>
     public partial class Entrance : Window
     {
+        private class _Info
+        {
+            internal MethodInfo info;
+            internal Attribute attribute;
+        }
+
         public Entrance()
         {
             InitializeComponent();
@@ -21,7 +27,7 @@ namespace Messenger
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            IEnumerable<(MethodInfo, Attribute)> find(Type attribute)
+            IEnumerable<_Info> find(Type attribute)
             {
                 var ass = typeof(Entrance).Assembly;
                 foreach (var t in ass.GetTypes())
@@ -32,18 +38,19 @@ namespace Messenger
                         var att = i.GetCustomAttributes(attribute).FirstOrDefault();
                         if (att == null)
                             continue;
-                        yield return (i, att);
+
+                        yield return new _Info() { info = i, attribute = att };
                     }
                 }
             }
 
-            var aut = find(typeof(AutoLoadAttribute)).Select(r => new { method = r.Item1, attr = (AutoLoadAttribute)r.Item2 }).ToList();
+            var aut = find(typeof(AutoLoadAttribute)).Select(r => new { method = r.info, attr = (AutoLoadAttribute)r.attribute }).ToList();
             aut.Sort((a, b) => a.attr.Level - b.attr.Level);
             aut.ForEach(m => m.method.Invoke(null, null));
 
             Closed += delegate
             {
-                var sav = find(typeof(AutoSaveAttribute)).Select(r => new { method = r.Item1, attr = (AutoSaveAttribute)r.Item2 }).ToList();
+                var sav = find(typeof(AutoSaveAttribute)).Select(r => new { method = r.info, attr = (AutoSaveAttribute)r.attribute }).ToList();
                 sav.Sort((a, b) => a.attr.Level - b.attr.Level);
                 sav.ForEach(m => m.method.Invoke(null, null));
             };
