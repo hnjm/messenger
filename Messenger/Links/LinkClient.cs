@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -13,13 +12,13 @@ namespace Mikodev.Network
     {
         internal bool _started = false;
         internal bool _disposed = false;
+        internal int _msglen = 0;
         internal readonly int _id = 0;
         internal readonly object _loc = new object();
         internal AesManaged _aes = null;
         internal Exception _except = null;
         internal IPEndPoint _iep = null;
-
-        internal readonly ConcurrentQueue<byte[]> _msgs = new ConcurrentQueue<byte[]>();
+        internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
         internal Socket _socket = null;
 
         public int ID => _id;
@@ -60,6 +59,7 @@ namespace Mikodev.Network
                 _started = true;
             }
 
+            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var rsa = new RSACryptoServiceProvider();
             var buf = default(byte[]);
             var req = PacketWriter.Serialize(new
@@ -71,13 +71,12 @@ namespace Mikodev.Network
 
             try
             {
-                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                if (Task.Run(() => _socket.Connect(ep)).Wait(Links.Timeout) == false)
+                if (Task.Run(() => soc.Connect(ep)).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when connect to server.");
-                _socket._SetKeepAlive();
-                if (Task.Run(async () => await _socket._SendExtendAsync(req.GetBytes())).Wait(Links.Timeout) == false)
+                soc._SetKeepAlive();
+                if (Task.Run(async () => await soc._SendExtendAsync(req.GetBytes())).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when client request.");
-                if (Task.Run(async () => buf = await _socket._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
+                if (Task.Run(async () => buf = await soc._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when client response.");
 
                 var rea = new PacketReader(buf);
@@ -88,10 +87,16 @@ namespace Mikodev.Network
                 var aesiv = rea["aesiv"].PullList();
                 _iep = rea["endpoint"].Pull<IPEndPoint>();
                 _aes = new AesManaged() { Key = rsa.Decrypt(aeskey, true), IV = rsa.Decrypt(aesiv, true) };
+                lock (_loc)
+                {
+                    if (_disposed)
+                        throw new InvalidOperationException();
+                    _socket = soc;
+                }
             }
             catch (Exception)
             {
-                Dispose();
+                soc.Dispose();
                 throw;
             }
 
@@ -101,26 +106,44 @@ namespace Mikodev.Network
 
         public void Enqueue(byte[] buffer)
         {
-            if (buffer == null)
-                throw new LinkException(LinkError.AssertFailed);
-            _msgs.Enqueue(buffer);
+            lock (_loc)
+            {
+                if (Links.Queue - _msglen < buffer.Length)
+                {
+                    Task.Run(new Action(Dispose));
+                    return;
+                }
+
+                _msgs.Enqueue(buffer);
+                _msglen += buffer.Length;
+            }
         }
 
         internal async Task _Sender()
         {
-            while (_socket != null)
+            bool dequeue(out byte[] buf)
             {
-                if (_msgs.TryDequeue(out var buf))
+                lock (_loc)
                 {
-                    var res = _aes._Encrypt(buf);
-                    await _socket._SendExtendAsync(res);
-                    continue;
+                    if (_msgs.Count > 0)
+                    {
+                        buf = _msgs.Dequeue();
+                        _msglen -= buf.Length;
+                        return true;
+                    }
                 }
 
-                var len = _msgs.Sum(r => r.Length);
-                if (len > Links.Queue)
-                    throw new LinkException(LinkError.Overflow);
-                await Task.Delay(Links.Delay);
+                buf = null;
+                return false;
+            }
+
+            while (_socket != null)
+            {
+                if (dequeue(out var buf))
+                    await _socket._SendExtendAsync(_aes._Encrypt(buf));
+                else
+                    await Task.Delay(Links.Delay);
+                continue;
             }
         }
 
@@ -134,25 +157,26 @@ namespace Mikodev.Network
             }
         }
 
-        internal void _Received(LinkPacket packet)
+        internal int _Received(LinkPacket packet)
         {
             if (packet.Source == Links.ID && string.Equals(packet.Path, "link.shutdown"))
-                _Shutdown();
-            else
-                Received?.Invoke(this, new LinkEventArgs<LinkPacket>() { Source = this, Record = packet });
+                return _Shutdown();
+            Received?.Invoke(this, new LinkEventArgs<LinkPacket>() { Source = this, Record = packet });
+            return 0;
         }
 
-        internal void _Shutdown(object ex = null)
+        internal int _Shutdown(object obj = null)
         {
-            if (ex != null)
-                Trace.WriteLine(ex);
+            if (obj != null)
+                Trace.WriteLine(obj);
             lock (_loc)
                 if (_disposed)
-                    return;
-            if (ex is Exception exc)
-                _except = exc;
+                    return 0;
+            if (obj is Exception ex)
+                _except = ex;
             Dispose();
             Shutdown?.Invoke(this, new EventArgs());
+            return 0;
         }
 
         public void Dispose()

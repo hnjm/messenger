@@ -2,7 +2,7 @@
 {
     public static class Links
     {
-        public const string Protocol = "mikodev.messenger.v1.10";
+        public const string Protocol = "mikodev.messenger.v1.12";
 
         public const int Port = 7550;
 
@@ -25,5 +25,7 @@
         public const int Queue = 4 * 1024 * 1024;
 
         public const int Delay = 4;
+
+        public const int Group = 32;
     }
 }

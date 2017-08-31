@@ -1,4 +1,5 @@
 ﻿using Messenger.Modules;
+using Mikodev.Network;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -33,7 +34,7 @@ namespace Messenger
             {
                 var res = Profiles.SetGroupLabels(textboxEdit.Text);
                 if (res == false)
-                    Entrance.ShowError($"最多允许使用 {Profiles.GroupLimit} 个群组标签.", null);
+                    Entrance.ShowError($"最多允许使用 {Links.Group} 个群组标签.", null);
                 return;
             }
         }

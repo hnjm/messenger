@@ -17,5 +17,7 @@
         CountLimited,
 
         ProtocolMismatch,
+
+        GroupLimited,
     }
 }

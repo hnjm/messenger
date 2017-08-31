@@ -1,5 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +13,6 @@ namespace Messenger.Modules
 {
     internal class Profiles : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        public const int GroupLimit = 32;
         public const string KeyCode = "profile-code";
         public const string KeyName = "profile-name";
         public const string KeyText = "profile-text";
@@ -172,7 +172,7 @@ namespace Messenger.Modules
             var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
             var kvs = tmp._Distinct((a, b) => a.Hash == b.Hash).ToList();
-            if (kvs.Count > GroupLimit)
+            if (kvs.Count > Links.Group)
                 return false;
             var ids = from i in kvs select i.Hash;
             instance._grouptags = args;

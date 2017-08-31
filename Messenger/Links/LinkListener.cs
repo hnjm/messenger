@@ -13,14 +13,12 @@ namespace Mikodev.Network
     public sealed partial class LinkListener
     {
         internal int _climit = Links.Count;
-
         internal int _port = Links.Port;
+        internal readonly object _obj = new object();
 
         internal Socket _soc = null;
-
-        internal Dictionary<int, LinkClient> _dic = new Dictionary<int, LinkClient>();
-
-        internal Dictionary<int, List<int>> _gro = new Dictionary<int, List<int>>();
+        internal readonly Dictionary<int, LinkClient> _dic = new Dictionary<int, LinkClient>();
+        internal readonly Dictionary<int, List<int>> _gro = new Dictionary<int, List<int>>();
 
         public Task Listen(int port = Links.Port, int count = Links.Count)
         {
@@ -84,7 +82,7 @@ namespace Mikodev.Network
                     return LinkError.CodeInvalid;
                 if (_dic.Count >= _climit)
                     return LinkError.CountLimited;
-                lock (_dic)
+                lock (_obj)
                 {
                     if (_dic.ContainsKey(code))
                         return LinkError.CodeConflict;
@@ -95,7 +93,7 @@ namespace Mikodev.Network
 
             void remove(int code)
             {
-                lock (_dic)
+                lock (_obj)
                 {
                     if (_dic.TryGetValue(code, out var val) && val == null)
                         _dic.Remove(code);
@@ -127,17 +125,13 @@ namespace Mikodev.Network
                 return res.GetBytes();
             }
 
-            if (Task.Run(async () => buf = await client._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
-            {
-                throw new TimeoutException("Listener request timeout.");
-            }
-
             try
             {
+                if (Task.Run(async () => buf = await client._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
+                    throw new TimeoutException("Listener request timeout.");
                 if (Task.Run(async () => await client._SendExtendAsync(respond())).Wait(Links.Timeout) == false)
-                {
                     throw new TimeoutException("Listener response timeout.");
-                }
+                if (err != LinkError.Success) throw new LinkException(err);
             }
             catch (Exception)
             {
@@ -146,28 +140,15 @@ namespace Mikodev.Network
                 throw;
             }
 
-            if (err != LinkError.Success)
-            {
-                throw new LinkException(err);
-            }
-
             var clt = new LinkClient(cid) { _aes = aes };
             clt.Received += _LinkClient_Received;
             clt.Shutdown += _LinkClient_Shutdown;
 
-            try
+            lock (_obj)
             {
-                Monitor.Enter(_dic);
-                Monitor.Enter(_gro);
-
                 remove(cid);
                 _dic.Add(cid, clt);
                 _gro.Add(cid, new List<int>());
-            }
-            finally
-            {
-                Monitor.Exit(_gro);
-                Monitor.Exit(_dic);
             }
 
             clt.Start(client);
@@ -184,22 +165,14 @@ namespace Mikodev.Network
                 path = "user.list",
             });
 
-            try
+            lock (_obj)
             {
-                Monitor.Enter(_dic);
-                Monitor.Enter(_gro);
-
                 _dic.Remove(clt._id);
                 _gro.Remove(clt._id);
                 foreach (var c in _dic) lst.Add(c.Key);
 
                 var buf = wtr.PushList("data", lst).GetBytes();
                 foreach (var i in _dic) i.Value.Enqueue(buf);
-            }
-            finally
-            {
-                Monitor.Exit(_gro);
-                Monitor.Exit(_dic);
             }
         }
 
@@ -210,43 +183,36 @@ namespace Mikodev.Network
             var tar = rea.Target;
             var pth = rea.Path;
 
-            if (tar == Links.ID)
+            switch (tar)
             {
-                if (pth == "user.groups")
-                {
+                case Links.ID when pth == "user.group":
                     var lst = rea.Data.PullList<int>().ToList();
+                    if (lst.Count > Links.Group)
+                        throw new LinkException(LinkError.GroupLimited, "Group count out of range.");
                     lst.RemoveAll(r => r < Links.ID == false);
-                    lock (_gro)
-                    {
-                        _gro[src].Clear();
+                    lock (_obj)
                         _gro[src] = lst;
-                    }
                     return;
-                }
-                lock (_dic)
-                {
-                    foreach (var i in _dic)
-                    {
-                        if (i.Key != src) i.Value.Enqueue(rea.Buffer);
-                    }
-                }
-            }
-            else if (tar > Links.ID)
-            {
-                lock (_dic)
-                {
-                    _dic[tar].Enqueue(rea.Buffer);
-                }
-            }
-            else
-            {
-                lock (_gro)
-                {
-                    foreach (var i in _gro)
-                    {
-                        if (i.Key != src && i.Value.Contains(tar)) _dic[i.Key].Enqueue(rea.Buffer);
-                    }
-                }
+
+                case Links.ID:
+                    lock (_obj)
+                        foreach (var i in _dic)
+                            if (i.Key != src)
+                                i.Value.Enqueue(rea.Buffer);
+                    return;
+
+                case int _ when tar > Links.ID:
+                    lock (_obj)
+                        if (_dic.TryGetValue(tar, out var clt))
+                            clt.Enqueue(rea.Buffer);
+                    return;
+
+                default:
+                    lock (_obj)
+                        foreach (var i in _gro)
+                            if (i.Key != src && i.Value.Contains(tar))
+                                _dic[i.Key].Enqueue(rea.Buffer);
+                    return;
             }
         }
     }
