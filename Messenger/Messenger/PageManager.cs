@@ -27,20 +27,20 @@ namespace Messenger
             SetSelectedProfile(listbox, list);
 
             var hdr = new ListChangedEventHandler((s, e) =>
-                {
-                    if (e.ListChangedType != ListChangedType.ItemAdded)
-                        return;
-                    SetSelectedProfile(listbox, list);
-                });
+            {
+                if (e.ListChangedType != ListChangedType.ItemAdded)
+                    return;
+                SetSelectedProfile(listbox, list);
+            });
 
             list.ListChanged += hdr;
             listbox.SelectionChanged += ListBox_SelectionChanged;
 
             page.Unloaded += delegate
-                {
-                    list.ListChanged -= hdr;
-                    listbox.SelectionChanged -= ListBox_SelectionChanged;
-                };
+            {
+                list.ListChanged -= hdr;
+                listbox.SelectionChanged -= ListBox_SelectionChanged;
+            };
         }
     }
 }

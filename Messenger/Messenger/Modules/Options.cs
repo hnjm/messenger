@@ -1,4 +1,5 @@
 ﻿using Messenger.Models;
+using Mikodev.Network;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -9,10 +10,6 @@ namespace Messenger.Modules
 {
     internal class Options
     {
-        /// <summary>
-        /// 允许载入内存的配置文件大小限制
-        /// </summary>
-        public const long DefaultLengthLimit = 32768;
         public const string DefaultPath = nameof(Messenger) + ".option";
         public const string DefaultRoot = "options-root";
         public const string DefaultHeader = "option";
@@ -39,15 +36,22 @@ namespace Messenger.Modules
                 try
                 {
                     fst = new FileStream(DefaultPath, FileMode.Open);
-                    if (fst.Length > DefaultLengthLimit == false)
+                    if (fst.Length > Links.BufferLimit == false)
                     {
                         var doc = new XmlDocument();
                         doc.Load(fst);
                         s_ins._doc = doc;
                     }
                 }
-                catch { }
-                finally { fst?.Dispose(); }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex);
+                }
+                finally
+                {
+                    fst?.Dispose();
+                }
+
                 if (s_ins._doc == null)
                     s_ins._doc = new XmlDocument();
                 return;

@@ -104,10 +104,10 @@
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoLoadFlag.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
-    <Compile Include="Models\TransportSender.cs" />
-    <Compile Include="Models\TransportReceiver.cs" />
-    <Compile Include="Models\Transport.cs" />
-    <Compile Include="Models\TransportStatus.cs" />
+    <Compile Include="Models\PortSender.cs" />
+    <Compile Include="Models\PortReceiver.cs" />
+    <Compile Include="Models\Port.cs" />
+    <Compile Include="Models\PortStatus.cs" />
     <Compile Include="Modules\Options.cs" />
     <Compile Include="Modules\Posters.cs" />
     <Compile Include="Modules\Routers.cs" />
@@ -132,7 +132,7 @@
       <DependentUpon>PageProfile.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modules\Symbols.cs" />
-    <Compile Include="Modules\Transports.cs" />
+    <Compile Include="Modules\Ports.cs" />
     <Compile Include="Models\Cargo.cs" />
     <Compile Include="Modules\Packets.cs" />
     <Compile Include="Models\Host.cs" />

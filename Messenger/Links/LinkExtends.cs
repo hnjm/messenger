@@ -10,7 +10,7 @@ namespace Mikodev.Network
         public static int _SetKeepAlive(this Socket socket, bool enable = true, uint before = Links.KeepAliveBefore, uint interval = Links.KeepAliveInterval)
         {
             if (enable == true && (before < 1 || interval < 1))
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("Keep alive argument out of range.");
             var len = sizeof(uint);
             var val = new byte[len];
             var buf = new byte[len * 3];
@@ -28,16 +28,14 @@ namespace Mikodev.Network
         {
             var buf = await _ReceiveAsync(socket, sizeof(int));
             var len = ToInt32(buf, 0);
-            if (len < 1 || len > Links.BufferLimit)
-                throw new LinkException(LinkError.Overflow);
             var res = await _ReceiveAsync(socket, len);
             return res;
         }
 
-        public static async Task<byte[]> _ReceiveAsync(Socket socket, int length)
+        public static async Task<byte[]> _ReceiveAsync(this Socket socket, int length)
         {
             if (length < 1 || length > Links.BufferLimit)
-                throw new LinkException(LinkError.AssertFailed, "Buffer size out of range!");
+                throw new LinkException(LinkError.Overflow, "Buffer length out of range!");
             var buf = new byte[length];
             var idx = 0;
             while (idx < length)

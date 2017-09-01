@@ -34,7 +34,7 @@ namespace Messenger
             {
                 var res = Profiles.SetGroupLabels(textboxEdit.Text);
                 if (res == false)
-                    Entrance.ShowError($"最多允许使用 {Links.Group} 个群组标签.", null);
+                    Entrance.ShowError($"最多允许 {Links.Group} 个群组标签", null);
                 return;
             }
         }

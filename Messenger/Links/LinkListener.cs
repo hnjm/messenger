@@ -23,8 +23,7 @@ namespace Mikodev.Network
         public Task Listen(int port = Links.Port, int count = Links.Count)
         {
             if (count < 1)
-                throw new ArgumentOutOfRangeException(nameof(count), "The count limit must bigger than zero!");
-
+                throw new ArgumentOutOfRangeException(nameof(count), "Count limit must bigger than zero!");
             var iep = new IPEndPoint(IPAddress.Any, port);
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
@@ -33,7 +32,7 @@ namespace Mikodev.Network
                 soc.Bind(iep);
                 soc.Listen(count);
                 if (Interlocked.CompareExchange(ref _soc, soc, null) != null)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Listener socket not null!");
                 _climit = count;
                 _port = port;
             }
@@ -97,7 +96,8 @@ namespace Mikodev.Network
                 {
                     if (_dic.TryGetValue(code, out var val) && val == null)
                         _dic.Remove(code);
-                    else throw new LinkException(LinkError.AssertFailed);
+                    else
+                        throw new LinkException(LinkError.AssertFailed, "Remove code mark error!");
                 }
             }
 
@@ -129,7 +129,7 @@ namespace Mikodev.Network
             {
                 if (Task.Run(async () => buf = await client._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Listener request timeout.");
-                if (Task.Run(async () => await client._SendExtendAsync(respond())).Wait(Links.Timeout) == false)
+                if (client._SendExtendAsync(respond()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Listener response timeout.");
                 if (err != LinkError.Success) throw new LinkException(err);
             }
@@ -169,10 +169,11 @@ namespace Mikodev.Network
             {
                 _dic.Remove(clt._id);
                 _gro.Remove(clt._id);
-                foreach (var c in _dic) lst.Add(c.Key);
-
+                foreach (var c in _dic)
+                    lst.Add(c.Key);
                 var buf = wtr.PushList("data", lst).GetBytes();
-                foreach (var i in _dic) i.Value.Enqueue(buf);
+                foreach (var i in _dic)
+                    i.Value.Enqueue(buf);
             }
         }
 

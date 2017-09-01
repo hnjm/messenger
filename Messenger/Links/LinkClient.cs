@@ -12,7 +12,7 @@ namespace Mikodev.Network
     {
         internal bool _started = false;
         internal bool _disposed = false;
-        internal int _msglen = 0;
+        internal long _msglen = 0;
         internal readonly int _id = 0;
         internal readonly object _loc = new object();
         internal AesManaged _aes = null;
@@ -42,7 +42,7 @@ namespace Mikodev.Network
             lock (_loc)
             {
                 if (_started || _disposed)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Client has benn marked as started or disposed!");
                 _started = true;
                 _socket = socket;
                 _Sender().ContinueWith(t => _Shutdown(t.Exception));
@@ -55,7 +55,7 @@ namespace Mikodev.Network
             lock (_loc)
             {
                 if (_started || _disposed)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Client has benn marked as started or disposed!");
                 _started = true;
             }
 
@@ -74,7 +74,7 @@ namespace Mikodev.Network
                 if (Task.Run(() => soc.Connect(ep)).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when connect to server.");
                 soc._SetKeepAlive();
-                if (Task.Run(async () => await soc._SendExtendAsync(req.GetBytes())).Wait(Links.Timeout) == false)
+                if (soc._SendExtendAsync(req.GetBytes()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when client request.");
                 if (Task.Run(async () => buf = await soc._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Timeout when client response.");
@@ -90,7 +90,7 @@ namespace Mikodev.Network
                 lock (_loc)
                 {
                     if (_disposed)
-                        throw new InvalidOperationException();
+                        throw new InvalidOperationException("Client has benn marked as disposed!");
                     _socket = soc;
                 }
             }
@@ -108,12 +108,10 @@ namespace Mikodev.Network
         {
             lock (_loc)
             {
-                if (Links.Queue - _msglen < buffer.Length)
-                {
-                    Task.Run(new Action(Dispose));
+                if (buffer == null || buffer.Length < 1 || buffer.Length > Links.BufferLimit)
+                    throw new LinkException(LinkError.AssertFailed, "Message buffer null or out of range!");
+                if (_disposed || _msglen > Links.Queue)
                     return;
-                }
-
                 _msgs.Enqueue(buffer);
                 _msglen += buffer.Length;
             }
@@ -125,16 +123,24 @@ namespace Mikodev.Network
             {
                 lock (_loc)
                 {
-                    if (_msgs.Count > 0)
+                    switch (_msglen)
                     {
-                        buf = _msgs.Dequeue();
-                        _msglen -= buf.Length;
-                        return true;
+                        case 0 when _msgs.Count > 0:
+                            throw new LinkException(LinkError.AssertFailed, "Message queue may have empty packet!");
+
+                        case long _ when _msglen > Links.Queue:
+                            throw new LinkException(LinkError.QueueLimited, "Message queue length out of range!");
+
+                        case long _ when _msglen > 0:
+                            buf = _msgs.Dequeue();
+                            _msglen -= buf.Length;
+                            return true;
+
+                        default:
+                            buf = null;
+                            return false;
                     }
                 }
-
-                buf = null;
-                return false;
             }
 
             while (_socket != null)
@@ -143,7 +149,6 @@ namespace Mikodev.Network
                     await _socket._SendExtendAsync(_aes._Encrypt(buf));
                 else
                     await Task.Delay(Links.Delay);
-                continue;
             }
         }
 

@@ -106,7 +106,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Entrance.ShowError("复制消息到剪切板出错", ex);
+                Entrance.ShowError("复制消息出错", ex);
             }
             e.Handled = true;
         }

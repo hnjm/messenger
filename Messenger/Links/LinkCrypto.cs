@@ -16,19 +16,19 @@ namespace Mikodev.Network
         public static byte[] _BufferWriter(byte[] buffer, int offset, int count, ICryptoTransform tramsform)
         {
             var mst = new MemoryStream();
-            var cst = default(CryptoStream);
+            var cst = new CryptoStream(mst, tramsform, CryptoStreamMode.Write);
 
             try
             {
-                cst = new CryptoStream(mst, tramsform, CryptoStreamMode.Write);
                 cst.Write(buffer, offset, count);
                 cst.Dispose();
+                mst.Dispose();
                 return mst.ToArray();
             }
             finally
             {
-                mst?.Dispose();
-                cst?.Dispose();
+                mst.Dispose();
+                cst.Dispose();
             }
         }
     }

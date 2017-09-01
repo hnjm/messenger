@@ -6,7 +6,7 @@ namespace Messenger.Models
     /// <summary>
     /// 文件传输基类
     /// </summary>
-    public abstract class Transport
+    public abstract class Port
     {
         protected bool _started = false;
         protected bool _disposed = false;
@@ -17,7 +17,7 @@ namespace Messenger.Models
         protected string _name = null;
         protected Guid _key = Guid.NewGuid();
         protected Exception _exception = null;
-        protected TransportStatus _status = TransportStatus.默认;
+        protected PortStatus _status = PortStatus.默认;
 
         /// <summary>
         /// 文件传输标识
@@ -38,7 +38,7 @@ namespace Messenger.Models
         /// <summary>
         /// 当前文件传输状态
         /// </summary>
-        public TransportStatus Status => _status;
+        public PortStatus Status => _status;
         /// <summary>
         /// 异常信息
         /// </summary>
@@ -55,12 +55,12 @@ namespace Messenger.Models
         /// <summary>
         /// 触发 <see cref="Started"/> 事件 (后台执行)
         /// </summary>
-        protected void _Started() => Task.Run(() => Started?.Invoke(this, new EventArgs()));
+        protected void _EmitStarted() => Task.Run(() => Started?.Invoke(this, new EventArgs()));
 
         /// <summary>
         /// 触发 <see cref="Disposed"/> 事件 (后台执行)
         /// </summary>
-        protected void _Disposed() => Task.Run(() => Disposed?.Invoke(this, new EventArgs()));
+        protected void _EmitDisposed() => Task.Run(() => Disposed?.Invoke(this, new EventArgs()));
 
         public virtual bool CanStart => IsStarted == false && IsDisposed == false;
         public virtual bool IsStarted => _started;

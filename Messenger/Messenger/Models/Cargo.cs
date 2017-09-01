@@ -30,14 +30,14 @@ namespace Messenger.Models
         private double _speed = 0;
         private double _progress = 0;
         private Profile _profile = null;
-        private Transport _trans = null;
+        private Port _trans = null;
         private TimeSpan _remain = TimeSpan.Zero;
         private List<_Record> _list = new List<_Record>();
 
         public double Speed => _speed;
         public double Progress => _progress;
         public TimeSpan Remain => _remain;
-        public Transport Transport => _trans;
+        public Port Transport => _trans;
 
         public Profile Profile
         {
@@ -49,18 +49,18 @@ namespace Messenger.Models
             }
         }
 
-        public Cargo(int id, Transport val)
+        public Cargo(int id, Port val)
         {
             _tid = id;
             _trans = val;
 
-            if (val is TransportSender mak)
+            if (val is PortSender mak)
             {
                 Linkers.Requests += mak.Transport_Requests;
                 val.Disposed += delegate
-                    {
-                        Linkers.Requests -= mak.Transport_Requests;
-                    };
+                {
+                    Linkers.Requests -= mak.Transport_Requests;
+                };
             }
         }
 
@@ -77,7 +77,7 @@ namespace Messenger.Models
             var spd = _AverageSpeed(tick);
             _speed = spd * 1000;  // 毫秒 -> 秒
             _remain = (spd > 0 && _trans.Position > 0) ? TimeSpan.FromMilliseconds((_trans.Length - _trans.Position) / spd) : TimeSpan.Zero;
-            _progress = (_trans.Length > 0) ? (100.0 * _trans.Position / _trans.Length) : (_trans.Status == TransportStatus.成功 ? 100 : 0);
+            _progress = (_trans.Length > 0) ? (100.0 * _trans.Position / _trans.Length) : (_trans.Status == PortStatus.成功 ? 100 : 0);
 
             OnPropertyChanged(nameof(Speed));
             OnPropertyChanged(nameof(Remain));

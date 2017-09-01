@@ -23,22 +23,22 @@ namespace Messenger
         {
             if (sender == buttonClean)
             {
-                Transports.Remove();
+                Ports.Remove();
             }
             else if (sender == buttonChange)
             {
                 var dfd = new System.Windows.Forms.FolderBrowserDialog();
-                if (Directory.Exists(Transports.SavePath))
-                    dfd.SelectedPath = Transports.SavePath;
+                if (Directory.Exists(Ports.SavePath))
+                    dfd.SelectedPath = Ports.SavePath;
                 if (dfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    Transports.SavePath = dfd.SelectedPath;
+                    Ports.SavePath = dfd.SelectedPath;
             }
             else if (sender == buttonOpen)
             {
                 try
                 {
-                    if (Directory.Exists(Transports.SavePath))
-                        Process.Start("explorer", "/e," + Transports.SavePath);
+                    if (Directory.Exists(Ports.SavePath))
+                        Process.Start("explorer", "/e," + Ports.SavePath);
                 }
                 catch (Exception ex)
                 {
@@ -47,9 +47,9 @@ namespace Messenger
             }
             else if (sender == buttonStopAll)
             {
-                foreach (var i in Transports.Makers)
+                foreach (var i in Ports.Makers)
                     i.Close();
-                foreach (var i in Transports.Takers)
+                foreach (var i in Ports.Takers)
                     i.Close();
             }
         }

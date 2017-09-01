@@ -9,7 +9,7 @@ namespace Messenger.Models
     /// <summary>
     /// 文件发送类 (事件驱动 线程安全)
     /// </summary>
-    public class TransportSender : Transport
+    public class PortSender : Port
     {
         private FileStream _stream = null;
         private Socket _socket = null;
@@ -23,7 +23,7 @@ namespace Messenger.Models
         /// 创建文件发送对象
         /// </summary>
         /// <param name="path">文件路径</param>
-        public TransportSender(string path)
+        public PortSender(string path)
         {
             var inf = default(FileInfo);
             var str = default(FileStream);
@@ -42,7 +42,7 @@ namespace Messenger.Models
             _stream = str;
             _name = inf.Name;
             _length = str.Length;
-            _status = TransportStatus.等待;
+            _status = PortStatus.等待;
         }
 
         /// <summary>
@@ -90,9 +90,9 @@ namespace Messenger.Models
                     return;
                 _started = true;
                 _socket = soc;
-                _status = TransportStatus.运行;
+                _status = PortStatus.运行;
             }
-            _Started();
+            _EmitStarted();
             _Read().ContinueWith(t =>
             {
                 var res = (t.Exception == null && _position == _length);
@@ -100,7 +100,7 @@ namespace Messenger.Models
                 {
                     if (_disposed == false)
                     {
-                        _status = res ? TransportStatus.成功 : TransportStatus.中断;
+                        _status = res ? PortStatus.成功 : PortStatus.中断;
                         _exception = t.Exception;
                         Dispose(true);
                     }
@@ -110,16 +110,16 @@ namespace Messenger.Models
 
         #region 实现 IDisposable
         /// <summary>
-        /// 释放资源并在后台触发 <see cref="Transport.Disposed"/> 事件 (不含 lock 语句)
+        /// 释放资源并在后台触发 <see cref="Port.Disposed"/> 事件 (不含 lock 语句)
         /// </summary>
         protected override void Dispose(bool disposing)
         {
             if (_disposed)
                 return;
 
-            var val = _status & TransportStatus.终态;
+            var val = _status & PortStatus.终止;
             if (val == 0)
-                _status = TransportStatus.取消;
+                _status = PortStatus.取消;
 
             _socket?.Dispose();
             _socket = null;
@@ -127,7 +127,7 @@ namespace Messenger.Models
             _stream = null;
 
             _disposed = true;
-            _Disposed();
+            _EmitDisposed();
         }
         #endregion
     }

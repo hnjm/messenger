@@ -4,20 +4,22 @@
     {
         None,
 
+        Success,
+
         Overflow,
 
         AssertFailed,
 
-        CodeConflict,
+        ProtocolMismatch,
 
         CodeInvalid,
 
-        Success,
+        CodeConflict,
 
         CountLimited,
 
-        ProtocolMismatch,
-
         GroupLimited,
+
+        QueueLimited,
     }
 }

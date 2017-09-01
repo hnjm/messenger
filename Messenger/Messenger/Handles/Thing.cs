@@ -13,10 +13,10 @@ namespace Messenger.Handles
         [Handle("info")]
         public void Take()
         {
-            var tak = default(TransportReceiver);
+            var tak = default(PortReceiver);
             try
             {
-                tak = new TransportReceiver(Data, () => Transports.FindPath(Data["filename"].Pull<string>()));
+                tak = new PortReceiver(Data, () => Ports.FindPath(Data["filename"].Pull<string>()));
             }
             catch (Exception ex)
             {
@@ -26,10 +26,10 @@ namespace Messenger.Handles
             var trs = new Cargo(Source, tak);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Transports.Expect.Add(trs);
-                Transports.Takers.Add(trs);
-                tak.Started += Transports.Trans_Changed;
-                tak.Disposed += Transports.Trans_Changed;
+                Ports.Expect.Add(trs);
+                Ports.Takers.Add(trs);
+                tak.Started += Ports.Trans_Changed;
+                tak.Disposed += Ports.Trans_Changed;
             });
             var pkt = new Packet() { Source = Source, Target = Linkers.ID, Groups = Source, Path = "file", Value = trs };
             Application.Current.Dispatcher.Invoke(() =>

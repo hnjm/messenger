@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Messenger.Models
@@ -14,19 +13,18 @@ namespace Messenger.Models
     /// <summary>
     /// 文件接收类 (线程安全)
     /// </summary>
-    public class TransportReceiver : Transport
+    public class PortReceiver : Port
     {
         private string _path = null;
         private FileStream _stream = null;
         private Socket _socket = null;
-        private Thread _thread = null;
         private List<IPEndPoint> _ieps = null;
         private Func<string> _callback = null;
 
         /// <summary>
         /// 初始化对象 并设定文件保存路径函数
         /// </summary>
-        public TransportReceiver(PacketReader reader, Func<string> callback)
+        public PortReceiver(PacketReader reader, Func<string> callback)
         {
             if (reader == null || callback == null)
                 throw new ArgumentNullException();
@@ -34,7 +32,7 @@ namespace Messenger.Models
             _name = reader["filename"].Pull<string>();
             _ieps = reader["endpoints"].PullList<IPEndPoint>().ToList();
             _length = reader["filesize"].Pull<long>();
-            _status = TransportStatus.等待;
+            _status = PortStatus.等待;
             _callback = callback;
         }
 
@@ -49,8 +47,8 @@ namespace Messenger.Models
                     throw new InvalidOperationException();
                 _started = true;
 
-                _status = TransportStatus.运行;
-                _Started();
+                _status = PortStatus.运行;
+                _EmitStarted();
             }
 
             var soc = default(Socket);
@@ -78,10 +76,7 @@ namespace Messenger.Models
                 }
 
                 if (soc == null)
-                {
                     throw new ApplicationException("Network unreachable.");
-                }
-
                 var buf = PacketWriter.Serialize(_key);
                 await soc._SendExtendAsync(buf.GetBytes());
                 inf = new FileInfo(_callback.Invoke());
@@ -96,69 +91,60 @@ namespace Messenger.Models
                         throw new InvalidOperationException();
                     _socket = soc;
                     _stream = str;
-                    _thread = new Thread(_Taker);
-                    _thread.Start();
                 }
             }
 
             start().ContinueWith(t =>
             {
-                if (t.Exception != null)
+                if (t.Exception == null)
                 {
-                    soc?.Dispose();
-                    str?.Dispose();
-                    soc = null;
-                    str = null;
-                    Dispose();
+                    _Receive().ContinueWith(_ReceiveClean);
+                    return;
                 }
-            });
+
+                soc?.Dispose();
+                str?.Dispose();
+                soc = null;
+                str = null;
+                Dispose();
+
+                throw t.Exception;
+            }).Wait();
         }
 
-        /// <summary>
-        /// 循环接收文件
-        /// </summary>
-        private void _Taker()
+        private async Task _Receive()
         {
-            var exc = default(Exception);
-            void _receive()
+            while (_socket != null && _position < _length)
             {
-                _stream.Seek(_position, SeekOrigin.Begin);
-                var sub = (long)short.MaxValue;
-                if (_position + sub > _length)
-                    sub = _length - _position;
-                var buf = new byte[sub];
-                int len = _socket.Receive(buf, 0, (int)sub, SocketFlags.None);
-                if (len < 1)
-                    throw new SocketException((int)SocketError.ConnectionReset);
-                _stream.Write(buf, 0, len);
-                _position += len;
+                if (_stream.Position != _position)
+                    _stream.Seek(_position, SeekOrigin.Begin);
+                var sub = (int)Math.Min(_length - _position, Links.Buffer);
+                var buf = await _socket._ReceiveAsync(sub);
+                _stream.Write(buf, 0, buf.Length);
+                _position += sub;
             }
+        }
 
-            try
-            {
-                while (_socket != null && _position < _length)
-                    _receive();
-            }
-            catch (Exception e)
-            {
-                exc = e;
-            }
-
-            var res = (exc == null && _position == _length);
+        private void _ReceiveClean(Task task)
+        {
+            var res = (task.Exception == null && _position == _length);
             lock (_loc)
             {
                 if (_disposed == false)
                 {
-                    _status = res ? TransportStatus.成功 : TransportStatus.中断;
-                    _exception = exc;
+                    _status = res ? PortStatus.成功 : PortStatus.中断;
+                    if (task.Exception != null)
+                        _exception = task.Exception;
                     Dispose(true);
                 }
             }
 
+            if (res == true || File.Exists(_path) == false)
+                return;
+
             try
             {
-                if (res == false && File.Exists(_path))
-                    File.Delete(_path);
+                File.Delete(_path);
             }
             catch (Exception ex)
             {
@@ -168,16 +154,16 @@ namespace Messenger.Models
 
         #region 实现 IDisposable
         /// <summary>
-        /// 释放资源并在后台触发 <see cref="Transport.Disposed"/> 事件 (不含 lock 语句)
+        /// 释放资源并在后台触发 <see cref="Port.Disposed"/> 事件 (不含 lock 语句)
         /// </summary>
         protected override void Dispose(bool disposing)
         {
             if (_disposed)
                 return;
 
-            var val = _status & TransportStatus.终态;
+            var val = _status & PortStatus.终止;
             if (val == 0)
-                _status = TransportStatus.取消;
+                _status = PortStatus.取消;
 
             _socket?.Dispose();
             _socket = null;
@@ -185,7 +171,7 @@ namespace Messenger.Models
             _stream = null;
 
             _disposed = true;
-            _Disposed();
+            _EmitDisposed();
         }
         #endregion
     }

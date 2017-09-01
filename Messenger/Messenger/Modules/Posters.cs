@@ -80,10 +80,10 @@ namespace Messenger.Modules
 
         public static Cargo File(int target, string filepath)
         {
-            var mak = default(TransportSender);
+            var mak = default(PortSender);
             try
             {
-                mak = new TransportSender(filepath);
+                mak = new PortSender(filepath);
             }
             catch (Exception ex)
             {
@@ -91,7 +91,7 @@ namespace Messenger.Modules
                 return null;
             }
             var car = new Cargo(target, mak);
-            Application.Current.Dispatcher.Invoke(() => Transports.Makers.Add(car));
+            Application.Current.Dispatcher.Invoke(() => Ports.Makers.Add(car));
             var wtr = PacketWriter.Serialize(new
             {
                 source = Linkers.ID,

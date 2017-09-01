@@ -117,7 +117,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Entrance.ShowError("连接失败.", ex);
+                Entrance.ShowError("连接失败", ex);
             }
 
             if (flg == true)

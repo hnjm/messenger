@@ -23,7 +23,7 @@ namespace Mikodev.Network
                     name = Dns.GetHostName();
                 soc.Bind(new IPEndPoint(IPAddress.Any, port));
                 if (Interlocked.CompareExchange(ref _broad, soc, null) != null)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Broadcast socket not null!");
                 _sname = name;
             }
             catch (Exception)
@@ -37,7 +37,6 @@ namespace Mikodev.Network
 
         internal async Task _Broadcast()
         {
-            var buf = new byte[Links.Buffer];
             var wtr = PacketWriter.Serialize(new
             {
                 protocol = Links.Protocol,
@@ -57,6 +56,7 @@ namespace Mikodev.Network
 
                 try
                 {
+                    var buf = new byte[Math.Min(ava, Links.Buffer)];
                     var iep = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
                     var len = _broad.ReceiveFrom(buf, ref iep);
 

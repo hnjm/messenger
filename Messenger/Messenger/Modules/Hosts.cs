@@ -37,19 +37,15 @@ namespace Messenger.Modules
         public static IEnumerable<Host> Refresh()
         {
             var lst = new List<Host>();
-            var buf = new byte[Links.Buffer];
+            var stw = new Stopwatch();
             var soc = new Socket(SocketType.Dgram, ProtocolType.Udp);
-            var wth = new Stopwatch();
             var txt = new PacketWriter().Push("protocol", Links.Protocol).GetBytes();
-            void action()
+
+            Host gethost(byte[] buffer, int offset, int length)
             {
-                while (soc != null)
+                try
                 {
-                    var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
-                    var len = soc.ReceiveFrom(buf, ref iep);
-                    var tmp = new byte[len];
-                    Array.Copy(buf, 0, tmp, 0, len);
-                    var rea = new PacketReader(tmp);
+                    var rea = new PacketReader(buffer, offset, length);
                     var inf = new Host()
                     {
                         Protocol = rea["protocol"].Pull<string>(),
@@ -58,32 +54,57 @@ namespace Messenger.Modules
                         Count = rea["count"].Pull<int>(),
                         CountLimit = rea["limit"].Pull<int>(),
                     };
-
-                    if (!inf.Protocol.Equals(Links.Protocol))
-                        continue;
-                    inf.Address = (iep as IPEndPoint).Address;
-                    inf.Delay = wth.ElapsedMilliseconds;
-                    if (lst.Find((r) => r.Equals(inf)) == null)
-                        lst.Add(inf);
+                    return inf;
+                }
+                catch (PacketException)
+                {
+                    return null;
                 }
             }
+
+            async Task refresh()
+            {
+                while (soc != null)
+                {
+                    var ava = soc.Available;
+                    if (ava < 1)
+                    {
+                        await Task.Delay(Links.Delay);
+                        continue;
+                    }
+
+                    var buf = new byte[Math.Min(ava, Links.Buffer)];
+                    var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
+                    var len = soc.ReceiveFrom(buf, ref iep);
+                    var inf = gethost(buf, 0, len);
+
+                    if (inf == null || inf.Protocol.Equals(Links.Protocol) == false)
+                        continue;
+                    inf.Address = ((IPEndPoint)iep).Address;
+                    inf.Delay = stw.ElapsedMilliseconds;
+
+                    if (lst.Find((r) => r.Equals(inf)) == null) lst.Add(inf);
+                }
+            }
+
             try
             {
                 soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
                 soc.Bind(new IPEndPoint(IPAddress.Any, 0));
-                wth.Start();
+                stw.Start();
+
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                if (Task.Run(new Action(action)).Wait(DefaultTimeout) == false)
-                    throw new TimeoutException();
+                refresh().Wait(DefaultTimeout);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
                 Trace.WriteLine(ex);
             }
 
             soc?.Dispose();
             soc = null;
+            stw.Stop();
             return lst;
         }
 
