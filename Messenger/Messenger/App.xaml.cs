@@ -8,9 +8,6 @@ using System.Windows.Input;
 
 namespace Messenger
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
         public event EventHandler<KeyEventArgs> TextBoxKeyDown;
@@ -19,7 +16,7 @@ namespace Messenger
         {
             base.OnStartup(e);
 
-            var lis = new LinkLogger($"{nameof(Messenger)}-{DateTime.Now:yyyyMMdd}");
+            var lis = new LinkLogger($"{nameof(Messenger)}-{DateTime.Now:yyyyMMdd}.log");
             Trace.Listeners.Add(lis);
             EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
 

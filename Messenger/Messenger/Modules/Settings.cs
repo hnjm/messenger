@@ -1,6 +1,4 @@
 ﻿using Messenger.Models;
-using System;
-using System.Diagnostics;
 
 namespace Messenger.Modules
 {
@@ -8,31 +6,25 @@ namespace Messenger.Modules
     {
         public const string KeyCtrlEnter = "setting-ctrlenter";
 
-        private bool ctrlenter = false;
+        private bool _ctrlenter = false;
 
-        private static Settings instance = new Settings();
+        private static Settings s_ins = new Settings();
 
-        public static bool UseCtrlEnter { get => instance.ctrlenter; set => instance.ctrlenter = value; }
+        public static bool UseCtrlEnter { get => s_ins._ctrlenter; set => s_ins._ctrlenter = value; }
 
         [AutoLoad(8, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
-            try
-            {
-                var str = Options.GetOption(KeyCtrlEnter);
-                if (str != null)
-                    instance.ctrlenter = bool.Parse(str);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(ex);
-            }
+            var str = Options.GetOption(KeyCtrlEnter);
+            if (str != null && bool.TryParse(str, out var res))
+                s_ins._ctrlenter = res;
+            return;
         }
 
         [AutoLoad(16, AutoLoadFlag.OnExit)]
         public static void Save()
         {
-            Options.SetOption(KeyCtrlEnter, instance.ctrlenter.ToString());
+            Options.SetOption(KeyCtrlEnter, s_ins._ctrlenter.ToString());
         }
     }
 }

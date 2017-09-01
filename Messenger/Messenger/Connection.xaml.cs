@@ -23,9 +23,6 @@ namespace Messenger
             public string P { get; set; } = string.Empty;
         }
 
-        /// <summary>
-        /// 局域网服务器信息列表
-        /// </summary>
         private BindingList<Host> _hosts = new BindingList<Host>();
 
         public Connection()

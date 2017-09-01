@@ -9,32 +9,23 @@ namespace Messenger.Modules
     /// </summary>
     internal class Symbols
     {
-        private BindingList<string> list = null;
-        private object locker = new object();
+        private BindingList<string> _list = null;
 
-        private static Symbols instance = new Symbols();
+        private static Symbols s_ins = new Symbols();
 
-        public static BindingList<string> List
+        public static BindingList<string> List => s_ins._list;
+
+        private Symbols()
         {
-            get
+            var lst = new BindingList<string>();
+            var idx = 0x1F600;
+            for (var i = 0; i < 69; i++)
             {
-                lock (instance.locker)
-                {
-                    if (instance.list == null)
-                    {
-                        var lst = new BindingList<string>();
-                        var offset = 0x1F600;
-                        for (var i = 0; i < 69; i++)
-                        {
-                            var buf = BitConverter.GetBytes(offset + i);
-                            var str = Encoding.UTF32.GetString(buf);
-                            lst.Add(str);
-                        }
-                        instance.list = lst;
-                    }
-                }
-                return instance.list;
+                var buf = BitConverter.GetBytes(idx + i);
+                var str = Encoding.UTF32.GetString(buf);
+                lst.Add(str);
             }
+            _list = lst;
         }
     }
 }

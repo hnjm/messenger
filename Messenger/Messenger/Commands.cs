@@ -17,18 +17,15 @@ namespace Messenger
 
         static Commands()
         {
-            var cpy = new CommandBinding();
-            cpy.Command = CopyText;
+            var cpy = new CommandBinding { Command = CopyText };
             cpy.CanExecute += Copy_CanExecute;
             cpy.Executed += Copy_Executed;
 
-            var rmv = new CommandBinding();
-            rmv.Command = Remove;
+            var rmv = new CommandBinding { Command = Remove };
             rmv.CanExecute += Remove_CanExecute;
             rmv.Executed += Remove_Executed;
 
-            var vie = new CommandBinding();
-            vie.Command = ViewImage;
+            var vie = new CommandBinding { Command = ViewImage };
             vie.CanExecute += LargeImage_CanExecute;
             vie.Executed += LargeImage_Executed;
 

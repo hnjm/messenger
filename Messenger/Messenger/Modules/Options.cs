@@ -3,58 +3,47 @@ using Mikodev.Network;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Xml;
 
 namespace Messenger.Modules
 {
     internal class Options
     {
-        public const string DefaultPath = nameof(Messenger) + ".option";
+        public const string DefaultPath = nameof(Messenger) + ".xml";
         public const string DefaultRoot = "options-root";
         public const string DefaultHeader = "option";
         public const string DefaultKey = "key";
         public const string DefaultValue = "value";
 
-        private object _loc = new object();
         private XmlDocument _doc = null;
 
-        private static Options s_ins = null;
+        private static Options s_ins = new Options();
 
         private Options() { }
 
         [AutoLoad(0, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
-            if (s_ins == null)
-                Interlocked.CompareExchange(ref s_ins, new Options(), null);
-            lock (s_ins._loc)
-            {
-                if (s_ins._doc != null)
-                    return;
-                var fst = default(FileStream);
-                try
-                {
-                    fst = new FileStream(DefaultPath, FileMode.Open);
-                    if (fst.Length > Links.BufferLimit == false)
-                    {
-                        var doc = new XmlDocument();
-                        doc.Load(fst);
-                        s_ins._doc = doc;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine(ex);
-                }
-                finally
-                {
-                    fst?.Dispose();
-                }
-
-                if (s_ins._doc == null)
-                    s_ins._doc = new XmlDocument();
+            if (s_ins._doc != null)
                 return;
+            var fst = default(FileStream);
+            var doc = new XmlDocument();
+
+            try
+            {
+                fst = new FileStream(DefaultPath, FileMode.Open);
+                if (fst.Length <= Links.BufferLimit)
+                    doc.Load(fst);
+                s_ins._doc = doc;
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+                s_ins._doc = new XmlDocument();
+            }
+            finally
+            {
+                fst?.Dispose();
             }
         }
 
@@ -84,7 +73,7 @@ namespace Messenger.Modules
             }
         }
 
-        private static XmlElement GetElement(string key)
+        private static XmlElement _GetElement(string key)
         {
             var doc = s_ins._doc;
             var roo = doc.SelectSingleNode($"/{DefaultRoot}") as XmlElement;
@@ -107,8 +96,7 @@ namespace Messenger.Modules
             try
             {
                 var pth = $"/{DefaultRoot}/{DefaultHeader}[@{DefaultKey}=\"{key}\"]";
-                var ele = doc.SelectSingleNode(pth) as XmlElement;
-                if (ele != null)
+                if (doc.SelectSingleNode(pth) is XmlElement ele)
                 {
                     if (ele.HasAttribute(DefaultValue))
                         return ele.GetAttribute(DefaultValue);
@@ -117,7 +105,7 @@ namespace Messenger.Modules
                 }
                 else
                 {
-                    ele = GetElement(key);
+                    ele = _GetElement(key);
                     if (empty != null)
                         ele.SetAttribute(DefaultValue, empty);
                 }
@@ -134,19 +122,19 @@ namespace Messenger.Modules
             var doc = s_ins?._doc;
             if (doc == null)
                 throw new InvalidOperationException();
-
             try
             {
                 var pth = $"/{DefaultRoot}/{DefaultHeader}[@{DefaultKey}=\"{key}\"]";
                 var ele = doc.SelectSingleNode(pth) as XmlElement;
                 if (ele == null)
-                    ele = GetElement(key);
+                    ele = _GetElement(key);
                 if (value != null)
                     ele.SetAttribute(DefaultValue, value);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Trace.WriteLine(ex);
                 return false;
             }
         }

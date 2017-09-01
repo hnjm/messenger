@@ -18,7 +18,7 @@ namespace Mikodev.Network
             {
                 wtr = new StreamWriter(_path, true, Encoding.UTF8);
                 var stb = new StringBuilder();
-                stb.AppendFormat("{0:u}", DateTime.Now);
+                stb.AppendFormat("[{0:u}]", DateTime.Now);
                 stb.AppendLine();
                 foreach (var i in message)
                     stb.Append(i);

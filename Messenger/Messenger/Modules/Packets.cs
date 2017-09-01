@@ -29,16 +29,16 @@ namespace Messenger.Modules
         private EventHandler<LinkEventArgs<Packet>> _Receiving = null;
         private EventHandler<LinkEventArgs<Packet>> _OnHandled = null;
 
-        private static Packets _instance = null;
+        private static Packets s_ins = new Packets();
 
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public static event EventHandler<LinkEventArgs<Packet>> Receiving { add => _instance._Receiving += value; remove => _instance._Receiving -= value; }
+        public static event EventHandler<LinkEventArgs<Packet>> Receiving { add => s_ins._Receiving += value; remove => s_ins._Receiving -= value; }
         /// <summary>
         /// 消息接收事件处理后
         /// </summary>
-        public static event EventHandler<LinkEventArgs<Packet>> OnHandled { add => _instance._OnHandled += value; remove => _instance._OnHandled -= value; }
+        public static event EventHandler<LinkEventArgs<Packet>> OnHandled { add => s_ins._OnHandled += value; remove => s_ins._OnHandled -= value; }
 
         private static Packet SetPacket(Packet pkt, object value)
         {
@@ -80,8 +80,8 @@ namespace Messenger.Modules
         private static void OnReceived(Packet rcd)
         {
             var arg = new LinkEventArgs<Packet>() { Record = rcd };
-            _instance._Receiving?.Invoke(_instance, arg);
-            _instance._OnHandled?.Invoke(_instance, arg);
+            s_ins._Receiving?.Invoke(s_ins, arg);
+            s_ins._OnHandled?.Invoke(s_ins, arg);
         }
 
         /// <summary>
@@ -89,40 +89,38 @@ namespace Messenger.Modules
         /// </summary>
         private static void Insert(Packet pkt)
         {
-            if (_instance == null)
-                return;
-            if (_instance._messages.TryGetValue(pkt.Groups, out var lst))
+            if (s_ins._messages.TryGetValue(pkt.Groups, out var lst))
                 Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
-            if (_instance._connection == null)
+            if (s_ins._connection == null)
                 return;
             var str = pkt.Value as string;
             if (str == null)
                 return;
 
             Task.Run(() =>
+            {
+                var cmd = default(SQLiteCommand);
+                try
                 {
-                    var cmd = default(SQLiteCommand);
-                    try
-                    {
-                        cmd = new SQLiteCommand(_instance._connection);
-                        cmd.CommandText = "insert into messages values(@sid, @tid, @gid, @tim, @typ, @msg)";
-                        cmd.Parameters.Add(new SQLiteParameter("@sid", pkt.Source));
-                        cmd.Parameters.Add(new SQLiteParameter("@tid", pkt.Target));
-                        cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Groups));
-                        cmd.Parameters.Add(new SQLiteParameter("@tim", pkt.Timestamp.ToBinary()));
-                        cmd.Parameters.Add(new SQLiteParameter("@typ", pkt.Path));
-                        cmd.Parameters.Add(new SQLiteParameter("@msg", str));
-                        cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine(ex);
-                    }
-                    finally
-                    {
-                        cmd?.Dispose();
-                    }
-                });
+                    cmd = new SQLiteCommand(s_ins._connection);
+                    cmd.CommandText = "insert into messages values(@sid, @tid, @gid, @tim, @typ, @msg)";
+                    cmd.Parameters.Add(new SQLiteParameter("@sid", pkt.Source));
+                    cmd.Parameters.Add(new SQLiteParameter("@tid", pkt.Target));
+                    cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Groups));
+                    cmd.Parameters.Add(new SQLiteParameter("@tim", pkt.Timestamp.ToBinary()));
+                    cmd.Parameters.Add(new SQLiteParameter("@typ", pkt.Path));
+                    cmd.Parameters.Add(new SQLiteParameter("@msg", str));
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex);
+                }
+                finally
+                {
+                    cmd?.Dispose();
+                }
+            });
         }
 
         /// <summary>
@@ -130,10 +128,10 @@ namespace Messenger.Modules
         /// </summary>
         public static BindingList<Packet> Query(int gid, int max = 32)
         {
-            var lst = _instance._messages.GetOrAdd(gid, _ => new BindingList<Packet>());
+            var lst = s_ins._messages.GetOrAdd(gid, _ => new BindingList<Packet>());
             if (lst.Count > 0)
                 return lst;
-            if (_instance?._connection == null)
+            if (s_ins._connection == null)
                 return lst;
 
             var cmd = default(SQLiteCommand);
@@ -141,7 +139,7 @@ namespace Messenger.Modules
             var lis = new List<Packet>();
             try
             {
-                cmd = new SQLiteCommand(_instance._connection);
+                cmd = new SQLiteCommand(s_ins._connection);
                 cmd.CommandText = "select * from messages where groups = @gid order by time desc limit 0,@max";
                 cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                 cmd.Parameters.Add(new SQLiteParameter("@max", max));
@@ -180,9 +178,6 @@ namespace Messenger.Modules
         [AutoLoad(1, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
-            if (_instance != null)
-                return;
-            _instance = new Packets();
             var con = default(SQLiteConnection);
             var cmd = default(SQLiteCommand);
             try
@@ -195,7 +190,7 @@ namespace Messenger.Modules
                     "time integer not null, path varchar not null, text varchar not null)";
                 cmd.ExecuteNonQuery();
                 // 确保连接有效
-                _instance._connection = con;
+                s_ins._connection = con;
             }
             catch (Exception ex)
             {
@@ -210,11 +205,9 @@ namespace Messenger.Modules
 
         public static void Remove(Packet record)
         {
-            if (_instance == null)
-                return;
-            if (_instance._messages.TryGetValue(record.Groups, out var lst))
+            if (s_ins._messages.TryGetValue(record.Groups, out var lst))
                 lst.Remove(record);
-            if (_instance._connection == null)
+            if (s_ins._connection == null)
                 return;
 
             Task.Run(() =>
@@ -222,7 +215,7 @@ namespace Messenger.Modules
                     var cmd = default(SQLiteCommand);
                     try
                     {
-                        cmd = new SQLiteCommand(_instance._connection);
+                        cmd = new SQLiteCommand(s_ins._connection);
                         cmd.CommandText = "delete from messages where groups == @gid and time == @mrt";
                         cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
                         cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp.ToBinary()));
@@ -244,11 +237,9 @@ namespace Messenger.Modules
         /// </summary>
         public static void Clear(int gid)
         {
-            if (_instance == null)
-                return;
-            if (_instance._messages.TryGetValue(gid, out var lst))
+            if (s_ins._messages.TryGetValue(gid, out var lst))
                 lst.Clear();
-            if (_instance._connection == null)
+            if (s_ins._connection == null)
                 return;
 
             Task.Run(() =>
@@ -256,7 +247,7 @@ namespace Messenger.Modules
                     var cmd = default(SQLiteCommand);
                     try
                     {
-                        cmd = new SQLiteCommand(_instance._connection);
+                        cmd = new SQLiteCommand(s_ins._connection);
                         cmd.CommandText = "delete from messages where groups == @gid";
                         cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                         cmd.ExecuteNonQuery();
@@ -278,8 +269,8 @@ namespace Messenger.Modules
         [AutoLoad(2, AutoLoadFlag.OnExit)]
         public static void Save()
         {
-            _instance?._connection?.Dispose();
-            _instance = null;
+            s_ins._connection?.Dispose();
+            s_ins._connection = null;
         }
     }
 }

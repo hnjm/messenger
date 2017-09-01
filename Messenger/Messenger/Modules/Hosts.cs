@@ -56,13 +56,14 @@ namespace Messenger.Modules
                     };
                     return inf;
                 }
-                catch (PacketException)
+                catch (Exception ex)
                 {
+                    Trace.WriteLine(ex);
                     return null;
                 }
             }
 
-            async Task refresh()
+            async Task _Refresh()
             {
                 while (soc != null)
                 {
@@ -95,7 +96,7 @@ namespace Messenger.Modules
 
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                refresh().Wait(DefaultTimeout);
+                _Refresh().Wait(DefaultTimeout);
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
