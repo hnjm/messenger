@@ -13,7 +13,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理传输并提供界面绑定功能
     /// </summary>
-    internal class Ports : INotifyPropertyChanged
+    internal class Ports : INotifyPropertyChanging, INotifyPropertyChanged
     {
         private const string PathKey = "port-path";
 
@@ -93,7 +93,7 @@ namespace Messenger.Modules
                 HasMakers = _makers.Count > 0;
         }
 
-        // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
+        // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 
         private static Ports s_ins = new Ports();
 
@@ -107,19 +107,30 @@ namespace Messenger.Modules
         internal static void Trans_Changed(object sender, EventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
+            {
+                for (var i = 0; i < s_ins._expect.Count; i++)
                 {
-                    for (var i = 0; i < s_ins._expect.Count; i++)
+                    var tra = s_ins._expect[i].Port;
+                    if (tra == sender)
                     {
-                        var tra = s_ins._expect[i].Transport;
-                        if (tra == sender)
-                        {
-                            s_ins._expect.RemoveAt(i);
-                            tra.Started -= Trans_Changed;
-                            tra.Disposed -= Trans_Changed;
-                            return;
-                        }
+                        s_ins._expect.RemoveAt(i);
+                        tra.Started -= Trans_Changed;
+                        tra.Disposed -= Trans_Changed;
+                        return;
                     }
-                });
+                }
+            });
+        }
+
+        public static void Close()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                foreach (var i in s_ins._takers)
+                    i.Close();
+                foreach (var i in s_ins._makers)
+                    i.Close();
+            });
         }
 
         /// <summary>
@@ -129,25 +140,25 @@ namespace Messenger.Modules
         {
             var lst = new List<Cargo>();
             var act = new Action<IList<Cargo>>((r) =>
+            {
+                var i = 0;
+                while (i < r.Count)
                 {
-                    var i = 0;
-                    while (i < r.Count)
+                    var trs = r[i].Port;
+                    if (trs.IsDisposed)
                     {
-                        var trs = r[i].Transport;
-                        if (trs.IsDisposed)
-                        {
-                            lst.Add(r[i]);
-                            r.RemoveAt(i);
-                        }
-                        else i++;
+                        lst.Add(r[i]);
+                        r.RemoveAt(i);
                     }
-                });
+                    else i++;
+                }
+            });
 
             Application.Current.Dispatcher.Invoke(() =>
-                {
-                    act.Invoke(s_ins._makers);
-                    act.Invoke(s_ins._takers);
-                });
+            {
+                act.Invoke(s_ins._makers);
+                act.Invoke(s_ins._takers);
+            });
 
             return lst;
         }

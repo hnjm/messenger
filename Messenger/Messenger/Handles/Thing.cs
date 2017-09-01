@@ -13,10 +13,10 @@ namespace Messenger.Handles
         [Handle("info")]
         public void Take()
         {
-            var tak = default(PortReceiver);
+            var tak = default(PortTaker);
             try
             {
-                tak = new PortReceiver(Data, () => Ports.FindPath(Data["filename"].Pull<string>()));
+                tak = new PortTaker(Data, () => Ports.FindPath(Data["filename"].Pull<string>()));
             }
             catch (Exception ex)
             {

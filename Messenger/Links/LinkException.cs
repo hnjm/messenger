@@ -8,7 +8,7 @@ namespace Mikodev.Network
     {
         internal readonly LinkError _error = LinkError.None;
 
-        public LinkException(LinkError error) => error = _error;
+        public LinkException(LinkError error) : base(error.ToString()) => error = _error;
 
         public LinkException(LinkError error, string message) : base(message) => error = _error;
 

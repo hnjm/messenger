@@ -99,12 +99,12 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Transport.Name}"/>
+                                    <TextBlock Grid.Row="0" FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Port.Name}"/>
                                     <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080">
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="文件大小: {0}, 状态: {1}, 剩余时间: {2:hh\:mm\:ss}">
-                                                <Binding Path="Transport.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
-                                                <Binding Path="Transport.Status" Mode="OneWay"/>
+                                                <Binding Path="Port.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
+                                                <Binding Path="Port.Status" Mode="OneWay"/>
                                                 <Binding Path="Remain" Mode="OneWay"/>
                                             </MultiBinding>
                                         </TextBlock.Text>

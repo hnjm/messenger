@@ -69,7 +69,7 @@ namespace Messenger.Modules
             });
 
             Packets.OnHandled += _Packets_OnHandled;
-            Ports.Expect.ListChanged += _Transports_ListChanged;
+            Ports.Expect.ListChanged += _Ports_ListChanged;
             Profiles.Current.ID = id;
 
             Posters.UserProfile(Links.ID);
@@ -120,8 +120,10 @@ namespace Messenger.Modules
                 s_ins._soc = null;
             }
 
+            Ports.Close();
+            Profiles.Clear();
             Packets.OnHandled -= _Packets_OnHandled;
-            Ports.Expect.ListChanged -= _Transports_ListChanged;
+            Ports.Expect.ListChanged -= _Ports_ListChanged;
         }
 
         public static void Enqueue(byte[] buffer) => s_ins._clt?.Enqueue(buffer);
@@ -156,7 +158,7 @@ namespace Messenger.Modules
             });
         }
 
-        private static void _Transports_ListChanged(object sender, ListChangedEventArgs e)
+        private static void _Ports_ListChanged(object sender, ListChangedEventArgs e)
         {
             if (sender == Ports.Expect && e.ListChangedType == ListChangedType.ItemAdded)
             {

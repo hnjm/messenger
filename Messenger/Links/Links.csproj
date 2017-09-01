@@ -52,6 +52,7 @@
     <Compile Include="LinkException.cs" />
     <Compile Include="LinkExtends.cs" />
     <Compile Include="LinkListener.cs" />
+    <Compile Include="LinkLogger.cs" />
     <Compile Include="LinkPacket.cs" />
     <Compile Include="Links.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

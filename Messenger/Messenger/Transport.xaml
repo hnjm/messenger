@@ -3,7 +3,6 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:local="clr-namespace:Messenger"
       xmlns:tools="clr-namespace:Messenger.Tools"
       xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
@@ -25,16 +24,16 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" FontSize="14" Foreground="#FFA0A0A0" Text="{Binding Path=Transport.Name, Mode=OneWay}"/>
+                    <TextBlock Grid.Column="0" Grid.Row="0" FontSize="14" Foreground="#FFA0A0A0" Text="{Binding Path=Port.Name, Mode=OneWay}"/>
                     <TextBlock Grid.Column="0" Grid.Row="1" Foreground="#808080">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="用户昵称: {0}, 文件状态: {1} / {2}, {3:F2}%, {4}/s, {5}, 剩余时间: {6:hh\:mm\:ss}">
                                 <Binding Path="Profile.Name"/>
-                                <Binding Path="Transport.Position" Mode="OneWay" Converter="{StaticResource lengthConverter}"/>
-                                <Binding Path="Transport.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
+                                <Binding Path="Port.Position" Mode="OneWay" Converter="{StaticResource lengthConverter}"/>
+                                <Binding Path="Port.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
                                 <Binding Path="Progress" Mode="OneWay"/>
                                 <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource lengthConverter}"/>
-                                <Binding Path="Transport.Status" Mode="OneWay"/>
+                                <Binding Path="Port.Status" Mode="OneWay"/>
                                 <Binding Path="Remain" Mode="OneWay"/>
                             </MultiBinding>
                         </TextBlock.Text>
@@ -55,19 +54,19 @@
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="border" Property="Background" Value="#FF202020"/>
                 </Trigger>
-                <DataTrigger Binding="{Binding Path=Transport.CanStart}" Value="True">
+                <DataTrigger Binding="{Binding Path=Port.CanStart}" Value="True">
                     <Setter TargetName="buttonPlay" Property="Visibility" Value="Visible"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Transport.IsDisposed}" Value="True">
+                <DataTrigger Binding="{Binding Path=Port.IsDisposed}" Value="True">
                     <Setter TargetName="buttonStop" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Transport.Status}" Value="中断">
+                <DataTrigger Binding="{Binding Path=Port.Status}" Value="中断">
                     <Setter TargetName="progressBar" Property="Foreground" Value="Crimson"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Transport.Status}" Value="成功">
+                <DataTrigger Binding="{Binding Path=Port.Status}" Value="成功">
                     <Setter TargetName="progressBar" Property="Foreground" Value="#FF20C000"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Transport.Status}" Value="取消">
+                <DataTrigger Binding="{Binding Path=Port.Status}" Value="取消">
                     <Setter TargetName="progressBar" Property="Foreground" Value="#FFC0C000"/>
                 </DataTrigger>
             </DataTemplate.Triggers>

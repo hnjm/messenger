@@ -32,7 +32,7 @@ namespace Messenger.Modules
         private List<WeakReference<Profile>> _spaces = new List<WeakReference<Profile>>();
         private Profile _local = new Profile();
         private Profile _inscope = null;
-        private event EventHandler _InscopeChanged = null;
+        private EventHandler _inscopechanged = null;
 
         public bool HasClient
         {
@@ -70,17 +70,17 @@ namespace Messenger.Modules
             Profile.InstancePropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName.Equals(nameof(Profile.Hint)))
-                        OnChanged();
+                        _Changed();
                 };
-            _client.ListChanged += (s, e) => OnChanged();
-            _groups.ListChanged += (s, e) => OnChanged();
-            _recent.ListChanged += (s, e) => OnChanged();
+            _client.ListChanged += (s, e) => _Changed();
+            _groups.ListChanged += (s, e) => _Changed();
+            _recent.ListChanged += (s, e) => _Changed();
         }
 
         /// <summary>
         /// 重新计算未读消息数量
         /// </summary>
-        private void OnChanged()
+        private void _Changed()
         {
             var cli = _client.Sum(r => r.Hint);
             var gro = _groups.Sum(r => r.Hint);
@@ -104,7 +104,13 @@ namespace Messenger.Modules
         public static BindingList<Profile> RecentList => instance._recent;
         public static BindingList<Profile> ClientList => instance._client;
         public static BindingList<Profile> GroupsList => instance._groups;
-        public static event EventHandler InscopeChanged { add => instance._InscopeChanged += value; remove => instance._InscopeChanged -= value; }
+        public static event EventHandler InscopeChanged { add => instance._inscopechanged += value; remove => instance._inscopechanged -= value; }
+
+        public static void Clear()
+        {
+            var clt = instance._client;
+            Application.Current.Dispatcher.Invoke(() => clt.Clear());
+        }
 
         /// <summary>
         /// 添加或更新用户信息 (添加返回真, 更新返回假)
@@ -155,12 +161,12 @@ namespace Messenger.Modules
             var clt = instance._client;
             var lst = new List<Profile>() as IList<Profile>;
             Application.Current.Dispatcher.Invoke(() =>
-                {
-                    lst = clt._Remove(r => ids.Contains(r.ID) == false);
-                    foreach (var r in lst)
-                        if (r.Hint > 0)
-                            SetRecent(r);
-                });
+            {
+                lst = clt._Remove(r => ids.Contains(r.ID) == false);
+                foreach (var r in lst)
+                    if (r.Hint > 0)
+                        SetRecent(r);
+            });
             return lst;
         }
 
@@ -180,20 +186,20 @@ namespace Messenger.Modules
             var gro = instance._groups;
             Posters.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
+            {
+                var lst = gro._Remove(r => ids.Contains(r.ID) == false);
+                foreach (var r in lst)
+                    if (r.Hint > 0)
+                        SetRecent(r);
+                var add = from r in kvs where gro.FirstOrDefault(t => t.ID == r.Hash) == null select r;
+                foreach (var i in add)
                 {
-                    var lst = gro._Remove(r => ids.Contains(r.ID) == false);
-                    foreach (var r in lst)
-                        if (r.Hint > 0)
-                            SetRecent(r);
-                    var add = from r in kvs where gro.FirstOrDefault(t => t.ID == r.Hash) == null select r;
-                    foreach (var i in add)
-                    {
-                        var pro = Query(i.Hash, true);
-                        pro.Name = i.Value;
-                        pro.Text = i.Hash.ToString("X8");
-                        gro.Add(pro);
-                    }
-                });
+                    var pro = Query(i.Hash, true);
+                    pro.Name = i.Value;
+                    pro.Text = i.Hash.ToString("X8");
+                    gro.Add(pro);
+                }
+            });
             return true;
         }
 
@@ -213,7 +219,7 @@ namespace Messenger.Modules
                 return;
 
             instance._inscope = profile;
-            instance._InscopeChanged?.Invoke(instance, new EventArgs());
+            instance._inscopechanged?.Invoke(instance, new EventArgs());
         }
 
         /// <summary>

@@ -9,7 +9,7 @@ namespace Messenger.Models
     /// <summary>
     /// 文件发送类 (事件驱动 线程安全)
     /// </summary>
-    public class PortSender : Port
+    public class PortMaker : Port
     {
         private FileStream _stream = null;
         private Socket _socket = null;
@@ -23,7 +23,7 @@ namespace Messenger.Models
         /// 创建文件发送对象
         /// </summary>
         /// <param name="path">文件路径</param>
-        public PortSender(string path)
+        public PortMaker(string path)
         {
             var inf = default(FileInfo);
             var str = default(FileStream);
@@ -77,7 +77,7 @@ namespace Messenger.Models
         /// <summary>
         /// 处理传输请求
         /// </summary>
-        public void Transport_Requests(object sender, LinkEventArgs<Guid> e)
+        public void PortRequests(object sender, LinkEventArgs<Guid> e)
         {
             var key = e.Record;
             var soc = e.Source as Socket;
@@ -102,7 +102,7 @@ namespace Messenger.Models
                     {
                         _status = res ? PortStatus.成功 : PortStatus.中断;
                         _exception = t.Exception;
-                        Dispose(true);
+                        _Dispose();
                     }
                 }
             });
@@ -112,7 +112,7 @@ namespace Messenger.Models
         /// <summary>
         /// 释放资源并在后台触发 <see cref="Port.Disposed"/> 事件 (不含 lock 语句)
         /// </summary>
-        protected override void Dispose(bool disposing)
+        protected override void _Dispose()
         {
             if (_disposed)
                 return;

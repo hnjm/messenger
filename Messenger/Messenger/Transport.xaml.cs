@@ -38,7 +38,9 @@ namespace Messenger
                 try
                 {
                     if (Directory.Exists(Ports.SavePath))
+                    {
                         Process.Start("explorer", "/e," + Ports.SavePath);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -47,14 +49,11 @@ namespace Messenger
             }
             else if (sender == buttonStopAll)
             {
-                foreach (var i in Ports.Makers)
-                    i.Close();
-                foreach (var i in Ports.Takers)
-                    i.Close();
+                Ports.Close();
             }
         }
 
-        private async void ButtonItem_Click(object sender, RoutedEventArgs e)
+        private void ButtonItem_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
             if (btn == null)
@@ -65,20 +64,10 @@ namespace Messenger
                 return;
 
             if (tag.Equals("Play"))
-            {
-                try
-                {
-                    await Task.Run(() => con.Start());
-                }
-                catch (Exception ex)
-                {
-                    Entrance.ShowError("接收文件失败", ex);
-                }
-            }
+                con.Start();
             else if (tag.Equals("Stop"))
-            {
                 con.Close();
-            }
+            return;
         }
     }
 }

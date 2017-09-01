@@ -6,9 +6,6 @@ using System.Windows;
 
 namespace Messenger.Models
 {
-    /// <summary>
-    /// 包装一个 <see cref="Foundation.Transport"/> 对象 并提供传输控制和界面绑定功能
-    /// </summary>
     public class Cargo : INotifyPropertyChanged
     {
         private class _Record
@@ -37,7 +34,7 @@ namespace Messenger.Models
         public double Speed => _speed;
         public double Progress => _progress;
         public TimeSpan Remain => _remain;
-        public Port Transport => _trans;
+        public Port Port => _trans;
 
         public Profile Profile
         {
@@ -54,13 +51,10 @@ namespace Messenger.Models
             _tid = id;
             _trans = val;
 
-            if (val is PortSender mak)
+            if (val is PortMaker mak)
             {
-                Linkers.Requests += mak.Transport_Requests;
-                val.Disposed += delegate
-                {
-                    Linkers.Requests -= mak.Transport_Requests;
-                };
+                Linkers.Requests += mak.PortRequests;
+                val.Disposed += (s, e) => Linkers.Requests -= mak.PortRequests;
             }
         }
 
@@ -82,7 +76,7 @@ namespace Messenger.Models
             OnPropertyChanged(nameof(Speed));
             OnPropertyChanged(nameof(Remain));
             OnPropertyChanged(nameof(Progress));
-            OnPropertyChanged(nameof(Transport));
+            OnPropertyChanged(nameof(Port));
         }
 
         private double _AverageSpeed(long tick)
@@ -104,9 +98,10 @@ namespace Messenger.Models
             return sum / _list.Count;
         }
 
-        public void Start()
+        public async void Start()
         {
-            _trans.Start();
+            if (_trans is PortTaker rec)
+                await rec.Start();
             Application.Current.Dispatcher.Invoke(() => Refresh(0L));
         }
 

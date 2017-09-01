@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace Launcher
 {
@@ -9,6 +10,9 @@ namespace Launcher
     {
         static void Main(string[] args)
         {
+            var lis = new LinkLogger($"{nameof(Launcher)}-{DateTime.Now:yyyyMMdd}");
+            Trace.Listeners.Add(lis);
+
             try
             {
                 Entrance(args);

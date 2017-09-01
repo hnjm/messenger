@@ -13,7 +13,7 @@ namespace Messenger.Models
     /// <summary>
     /// 文件接收类 (线程安全)
     /// </summary>
-    public class PortReceiver : Port
+    public class PortTaker : Port
     {
         private string _path = null;
         private FileStream _stream = null;
@@ -24,7 +24,7 @@ namespace Messenger.Models
         /// <summary>
         /// 初始化对象 并设定文件保存路径函数
         /// </summary>
-        public PortReceiver(PacketReader reader, Func<string> callback)
+        public PortTaker(PacketReader reader, Func<string> callback)
         {
             if (reader == null || callback == null)
                 throw new ArgumentNullException();
@@ -37,9 +37,9 @@ namespace Messenger.Models
         }
 
         /// <summary>
-        /// 启动文件接收 失败时自动调用 <see cref="Dispose(bool)"/>
+        /// 启动文件接收 失败时自动调用 <see cref="_Dispose(bool)"/>
         /// </summary>
-        public override void Start()
+        public Task Start()
         {
             lock (_loc)
             {
@@ -55,7 +55,7 @@ namespace Messenger.Models
             var inf = default(FileInfo);
             var str = default(FileStream);
 
-            async Task start()
+            async Task _Emit()
             {
                 for (int i = 0; i < _ieps.Count && soc == null; i++)
                 {
@@ -63,7 +63,7 @@ namespace Messenger.Models
                     {
                         soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
                         if (Task.Run(() => soc.Connect(_ieps[i])).Wait(Links.Timeout) == false)
-                            throw new TimeoutException("Transport receiver timeout.");
+                            throw new TimeoutException("Port receiver timeout.");
                         soc._SetKeepAlive();
                         break;
                     }
@@ -94,22 +94,19 @@ namespace Messenger.Models
                 }
             }
 
-            start().ContinueWith(t =>
+            return _Emit().ContinueWith(t =>
             {
                 if (t.Exception == null)
                 {
                     _Receive().ContinueWith(_ReceiveClean);
                     return;
                 }
-
                 soc?.Dispose();
                 str?.Dispose();
                 soc = null;
                 str = null;
                 Dispose();
-
-                throw t.Exception;
-            }).Wait();
+            });
         }
 
         private async Task _Receive()
@@ -135,7 +132,7 @@ namespace Messenger.Models
                     _status = res ? PortStatus.成功 : PortStatus.中断;
                     if (task.Exception != null)
                         _exception = task.Exception;
-                    Dispose(true);
+                    _Dispose();
                 }
             }
 
@@ -156,7 +153,7 @@ namespace Messenger.Models
         /// <summary>
         /// 释放资源并在后台触发 <see cref="Port.Disposed"/> 事件 (不含 lock 语句)
         /// </summary>
-        protected override void Dispose(bool disposing)
+        protected override void _Dispose()
         {
             if (_disposed)
                 return;

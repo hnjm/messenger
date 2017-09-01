@@ -104,8 +104,8 @@
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoLoadFlag.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
-    <Compile Include="Models\PortSender.cs" />
-    <Compile Include="Models\PortReceiver.cs" />
+    <Compile Include="Models\PortMaker.cs" />
+    <Compile Include="Models\PortTaker.cs" />
     <Compile Include="Models\Port.cs" />
     <Compile Include="Models\PortStatus.cs" />
     <Compile Include="Modules\Options.cs" />
