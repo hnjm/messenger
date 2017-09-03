@@ -102,7 +102,7 @@ namespace Messenger.Modules
                 }
 
                 s_ins._Request?.Invoke(clt, arg);
-                if (arg.Source != null)
+                if (arg.Finish == false)
                 {
                     clt.Dispose();
                 }

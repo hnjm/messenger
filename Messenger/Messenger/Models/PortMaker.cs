@@ -83,7 +83,7 @@ namespace Messenger.Models
             var soc = e.Source as Socket;
             if (_key.Equals(key) == false || soc == null)
                 return;
-            e.Source = null;
+            e.Finish = true;
             lock (_loc)
             {
                 if (_started || _disposed)

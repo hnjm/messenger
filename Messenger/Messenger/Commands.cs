@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace Messenger
 {
-    public static class Commands
+    internal static class Commands
     {
         public static RoutedUICommand CopyText { get; } = new RoutedUICommand() { Text = "复制消息内容" };
 

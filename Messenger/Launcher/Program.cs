@@ -10,7 +10,7 @@ namespace Launcher
     {
         static void Main(string[] args)
         {
-            var lis = new LinkLogger($"{nameof(Launcher)}-{DateTime.Now:yyyyMMdd}.log");
+            var lis = new LinkLogger($"{nameof(Launcher)}.log");
             Trace.Listeners.Add(lis);
 
             try

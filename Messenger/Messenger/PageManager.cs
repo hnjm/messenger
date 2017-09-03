@@ -5,7 +5,7 @@ using System.Windows.Controls;
 
 namespace Messenger
 {
-    public static class PageManager
+    internal static class PageManager
     {
         public static void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

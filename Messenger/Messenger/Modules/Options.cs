@@ -9,7 +9,7 @@ namespace Messenger.Modules
 {
     internal class Options
     {
-        public const string DefaultPath = nameof(Messenger) + ".xml";
+        public const string DefaultPath = nameof(Messenger) + ".opt";
         public const string DefaultRoot = "options-root";
         public const string DefaultHeader = "option";
         public const string DefaultKey = "key";

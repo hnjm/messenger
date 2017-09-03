@@ -17,7 +17,7 @@ namespace Messenger.Tools
                 len = obl;
             else if (value is double obd)
                 len = (long)obd;
-            return Converts.GetLength(len);
+            return Converts._GetLength(len);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();

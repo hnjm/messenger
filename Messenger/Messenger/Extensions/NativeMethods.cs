@@ -8,7 +8,7 @@ namespace Messenger.Extensions
         /// <summary>
         /// 任务栏闪烁
         /// </summary>
-        [DllImport("user32.dll")]
-        public static extern bool FlashWindow(IntPtr handle, bool invert);
+        [DllImport("user32.dll", EntryPoint = "FlashWindow")]
+        internal static extern bool FlashWindow(IntPtr handle, bool invert);
     }
 }

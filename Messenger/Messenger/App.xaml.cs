@@ -16,7 +16,7 @@ namespace Messenger
         {
             base.OnStartup(e);
 
-            var lis = new LinkLogger($"{nameof(Messenger)}-{DateTime.Now:yyyyMMdd}.log");
+            var lis = new LinkLogger($"{nameof(Messenger)}.log");
             Trace.Listeners.Add(lis);
             EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
 

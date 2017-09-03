@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Messenger.Extensions
 {
     internal static class Converts
     {
-        public static bool GetHost(string str, out string host, out int port)
+        internal static readonly IReadOnlyList<string> _units = new string[] { string.Empty, "K", "M", "G", "T", "P", "E" };
+
+        internal static bool _GetHost(string str, out string host, out int port)
         {
             if (string.IsNullOrWhiteSpace(str))
                 goto fail;
@@ -18,6 +21,7 @@ namespace Messenger.Extensions
             if (int.TryParse(str.Substring(idx + 1), out port) == false)
                 goto fail;
             return true;
+
             fail:
             host = null;
             port = 0;
@@ -27,9 +31,9 @@ namespace Messenger.Extensions
         /// <summary>
         /// 数据大小换算 (保留 2 位小数)
         /// </summary>
-        public static string GetLength(long length)
+        internal static string _GetLength(long length)
         {
-            if (GetLength(length, out var len, out var pos))
+            if (_GetLength(length, out var len, out var pos))
                 return $"{len:0.00} {pos}B";
             else return string.Empty;
         }
@@ -41,17 +45,16 @@ namespace Messenger.Extensions
         /// <param name="len">长度</param>
         /// <param name="pos">单位</param>
         /// <returns></returns>
-        public static bool GetLength(long length, out double len, out string pos)
+        internal static bool _GetLength(long length, out double len, out string pos)
         {
             len = 0;
             pos = string.Empty;
             if (length < 0)
                 return false;
 
-            string[] format = { string.Empty, "K", "M", "G", "T", "P", "E" };
             var tmp = length;
             var i = 0;
-            while (i < format.Length - 1)
+            while (i < _units.Count - 1)
             {
                 if (tmp < (1 << 10))
                     break;
@@ -59,7 +62,7 @@ namespace Messenger.Extensions
                 i++;
             }
             len = length / Math.Pow(1024, i);
-            pos = format[i];
+            pos = _units[i];
             return true;
         }
 
@@ -69,7 +72,7 @@ namespace Messenger.Extensions
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="FormatException"/>
         /// <exception cref="OverflowException"/>
-        public static IPEndPoint _ToEndPoint(this string str)
+        internal static IPEndPoint _ToEndPoint(this string str)
         {
             if (str == null)
                 throw new ArgumentNullException();

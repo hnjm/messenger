@@ -42,7 +42,7 @@
             <GeometryGroup>
                 <EllipseGeometry Center="11,11" RadiusX="1" RadiusY="1" />
                 <EllipseGeometry Center="21,11" RadiusX="1" RadiusY="1"/>
-                <PathGeometry Figures="M 9,17 A 7.5,7.5 0 0 0 23,17"/>
+                <PathGeometry Figures="M 9,18 A 7.5,7.5 0 0 0 23,18"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
