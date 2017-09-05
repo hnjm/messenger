@@ -42,34 +42,30 @@ namespace Mikodev.Network
                 throw;
             }
 
-            return Task.Run(new Action(_Listen));
+            return _Listen();
         }
 
-        private void _Listen()
+        private async Task _Listen()
         {
-            while (_soc != null)
+            void _Invoke(Socket soc) => Task.Run(() => _Handle(soc)).ContinueWith(tsk =>
             {
-                var clt = default(Socket);
+                if (tsk.Exception == null)
+                    return;
+                Trace.WriteLine(tsk.Exception);
+                soc.Dispose();
+            });
 
+            while (true)
+            {
                 try
                 {
-                    clt = _soc.Accept();
-                    clt._SetKeepAlive();
+                    var clt = await _soc._AcceptAsync();
+                    _Invoke(clt);
                 }
                 catch (SocketException ex)
                 {
                     Trace.WriteLine(ex);
-                    continue;
                 }
-
-                Task.Run(() => _Handle(clt)).ContinueWith(t =>
-                {
-                    if (t.Exception != null)
-                    {
-                        Trace.WriteLine(t.Exception);
-                        clt.Dispose();
-                    }
-                });
             }
         }
 

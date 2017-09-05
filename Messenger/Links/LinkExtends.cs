@@ -7,6 +7,8 @@ namespace Mikodev.Network
 {
     public static class LinkExtends
     {
+        public static Task<Socket> _AcceptAsync(this Socket socket) => Task.Factory.FromAsync(socket.BeginAccept, socket.EndAccept, null);
+
         public static int _SetKeepAlive(this Socket socket, bool enable = true, uint before = Links.KeepAliveBefore, uint interval = Links.KeepAliveInterval)
         {
             if (enable == true && (before < 1 || interval < 1))

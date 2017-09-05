@@ -61,11 +61,11 @@ namespace Messenger.Modules
                 throw;
             }
 
-            Task.Run(() => _Listen(soc)).ContinueWith(t =>
+            _Listen(soc).ContinueWith(tsk =>
             {
-                if (t.Exception == null)
+                if (tsk.Exception == null)
                     return;
-                Trace.WriteLine(t.Exception);
+                Trace.WriteLine(tsk.Exception);
             });
 
             Packets.OnHandled += _Packets_OnHandled;
@@ -76,8 +76,8 @@ namespace Messenger.Modules
             Posters.UserRequest();
             Posters.UserGroups();
         }
-
-        private static void _Listen(Socket socket)
+        
+        private static async Task _Listen(Socket socket)
         {
             while (true)
             {
@@ -87,7 +87,7 @@ namespace Messenger.Modules
 
                 try
                 {
-                    clt = socket.Accept();
+                    clt = await socket._AcceptAsync();
                     if (Task.Run(async () => buf = await clt._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                         throw new TimeoutException("Timeout when accept transport header.");
                     var rea = new PacketReader(buf);
@@ -102,10 +102,9 @@ namespace Messenger.Modules
                 }
 
                 s_ins._Request?.Invoke(clt, arg);
-                if (arg.Finish == false)
-                {
-                    clt.Dispose();
-                }
+                if (arg.Finish == true)
+                    continue;
+                clt.Dispose();
             }
         }
 

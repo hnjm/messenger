@@ -14,8 +14,6 @@ namespace Messenger.Modules
 {
     internal class Hosts
     {
-        public const int DefaultTimeout = 1000;
-
         public const string KeyLast = "server-last";
         public const string KeyList = "server-list";
         public const string KeyPort = "server-port";
@@ -96,7 +94,7 @@ namespace Messenger.Modules
 
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                _Refresh().Wait(DefaultTimeout);
+                _Refresh().Wait(Links.Timeout);
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {

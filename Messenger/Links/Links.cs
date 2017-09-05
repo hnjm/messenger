@@ -10,7 +10,7 @@
 
         public const int Timeout = 3 * 1000;
 
-        public const int KeepAliveBefore = 20 * 1000;
+        public const int KeepAliveBefore = 180 * 1000;
 
         public const int KeepAliveInterval = Timeout;
 
