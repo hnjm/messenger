@@ -9,7 +9,7 @@ namespace Messenger.Modules
     /// </summary>
     internal class Symbols
     {
-        private BindingList<string> _list = null;
+        private readonly BindingList<string> _list = null;
 
         private static Symbols s_ins = new Symbols();
 

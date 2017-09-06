@@ -15,18 +15,18 @@ namespace Messenger.Modules
     /// </summary>
     internal class Caches
     {
-        public const string CacheFolder = nameof(Caches);
-        public const string CacheExtension = ".jpg";
+        private const string _CacheFolder = nameof(Caches);
+        private const string _CacheExtension = ".jpg";
 
-        public const int DefaultLimit = 384;
-        public const float DefaultDensity = 96;
-        public const string KeyCache = "cache-dir";
-        public const string KeyLimit = "cache-limit";
-        public const string KeyDensity = "cache-density";
+        private const int _Limit = 384;
+        private const float _Density = 96;
+        private const string _KeyCache = "cache-dir";
+        private const string _KeyLimit = "cache-limit";
+        private const string _KeyDensity = "cache-density";
 
-        private int _imgLimit = DefaultLimit;
-        private float _imgdpi = DefaultDensity;
-        private string _dir = CacheFolder;
+        private int _imgLimit = _Limit;
+        private float _imgdpi = _Density;
+        private string _dir = _CacheFolder;
 
         private static Caches s_ins = new Caches();
 
@@ -37,9 +37,9 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._dir = Options.GetOption(KeyCache, CacheFolder);
-                s_ins._imgLimit = int.Parse(Options.GetOption(KeyLimit, DefaultLimit.ToString()));
-                s_ins._imgdpi = float.Parse(Options.GetOption(KeyDensity, DefaultDensity.ToString()));
+                s_ins._dir = Options.GetOption(_KeyCache, _CacheFolder);
+                s_ins._imgLimit = int.Parse(Options.GetOption(_KeyLimit, _Limit.ToString()));
+                s_ins._imgdpi = float.Parse(Options.GetOption(_KeyDensity, _Density.ToString()));
             }
             catch (Exception ex)
             {
@@ -60,7 +60,7 @@ namespace Messenger.Modules
         public static string GetPath(string code)
         {
             var dir = new DirectoryInfo(s_ins._dir);
-            var pth = Path.Combine(dir.FullName, code + CacheExtension);
+            var pth = Path.Combine(dir.FullName, code + _CacheExtension);
             return pth;
         }
 
@@ -75,7 +75,7 @@ namespace Messenger.Modules
                 dir = new DirectoryInfo(s_ins._dir);
                 if (dir.Exists == false)
                     dir.Create();
-                pth = Path.Combine(dir.FullName, cod + CacheExtension);
+                pth = Path.Combine(dir.FullName, cod + _CacheExtension);
                 if (File.Exists(pth) == false)
                 {
                     fst = new FileStream(pth, FileMode.CreateNew, FileAccess.Write);

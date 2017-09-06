@@ -15,7 +15,7 @@ namespace Messenger.Modules
     /// </summary>
     internal class Ports : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        private const string PathKey = "port-path";
+        private const string _KeyPath = "port-path";
 
         private bool _hasexcept = false;
         private bool _hastakers = false;
@@ -189,7 +189,7 @@ namespace Messenger.Modules
         [AutoLoad(32, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
-            var pth = Options.GetOption(PathKey);
+            var pth = Options.GetOption(_KeyPath);
             if (string.IsNullOrEmpty(pth))
                 pth = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Received");
             s_ins._savepath = pth;
@@ -198,7 +198,7 @@ namespace Messenger.Modules
         [AutoLoad(4, AutoLoadFlag.OnExit)]
         public static void Save()
         {
-            Options.SetOption(PathKey, s_ins._savepath);
+            Options.SetOption(_KeyPath, s_ins._savepath);
         }
     }
 }

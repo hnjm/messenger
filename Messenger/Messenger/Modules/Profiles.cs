@@ -13,11 +13,11 @@ namespace Messenger.Modules
 {
     internal class Profiles : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        public const string KeyCode = "profile-code";
-        public const string KeyName = "profile-name";
-        public const string KeyText = "profile-text";
-        public const string KeyImage = "profile-image";
-        public const string KeyLabel = "profile-groups";
+        private const string _KeyCode = "profile-code";
+        private const string _KeyName = "profile-name";
+        private const string _KeyText = "profile-text";
+        private const string _KeyImage = "profile-image";
+        private const string _KeyLabel = "profile-groups";
 
         private bool _hasclient = false;
         private bool _hasgroups = false;
@@ -68,10 +68,10 @@ namespace Messenger.Modules
         private Profiles()
         {
             Profile.InstancePropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName.Equals(nameof(Profile.Hint)))
-                        _Changed();
-                };
+            {
+                if (e.PropertyName.Equals(nameof(Profile.Hint)))
+                    _Changed();
+            };
             _client.ListChanged += (s, e) => _Changed();
             _groups.ListChanged += (s, e) => _Changed();
             _recent.ListChanged += (s, e) => _Changed();
@@ -246,12 +246,12 @@ namespace Messenger.Modules
         {
             try
             {
-                instance._local.ID = int.Parse(Options.GetOption(KeyCode, new Random().Next(1, int.MaxValue).ToString()));
-                instance._local.Name = Options.GetOption(KeyName);
-                instance._local.Text = Options.GetOption(KeyText);
-                var lbs = Options.GetOption(KeyLabel);
+                instance._local.ID = int.Parse(Options.GetOption(_KeyCode, new Random().Next(1, int.MaxValue).ToString()));
+                instance._local.Name = Options.GetOption(_KeyName);
+                instance._local.Text = Options.GetOption(_KeyText);
+                var lbs = Options.GetOption(_KeyLabel);
                 SetGroupLabels(lbs);
-                var pth = Options.GetOption(KeyImage);
+                var pth = Options.GetOption(_KeyImage);
                 if (pth == null)
                     return;
                 var buf = Caches.ImageSquare(pth);
@@ -270,11 +270,11 @@ namespace Messenger.Modules
         [AutoLoad(8, AutoLoadFlag.OnExit)]
         public static void Save()
         {
-            Options.SetOption(KeyCode, instance._local.ID.ToString());
-            Options.SetOption(KeyName, instance._local.Name);
-            Options.SetOption(KeyText, instance._local.Text);
-            Options.SetOption(KeyImage, instance._imagesource);
-            Options.SetOption(KeyLabel, instance._grouptags);
+            Options.SetOption(_KeyCode, instance._local.ID.ToString());
+            Options.SetOption(_KeyName, instance._local.Name);
+            Options.SetOption(_KeyText, instance._local.Text);
+            Options.SetOption(_KeyImage, instance._imagesource);
+            Options.SetOption(_KeyLabel, instance._grouptags);
         }
     }
 }

@@ -76,35 +76,45 @@ namespace Messenger.Modules
             Posters.UserRequest();
             Posters.UserGroups();
         }
-        
+
         private static async Task _Listen(Socket socket)
         {
-            while (true)
+            void _Invoke(Socket clt)
             {
-                var clt = default(Socket);
-                var arg = default(LinkEventArgs<Guid>);
-                var buf = default(byte[]);
-
-                try
+                Task.Run(() =>
                 {
-                    clt = await socket._AcceptAsync();
+                    var buf = default(byte[]);
                     if (Task.Run(async () => buf = await clt._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                         throw new TimeoutException("Timeout when accept transport header.");
                     var rea = new PacketReader(buf);
                     var key = rea.Pull<Guid>();
-                    arg = new LinkEventArgs<Guid>() { Record = key, Source = clt };
-                }
-                catch (Exception ex) when (ex is SocketException || ex is PacketException)
+                    var arg = new LinkEventArgs<Guid>() { Record = key, Source = clt };
+                    s_ins._Request?.Invoke(s_ins, arg);
+                    if (arg.Finish == true)
+                        return;
+                    clt.Dispose();
+                })
+                .ContinueWith(tsk =>
                 {
-                    clt?.Dispose();
+                    if (tsk.Exception == null)
+                        return;
+                    Trace.WriteLine(tsk.Exception);
+                    clt.Dispose();
+                });
+            }
+
+            while (true)
+            {
+                try
+                {
+                    var clt = await socket._AcceptAsync();
+                    _Invoke(clt);
+                }
+                catch (SocketException ex)
+                {
                     Trace.WriteLine(ex);
                     continue;
                 }
-
-                s_ins._Request?.Invoke(clt, arg);
-                if (arg.Finish == true)
-                    continue;
-                clt.Dispose();
             }
         }
 

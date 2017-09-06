@@ -9,11 +9,11 @@ namespace Messenger.Modules
 {
     internal class Options
     {
-        public const string DefaultPath = nameof(Messenger) + ".opt";
-        public const string DefaultRoot = "options-root";
-        public const string DefaultHeader = "option";
-        public const string DefaultKey = "key";
-        public const string DefaultValue = "value";
+        private const string _Path = nameof(Messenger) + ".opt";
+        private const string _Root = "options-root";
+        private const string _Header = "option";
+        private const string _Key = "key";
+        private const string _Value = "value";
 
         private XmlDocument _doc = null;
 
@@ -31,7 +31,7 @@ namespace Messenger.Modules
 
             try
             {
-                fst = new FileStream(DefaultPath, FileMode.Open);
+                fst = new FileStream(_Path, FileMode.Open);
                 if (fst.Length <= Links.BufferLimit)
                     doc.Load(fst);
                 s_ins._doc = doc;
@@ -58,7 +58,7 @@ namespace Messenger.Modules
                 var doc = s_ins?._doc;
                 if (doc == null)
                     return;
-                str = new FileStream(DefaultPath, FileMode.Create);
+                str = new FileStream(_Path, FileMode.Create);
                 wtr = XmlWriter.Create(str, set);
                 doc.Save(wtr);
             }
@@ -76,14 +76,14 @@ namespace Messenger.Modules
         private static XmlElement _GetElement(string key)
         {
             var doc = s_ins._doc;
-            var roo = doc.SelectSingleNode($"/{DefaultRoot}") as XmlElement;
+            var roo = doc.SelectSingleNode($"/{_Root}") as XmlElement;
             if (roo == null)
             {
-                roo = doc.CreateElement(DefaultRoot);
+                roo = doc.CreateElement(_Root);
                 doc.AppendChild(roo);
             }
-            var ele = doc.CreateElement(DefaultHeader);
-            ele.SetAttribute(DefaultKey, key);
+            var ele = doc.CreateElement(_Header);
+            ele.SetAttribute(_Key, key);
             roo.AppendChild(ele);
             return ele;
         }
@@ -95,19 +95,19 @@ namespace Messenger.Modules
                 throw new InvalidOperationException();
             try
             {
-                var pth = $"/{DefaultRoot}/{DefaultHeader}[@{DefaultKey}=\"{key}\"]";
+                var pth = $"/{_Root}/{_Header}[@{_Key}=\"{key}\"]";
                 if (doc.SelectSingleNode(pth) is XmlElement ele)
                 {
-                    if (ele.HasAttribute(DefaultValue))
-                        return ele.GetAttribute(DefaultValue);
+                    if (ele.HasAttribute(_Value))
+                        return ele.GetAttribute(_Value);
                     if (empty != null)
-                        ele.SetAttribute(DefaultValue, empty);
+                        ele.SetAttribute(_Value, empty);
                 }
                 else
                 {
                     ele = _GetElement(key);
                     if (empty != null)
-                        ele.SetAttribute(DefaultValue, empty);
+                        ele.SetAttribute(_Value, empty);
                 }
             }
             catch (Exception ex)
@@ -124,12 +124,12 @@ namespace Messenger.Modules
                 throw new InvalidOperationException();
             try
             {
-                var pth = $"/{DefaultRoot}/{DefaultHeader}[@{DefaultKey}=\"{key}\"]";
+                var pth = $"/{_Root}/{_Header}[@{_Key}=\"{key}\"]";
                 var ele = doc.SelectSingleNode(pth) as XmlElement;
                 if (ele == null)
                     ele = _GetElement(key);
                 if (value != null)
-                    ele.SetAttribute(DefaultValue, value);
+                    ele.SetAttribute(_Value, value);
                 return true;
             }
             catch (Exception ex)

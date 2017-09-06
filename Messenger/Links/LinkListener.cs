@@ -71,7 +71,7 @@ namespace Mikodev.Network
 
         private void _Handle(Socket client)
         {
-            LinkError check(int code)
+            LinkError _Check(int code)
             {
                 if (code <= Links.ID)
                     return LinkError.CodeInvalid;
@@ -86,30 +86,29 @@ namespace Mikodev.Network
                 }
             }
 
-            void remove(int code)
+            void _Remove(int code)
             {
                 lock (_obj)
                 {
                     if (_dic.TryGetValue(code, out var val) && val == null)
                         _dic.Remove(code);
-                    else
-                        throw new LinkException(LinkError.AssertFailed, "Remove code mark error!");
+                    else throw new LinkException(LinkError.AssertFailed, "Remove code mark error!");
                 }
             }
 
-            var rsa = new RSACryptoServiceProvider();
             var aes = new AesManaged();
             var buf = default(byte[]);
             var err = LinkError.None;
             var cid = 0;
 
-            byte[] respond()
+            byte[] _Respond()
             {
                 var rea = new PacketReader(buf);
+                var rsa = new RSACryptoServiceProvider();
                 if (string.Equals(rea["protocol"].Pull<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
                 cid = rea["id"].Pull<int>();
-                err = check(cid);
+                err = _Check(cid);
                 rsa.FromXmlString(rea["rsakey"].Pull<string>());
                 var res = PacketWriter.Serialize(new
                 {
@@ -125,14 +124,15 @@ namespace Mikodev.Network
             {
                 if (Task.Run(async () => buf = await client._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Listener request timeout.");
-                if (client._SendExtendAsync(respond()).Wait(Links.Timeout) == false)
+                if (client._SendExtendAsync(_Respond()).Wait(Links.Timeout) == false)
                     throw new TimeoutException("Listener response timeout.");
-                if (err != LinkError.Success) throw new LinkException(err);
+                if (err != LinkError.Success)
+                    throw new LinkException(err);
             }
             catch (Exception)
             {
                 if (err == LinkError.Success)
-                    remove(cid);
+                    _Remove(cid);
                 throw;
             }
 
@@ -142,7 +142,7 @@ namespace Mikodev.Network
 
             lock (_obj)
             {
-                remove(cid);
+                _Remove(cid);
                 _dic.Add(cid, clt);
                 _gro.Add(cid, new List<int>());
             }

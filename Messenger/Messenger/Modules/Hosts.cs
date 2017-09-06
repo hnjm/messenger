@@ -14,9 +14,10 @@ namespace Messenger.Modules
 {
     internal class Hosts
     {
-        public const string KeyLast = "server-last";
-        public const string KeyList = "server-list";
-        public const string KeyPort = "server-port";
+        private const int _Timeout = 1000;
+        private const string _KeyLast = "server-last";
+        private const string _KeyList = "server-list";
+        private const string _KeyPort = "server-port";
 
         private IPEndPoint _broadcast = null;
         private string _host = null;
@@ -94,7 +95,7 @@ namespace Messenger.Modules
 
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                _Refresh().Wait(Links.Timeout);
+                _Refresh().Wait(_Timeout);
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
@@ -116,12 +117,12 @@ namespace Messenger.Modules
             var lst = new List<IPEndPoint>();
             try
             {
-                var pot = Options.GetOption(KeyPort, Links.BroadcastPort.ToString());
+                var pot = Options.GetOption(_KeyPort, Links.BroadcastPort.ToString());
                 if (pot != null)
                     s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
-                var str = Options.GetOption(KeyLast);
+                var str = Options.GetOption(_KeyLast);
                 Converts._GetHost(str, out s_ins._host, out s_ins._port);
-                var sts = Options.GetOption(KeyList) ?? string.Empty;
+                var sts = Options.GetOption(_KeyList) ?? string.Empty;
                 var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in arr)
                     lst.Add(s._ToEndPoint());
@@ -155,8 +156,8 @@ namespace Messenger.Modules
                 }
             }
             if (s_ins._host != null)
-                Options.SetOption(KeyLast, $"{s_ins._host}:{s_ins._port}");
-            Options.SetOption(KeyList, stb.ToString());
+                Options.SetOption(_KeyLast, $"{s_ins._host}:{s_ins._port}");
+            Options.SetOption(_KeyList, stb.ToString());
         }
     }
 }

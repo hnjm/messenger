@@ -4,7 +4,7 @@ namespace Messenger.Modules
 {
     internal class Settings
     {
-        public const string KeyCtrlEnter = "setting-ctrlenter";
+        private const string _KeyCtrlEnter = "setting-ctrlenter";
 
         private bool _ctrlenter = false;
 
@@ -15,7 +15,7 @@ namespace Messenger.Modules
         [AutoLoad(8, AutoLoadFlag.OnLoad)]
         public static void Load()
         {
-            var str = Options.GetOption(KeyCtrlEnter);
+            var str = Options.GetOption(_KeyCtrlEnter);
             if (str != null && bool.TryParse(str, out var res))
                 s_ins._ctrlenter = res;
             return;
@@ -24,7 +24,7 @@ namespace Messenger.Modules
         [AutoLoad(16, AutoLoadFlag.OnExit)]
         public static void Save()
         {
-            Options.SetOption(KeyCtrlEnter, s_ins._ctrlenter.ToString());
+            Options.SetOption(_KeyCtrlEnter, s_ins._ctrlenter.ToString());
         }
     }
 }
