@@ -14,11 +14,12 @@ namespace Mikodev.Network
     {
         internal int _climit = Links.Count;
         internal int _port = Links.Port;
-        internal readonly object _obj = new object();
+        internal readonly object _loc = new object();
 
         internal Socket _soc = null;
         internal readonly Dictionary<int, LinkClient> _dic = new Dictionary<int, LinkClient>();
-        internal readonly Dictionary<int, List<int>> _gro = new Dictionary<int, List<int>>();
+        internal readonly Dictionary<int, HashSet<int>> _gro = new Dictionary<int, HashSet<int>>();
+        internal readonly Dictionary<int, HashSet<int>> _set = new Dictionary<int, HashSet<int>>();
 
         public Task Listen(int port = Links.Port, int count = Links.Count)
         {
@@ -77,7 +78,7 @@ namespace Mikodev.Network
                     return LinkError.CodeInvalid;
                 if (_dic.Count >= _climit)
                     return LinkError.CountLimited;
-                lock (_obj)
+                lock (_loc)
                 {
                     if (_dic.ContainsKey(code))
                         return LinkError.CodeConflict;
@@ -88,7 +89,7 @@ namespace Mikodev.Network
 
             void _Remove(int code)
             {
-                lock (_obj)
+                lock (_loc)
                 {
                     if (_dic.TryGetValue(code, out var val) && val == null)
                         _dic.Remove(code);
@@ -140,19 +141,48 @@ namespace Mikodev.Network
             clt.Received += _LinkClient_Received;
             clt.Shutdown += _LinkClient_Shutdown;
 
-            lock (_obj)
+            lock (_loc)
             {
                 _Remove(cid);
                 _dic.Add(cid, clt);
-                _gro.Add(cid, new List<int>());
+                _gro.Add(cid, new HashSet<int>());
             }
 
             clt.Start(client);
         }
 
+        private void _ResetGroup(int source, IEnumerable<int> target = null)
+        {
+            var set = _gro[source];
+            foreach (var i in set)
+            {
+                var gro = _set[i];
+                var res = gro.Remove(source);
+                if (gro.Count > 0)
+                    continue;
+                res &= _set.Remove(i);
+            }
+
+            if (target == null)
+            {
+                _gro.Remove(source);
+                return;
+            }
+
+            set.Clear();
+            set.UnionWith(target);
+            foreach (var i in target)
+            {
+                if (_set.TryGetValue(i, out var gro) == false)
+                    _set.Add(i, (gro = new HashSet<int>()));
+                var res = gro.Add(source);
+            }
+        }
+
         private void _LinkClient_Shutdown(object sender, EventArgs e)
         {
             var clt = (LinkClient)sender;
+            var cid = clt._id;
             var lst = new List<int>();
             var wtr = PacketWriter.Serialize(new
             {
@@ -161,10 +191,10 @@ namespace Mikodev.Network
                 path = "user.list",
             });
 
-            lock (_obj)
+            lock (_loc)
             {
-                _dic.Remove(clt._id);
-                _gro.Remove(clt._id);
+                _ResetGroup(cid);
+                _dic.Remove(cid);
                 foreach (var c in _dic)
                     lst.Add(c.Key);
                 var buf = wtr.PushList("data", lst).GetBytes();
@@ -183,32 +213,33 @@ namespace Mikodev.Network
             switch (tar)
             {
                 case Links.ID when pth == "user.group":
-                    var lst = rea.Data.PullList<int>().ToList();
-                    if (lst.Count > Links.Group)
+                    var lst = rea.Data.PullList<int>().Where(r => r < Links.ID);
+                    var set = new HashSet<int>(lst);
+                    if (set.Count > Links.Group)
                         throw new LinkException(LinkError.GroupLimited, "Group count out of range.");
-                    lst.RemoveAll(r => r < Links.ID == false);
-                    lock (_obj)
-                        _gro[src] = lst;
+                    lock (_loc)
+                        _ResetGroup(src, set);
                     return;
 
                 case Links.ID:
-                    lock (_obj)
+                    lock (_loc)
                         foreach (var i in _dic)
                             if (i.Key != src)
                                 i.Value.Enqueue(rea.Buffer);
                     return;
 
                 case int _ when tar > Links.ID:
-                    lock (_obj)
+                    lock (_loc)
                         if (_dic.TryGetValue(tar, out var clt))
                             clt.Enqueue(rea.Buffer);
                     return;
 
                 default:
-                    lock (_obj)
-                        foreach (var i in _gro)
-                            if (i.Key != src && i.Value.Contains(tar))
-                                _dic[i.Key].Enqueue(rea.Buffer);
+                    lock (_loc)
+                        if (_set.TryGetValue(tar, out var val))
+                            foreach (var i in val)
+                                if (i != src)
+                                    _dic[i].Enqueue(rea.Buffer);
                     return;
             }
         }
