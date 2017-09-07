@@ -87,16 +87,6 @@ namespace Mikodev.Network
                 }
             }
 
-            void _Remove(int code)
-            {
-                lock (_loc)
-                {
-                    if (_dic.TryGetValue(code, out var val) && val == null)
-                        _dic.Remove(code);
-                    else throw new LinkException(LinkError.AssertFailed, "Remove code mark error!");
-                }
-            }
-
             var aes = new AesManaged();
             var buf = default(byte[]);
             var err = LinkError.None;
@@ -133,7 +123,8 @@ namespace Mikodev.Network
             catch (Exception)
             {
                 if (err == LinkError.Success)
-                    _Remove(cid);
+                    lock (_loc)
+                        _dic.Remove(cid);
                 throw;
             }
 
@@ -143,7 +134,7 @@ namespace Mikodev.Network
 
             lock (_loc)
             {
-                _Remove(cid);
+                _dic.Remove(cid);
                 _dic.Add(cid, clt);
                 _gro.Add(cid, new HashSet<int>());
             }
@@ -157,15 +148,16 @@ namespace Mikodev.Network
             foreach (var i in set)
             {
                 var gro = _set[i];
-                var res = gro.Remove(source);
+                gro.Remove(source);
                 if (gro.Count > 0)
                     continue;
-                res &= _set.Remove(i);
+                _set.Remove(i);
             }
 
             if (target == null)
             {
                 _gro.Remove(source);
+                _dic.Remove(source);
                 return;
             }
 
@@ -175,7 +167,7 @@ namespace Mikodev.Network
             {
                 if (_set.TryGetValue(i, out var gro) == false)
                     _set.Add(i, (gro = new HashSet<int>()));
-                var res = gro.Add(source);
+                gro.Add(source);
             }
         }
 
@@ -194,12 +186,12 @@ namespace Mikodev.Network
             lock (_loc)
             {
                 _ResetGroup(cid);
-                _dic.Remove(cid);
                 foreach (var c in _dic)
-                    lst.Add(c.Key);
+                    if (c.Value != null)
+                        lst.Add(c.Key);
                 var buf = wtr.PushList("data", lst).GetBytes();
                 foreach (var i in _dic)
-                    i.Value.Enqueue(buf);
+                    i.Value?.Enqueue(buf);
             }
         }
 
@@ -225,13 +217,13 @@ namespace Mikodev.Network
                     lock (_loc)
                         foreach (var i in _dic)
                             if (i.Key != src)
-                                i.Value.Enqueue(rea.Buffer);
+                                i.Value?.Enqueue(rea.Buffer);
                     return;
 
                 case int _ when tar > Links.ID:
                     lock (_loc)
                         if (_dic.TryGetValue(tar, out var clt))
-                            clt.Enqueue(rea.Buffer);
+                            clt?.Enqueue(rea.Buffer);
                     return;
 
                 default:
@@ -239,7 +231,7 @@ namespace Mikodev.Network
                         if (_set.TryGetValue(tar, out var val))
                             foreach (var i in val)
                                 if (i != src)
-                                    _dic[i].Enqueue(rea.Buffer);
+                                    _dic[i]?.Enqueue(rea.Buffer);
                     return;
             }
         }

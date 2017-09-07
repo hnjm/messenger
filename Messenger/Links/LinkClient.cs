@@ -106,14 +106,15 @@ namespace Mikodev.Network
 
         public void Enqueue(byte[] buffer)
         {
+            var len = buffer?.Length ?? throw new ArgumentNullException(nameof(buffer));
+            if (len < 1 || len > Links.BufferLimit)
+                throw new ArgumentOutOfRangeException(nameof(buffer));
             lock (_loc)
             {
-                if (buffer == null || buffer.Length < 1 || buffer.Length > Links.BufferLimit)
-                    throw new LinkException(LinkError.AssertFailed, "Message buffer null or out of range!");
                 if (_disposed || _msglen > Links.Queue)
                     return;
+                _msglen += len;
                 _msgs.Enqueue(buffer);
-                _msglen += buffer.Length;
             }
         }
 
@@ -123,24 +124,18 @@ namespace Mikodev.Network
             {
                 lock (_loc)
                 {
-                    switch (_msglen)
+                    if (_msglen > Links.Queue)
+                        throw new LinkException(LinkError.QueueLimited, "Message queue length out of range!");
+                    if (_msglen > 0)
                     {
-                        case 0 when _msgs.Count > 0:
-                            throw new LinkException(LinkError.AssertFailed, "Message queue may have empty packet!");
-
-                        case long _ when _msglen > Links.Queue:
-                            throw new LinkException(LinkError.QueueLimited, "Message queue length out of range!");
-
-                        case long _ when _msglen > 0:
-                            buf = _msgs.Dequeue();
-                            _msglen -= buf.Length;
-                            return true;
-
-                        default:
-                            buf = null;
-                            return false;
+                        buf = _msgs.Dequeue();
+                        _msglen -= buf.Length;
+                        return true;
                     }
                 }
+
+                buf = null;
+                return false;
             }
 
             while (_socket != null)
