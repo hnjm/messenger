@@ -159,7 +159,7 @@ namespace Mikodev.Network
 
         internal int _Received(LinkPacket packet)
         {
-            if (packet.Source == Links.ID && string.Equals(packet.Path, "link.shutdown"))
+            if (packet.Source == Links.ID && packet.Path == "link.shutdown")
                 return _Shutdown();
             Received?.Invoke(this, new LinkEventArgs<LinkPacket>() { Source = this, Record = packet });
             return 0;

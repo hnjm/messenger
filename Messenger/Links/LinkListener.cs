@@ -173,9 +173,7 @@ namespace Mikodev.Network
 
         private void _LinkClient_Shutdown(object sender, EventArgs e)
         {
-            var clt = (LinkClient)sender;
-            var cid = clt._id;
-            var lst = new List<int>();
+            var cid = ((LinkClient)sender)._id;
             var wtr = PacketWriter.Serialize(new
             {
                 source = Links.ID,
@@ -186,13 +184,34 @@ namespace Mikodev.Network
             lock (_loc)
             {
                 _ResetGroup(cid);
-                foreach (var c in _dic)
-                    if (c.Value != null)
-                        lst.Add(c.Key);
+                var lst = _dic.Where(r => r.Value != null).Select(r => r.Key);
                 var buf = wtr.PushList("data", lst).GetBytes();
-                foreach (var i in _dic)
-                    i.Value?.Enqueue(buf);
+                _EnqAll(buf, cid);
             }
+        }
+
+        private void _EnqAll(byte[] buffer, int except)
+        {
+            foreach (var i in _dic)
+                if (i.Key != except)
+                    i.Value?.Enqueue(buffer);
+            return;
+        }
+
+        private void _Enq(byte[] buffer, int target)
+        {
+            if (_dic.TryGetValue(target, out var val))
+                val?.Enqueue(buffer);
+            return;
+        }
+
+        private void _EnqSet(byte[] buffer, int group, int except)
+        {
+            if (_set.TryGetValue(group, out var res))
+                foreach (var i in res)
+                    if (i != except && _dic.TryGetValue(i, out var val))
+                        val?.Enqueue(buffer);
+            return;
         }
 
         private void _LinkClient_Received(object sender, LinkEventArgs<LinkPacket> arg)
@@ -200,11 +219,11 @@ namespace Mikodev.Network
             var rea = arg.Record;
             var src = rea.Source;
             var tar = rea.Target;
-            var pth = rea.Path;
+            var buf = rea.Buffer;
 
             switch (tar)
             {
-                case Links.ID when pth == "user.group":
+                case Links.ID when rea.Path == "user.group":
                     var lst = rea.Data.PullList<int>().Where(r => r < Links.ID);
                     var set = new HashSet<int>(lst);
                     if (set.Count > Links.Group)
@@ -215,23 +234,17 @@ namespace Mikodev.Network
 
                 case Links.ID:
                     lock (_loc)
-                        foreach (var i in _dic)
-                            if (i.Key != src)
-                                i.Value?.Enqueue(rea.Buffer);
+                        _EnqAll(buf, src);
                     return;
 
                 case int _ when tar > Links.ID:
                     lock (_loc)
-                        if (_dic.TryGetValue(tar, out var clt))
-                            clt?.Enqueue(rea.Buffer);
+                        _Enq(buf, tar);
                     return;
 
                 default:
                     lock (_loc)
-                        if (_set.TryGetValue(tar, out var val))
-                            foreach (var i in val)
-                                if (i != src)
-                                    _dic[i]?.Enqueue(rea.Buffer);
+                        _EnqSet(buf, tar, src);
                     return;
             }
         }
