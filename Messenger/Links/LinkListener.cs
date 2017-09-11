@@ -87,7 +87,8 @@ namespace Mikodev.Network
                 }
             }
 
-            var aes = new AesManaged();
+            var key = LinkCrypto.GetKey();
+            var blk = LinkCrypto.GetBlock();
             var buf = default(byte[]);
             var err = LinkError.None;
             var cid = 0;
@@ -104,8 +105,8 @@ namespace Mikodev.Network
                 var res = PacketWriter.Serialize(new
                 {
                     result = err,
-                    aeskey = rsa.Encrypt(aes.Key, true),
-                    aesiv = rsa.Encrypt(aes.IV, true),
+                    aeskey = rsa.Encrypt(key, true),
+                    aesiv = rsa.Encrypt(blk, true),
                     endpoint = (IPEndPoint)client.RemoteEndPoint
                 });
                 return res.GetBytes();
@@ -128,7 +129,7 @@ namespace Mikodev.Network
                 throw;
             }
 
-            var clt = new LinkClient(cid) { _aes = aes };
+            var clt = new LinkClient(cid) { _key = key, _blk = blk };
             clt.Received += _LinkClient_Received;
             clt.Shutdown += _LinkClient_Shutdown;
 

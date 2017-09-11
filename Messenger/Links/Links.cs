@@ -2,7 +2,7 @@
 {
     public static class Links
     {
-        public const string Protocol = "mikodev.messenger.v1.12";
+        public const string Protocol = "mikodev.messenger.v1.14";
 
         public const int Port = 7550;
 

@@ -15,17 +15,18 @@ namespace Mikodev.Network
         internal long _msglen = 0;
         internal readonly int _id = 0;
         internal readonly object _loc = new object();
-        internal AesManaged _aes = null;
-        internal Exception _except = null;
+        internal byte[] _key = null;
+        internal byte[] _blk = null;
+        internal Socket _socket = null;
+        internal Exception _exc = null;
         internal IPEndPoint _iep = null;
         internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
-        internal Socket _socket = null;
 
         public int ID => _id;
 
         public bool IsRunning => _disposed == false && _started == true;
 
-        public Exception Exception => _except;
+        public Exception Exception => _exc;
 
         public IPEndPoint InnerEndPoint => _socket?.LocalEndPoint as IPEndPoint;
 
@@ -85,13 +86,17 @@ namespace Mikodev.Network
                     throw new LinkException(err);
                 var aeskey = rea["aeskey"].PullList();
                 var aesiv = rea["aesiv"].PullList();
-                _iep = rea["endpoint"].Pull<IPEndPoint>();
-                _aes = new AesManaged() { Key = rsa.Decrypt(aeskey, true), IV = rsa.Decrypt(aesiv, true) };
+                var iep = rea["endpoint"].Pull<IPEndPoint>();
+                var key = rsa.Decrypt(aeskey, true);
+                var blk = rsa.Decrypt(aesiv, true);
                 lock (_loc)
                 {
                     if (_disposed)
                         throw new InvalidOperationException("Client has benn marked as disposed!");
                     _socket = soc;
+                    _iep = iep;
+                    _key = key;
+                    _blk = blk;
                 }
             }
             catch (Exception)
@@ -141,7 +146,7 @@ namespace Mikodev.Network
             while (_socket != null)
             {
                 if (dequeue(out var buf))
-                    await _socket._SendExtendAsync(_aes._Encrypt(buf));
+                    await _socket._SendExtendAsync(LinkCrypto.Encrypt(buf, _key, _blk));
                 else
                     await Task.Delay(Links.Delay);
             }
@@ -152,7 +157,7 @@ namespace Mikodev.Network
             while (_socket != null)
             {
                 var buf = await _socket._ReceiveExtendAsync();
-                var res = _aes._Decrypt(buf);
+                var res = LinkCrypto.Decrypt(buf, _key, _blk);
                 _Received(new LinkPacket()._Load(res));
             }
         }
@@ -173,7 +178,7 @@ namespace Mikodev.Network
                 if (_disposed)
                     return 0;
             if (obj is Exception ex)
-                _except = ex;
+                _exc = ex;
             Dispose();
             Shutdown?.Invoke(this, new EventArgs());
             return 0;
