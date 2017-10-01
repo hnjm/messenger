@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mikodev.Exchange, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mikodev.Exchange.1.1.2\lib\net451\Mikodev.Exchange.dll</HintPath>
+    <Reference Include="Mikodev.Exchange, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mikodev.Exchange.1.2.2\lib\net451\Mikodev.Exchange.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

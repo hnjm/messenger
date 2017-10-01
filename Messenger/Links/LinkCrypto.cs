@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Threading;
 
 namespace Mikodev.Network
 {
@@ -18,9 +17,12 @@ namespace Mikodev.Network
 
         internal static AesManaged _Instance()
         {
-            if (s_aes == null)
-                Interlocked.CompareExchange(ref s_aes, new AesManaged() { KeySize = _Key * 8, BlockSize = _Block * 8 }, null);
-            return s_aes;
+            var aes = s_aes;
+            if (aes != null)
+                return aes;
+            aes = new AesManaged() { KeySize = _Key * 8, BlockSize = _Block * 8 };
+            s_aes = aes;
+            return aes;
         }
 
         public static byte[] GetKey()

@@ -7,22 +7,32 @@ namespace Mikodev.Network
 {
     public static class LinkExtends
     {
+        public static byte[] _Merge(params byte[][] arrays)
+        {
+            var sum = 0;
+            for (int i = 0; i < arrays.Length; i++)
+                sum += arrays[i].Length;
+            var arr = new byte[sum];
+            var idx = 0;
+            for (int i = 0; i < arrays.Length; i++)
+            {
+                var cur = arrays[i];
+                var len = cur.Length;
+                Buffer.BlockCopy(cur, 0, arr, idx, len);
+                idx += len;
+            }
+            return arr;
+        }
+
         public static Task<Socket> _AcceptAsync(this Socket socket) => Task.Factory.FromAsync(socket.BeginAccept, socket.EndAccept, null);
 
         public static int _SetKeepAlive(this Socket socket, bool enable = true, uint before = Links.KeepAliveBefore, uint interval = Links.KeepAliveInterval)
         {
             if (enable == true && (before < 1 || interval < 1))
                 throw new ArgumentOutOfRangeException("Keep alive argument out of range.");
-            var len = sizeof(uint);
-            var val = new byte[len];
-            var buf = new byte[len * 3];
-            if (enable)
-            {
-                Buffer.BlockCopy(GetBytes(1U), 0, buf, 0, len);
-                Buffer.BlockCopy(GetBytes(before), 0, buf, len, len);
-                Buffer.BlockCopy(GetBytes(interval), 0, buf, len * 2, len);
-            }
-            socket.IOControl(IOControlCode.KeepAliveValues, buf, val);
+            var val = new byte[sizeof(uint)];
+            var res = _Merge(GetBytes(1U), GetBytes(before), GetBytes(interval));
+            socket.IOControl(IOControlCode.KeepAliveValues, res, val);
             return ToInt32(val, 0);
         }
 
@@ -69,15 +79,16 @@ namespace Mikodev.Network
             }
         }
 
-        public static LinkPacket _Load(this LinkPacket packet, byte[] buf)
+        public static LinkPacket _Load(this LinkPacket src, byte[] buf)
         {
-            packet._buf = buf;
-            packet._ori = new PacketReader(buf);
-            packet._src = packet._ori["source"].Pull<int>();
-            packet._tar = packet._ori["target"].Pull<int>();
-            packet._pth = packet._ori["path"].Pull<string>();
-            packet._dat = packet._ori["data", true];
-            return packet;
+            var ori = new PacketReader(buf);
+            src._buf = buf;
+            src._ori = ori;
+            src._src = ori["source"].Pull<int>();
+            src._tar = ori["target"].Pull<int>();
+            src._pth = ori["path"].Pull<string>();
+            src._dat = ori["data", true];
+            return src;
         }
     }
 }
