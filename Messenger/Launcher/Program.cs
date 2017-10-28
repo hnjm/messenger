@@ -1,8 +1,8 @@
-﻿using Mikodev.Network;
+﻿using Mikodev.Logger;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace Launcher
 {
@@ -10,8 +10,7 @@ namespace Launcher
     {
         static void Main(string[] args)
         {
-            var lis = new LinkLogger($"{nameof(Launcher)}.log");
-            Trace.Listeners.Add(lis);
+            Log.SetPath(nameof(Launcher));
 
             try
             {

@@ -1,7 +1,6 @@
 ﻿using Messenger.Modules;
-using Mikodev.Network;
+using Mikodev.Logger;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,8 +15,7 @@ namespace Messenger
         {
             base.OnStartup(e);
 
-            var lis = new LinkLogger($"{nameof(Messenger)}.log");
-            Trace.Listeners.Add(lis);
+            Log.SetPath(nameof(Messenger));
             EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
 
             DispatcherUnhandledException += (s, arg) =>

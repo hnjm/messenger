@@ -1,5 +1,6 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Logger;
 using System;
 using System.Diagnostics;
 using System.Windows;
@@ -59,7 +60,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
         }
 

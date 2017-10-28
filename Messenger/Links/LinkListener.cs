@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Mikodev.Logger;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -50,9 +50,10 @@ namespace Mikodev.Network
         {
             void _Invoke(Socket soc) => Task.Run(() => _Handle(soc)).ContinueWith(tsk =>
             {
-                if (tsk.Exception == null)
+                var ex = tsk.Exception;
+                if (ex == null)
                     return;
-                Trace.WriteLine(tsk.Exception);
+                Log.Err(ex);
                 soc.Dispose();
             });
 
@@ -65,7 +66,7 @@ namespace Mikodev.Network
                 }
                 catch (SocketException ex)
                 {
-                    Trace.WriteLine(ex);
+                    Log.Err(ex);
                 }
             }
         }

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A3ECBE4A-2D6A-490D-B8B5-6768A1253213}</ProjectGuid>
+    <ProjectGuid>{F9128A2A-36B1-41BB-AE3C-6D2E93F66605}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Mikodev.Network</RootNamespace>
-    <AssemblyName>Mikodev.Links</AssemblyName>
+    <RootNamespace>Mikodev.Logger</RootNamespace>
+    <AssemblyName>Mikodev.Logger</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -31,9 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mikodev.Exchange, Version=1.2.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mikodev.Exchange.1.2.4\lib\net451\Mikodev.Exchange.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,26 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LinkBroadcast.cs" />
-    <Compile Include="LinkCrypto.cs" />
-    <Compile Include="LinkClient.cs" />
-    <Compile Include="LinkError.cs" />
-    <Compile Include="LinkEventArgs.cs" />
-    <Compile Include="LinkException.cs" />
-    <Compile Include="LinkExtends.cs" />
-    <Compile Include="LinkListener.cs" />
-    <Compile Include="LinkPacket.cs" />
-    <Compile Include="Links.cs" />
+    <Compile Include="Log.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="LogTrace.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Logger\Logger.csproj">
-      <Project>{f9128a2a-36b1-41bb-ae3c-6d2e93f66605}</Project>
-      <Name>Logger</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,5 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
@@ -60,7 +61,7 @@ namespace Messenger.Modules
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine(ex);
+                    Log.Err(ex);
                     return null;
                 }
             }
@@ -102,7 +103,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
 
             soc?.Dispose();
@@ -132,7 +133,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
             if (s_ins._broadcast != null)
                 lst.Add(s_ins._broadcast);

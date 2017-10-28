@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Mikodev.Logger;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -170,14 +170,14 @@ namespace Mikodev.Network
             return 0;
         }
 
-        internal int _Shutdown(object obj = null)
+        internal int _Shutdown(Exception ex = null)
         {
-            if (obj != null)
-                Trace.WriteLine(obj);
+            if (ex != null)
+                Log.Err(ex);
             lock (_loc)
                 if (_disposed)
                     return 0;
-            if (obj is Exception ex)
+            if (ex !=null)
                 _exc = ex;
             Dispose();
             Shutdown?.Invoke(this, new EventArgs());

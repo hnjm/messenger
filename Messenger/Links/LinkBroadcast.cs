@@ -1,5 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Mikodev.Logger;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -68,7 +68,7 @@ namespace Mikodev.Network
                 }
                 catch (SocketException ex)
                 {
-                    Trace.WriteLine(ex);
+                    Log.Err(ex);
                 }
             }
         }

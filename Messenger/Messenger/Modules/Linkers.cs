@@ -1,10 +1,10 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -67,7 +67,7 @@ namespace Messenger.Modules
             {
                 if (tsk.Exception == null)
                     return;
-                Trace.WriteLine(tsk.Exception);
+                Log.Err(tsk.Exception);
             });
 
             Packets.OnHandled += _Packets_OnHandled;
@@ -100,7 +100,7 @@ namespace Messenger.Modules
                 {
                     if (tsk.Exception == null)
                         return;
-                    Trace.WriteLine(tsk.Exception);
+                    Log.Err(tsk.Exception);
                     clt.Dispose();
                 });
             }
@@ -114,7 +114,7 @@ namespace Messenger.Modules
                 }
                 catch (SocketException ex)
                 {
-                    Trace.WriteLine(ex);
+                    Log.Err(ex);
                     continue;
                 }
             }

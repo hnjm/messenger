@@ -1,7 +1,7 @@
 ﻿using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Xml;
 
@@ -41,7 +41,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 s_ins._doc = new XmlDocument();
             }
             finally
@@ -67,7 +67,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
             finally
             {
@@ -115,7 +115,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
             return empty;
         }
@@ -137,7 +137,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 return false;
             }
         }

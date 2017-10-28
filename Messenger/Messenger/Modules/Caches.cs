@@ -1,6 +1,6 @@
 ﻿using Messenger.Models;
+using Mikodev.Logger;
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -43,7 +43,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
         }
 
@@ -94,7 +94,7 @@ namespace Messenger.Modules
             {
                 if (nothrow == false)
                     throw;
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 return null;
             }
             finally

@@ -1,10 +1,10 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -263,7 +263,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 return;
             }
         }

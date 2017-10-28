@@ -1,11 +1,11 @@
 ﻿using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -113,7 +113,7 @@ namespace Messenger.Modules
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine(ex);
+                    Log.Err(ex);
                 }
                 finally
                 {
@@ -161,7 +161,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 return lst;
             }
             finally
@@ -193,7 +193,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 con?.Dispose();
             }
             finally
@@ -222,7 +222,7 @@ namespace Messenger.Modules
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine(ex);
+                        Log.Err(ex);
                     }
                     finally
                     {
@@ -253,7 +253,7 @@ namespace Messenger.Modules
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine(ex);
+                        Log.Err(ex);
                     }
                     finally
                     {

@@ -1,7 +1,7 @@
-﻿using Mikodev.Network;
+﻿using Mikodev.Logger;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -72,7 +72,7 @@ namespace Messenger.Models
                     {
                         soc.Dispose();
                         soc = null;
-                        Trace.WriteLine(ex);
+                        Log.Err(ex);
                     }
                 }
 
@@ -154,7 +154,7 @@ namespace Messenger.Models
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
             }
         }
 

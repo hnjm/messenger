@@ -1,8 +1,8 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
-using System.Diagnostics;
 using System.Windows;
 
 namespace Messenger.Handles
@@ -26,7 +26,7 @@ namespace Messenger.Handles
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
+                Log.Err(ex);
                 return;
             }
             var trs = new Cargo(Source, tak);

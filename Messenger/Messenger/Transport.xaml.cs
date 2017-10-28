@@ -1,9 +1,9 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Logger;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -44,7 +44,7 @@ namespace Messenger
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine(ex);
+                    Log.Err(ex);
                 }
             }
             else if (sender == buttonStopAll)
