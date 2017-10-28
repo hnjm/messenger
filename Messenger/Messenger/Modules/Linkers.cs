@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -14,6 +13,9 @@ using System.Windows.Interop;
 
 namespace Messenger.Modules
 {
+    /// <summary>
+    /// 维持客户端与服务器的连接, 并负责引发事件
+    /// </summary>
     internal class Linkers
     {
         private readonly object _loc = new object();
@@ -148,7 +150,7 @@ namespace Messenger.Modules
                 lst.Add(iep);
             if (clt?.OuterEndPoint is IPEndPoint rep)
                 lst.Add(rep);
-            var res = lst._Distinct((a, b) => a.Equals(b)).ToList();
+            var res = lst._Distinct((a, b) => a.Equals(b));
             return res;
         }
 

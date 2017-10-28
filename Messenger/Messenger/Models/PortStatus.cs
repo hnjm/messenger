@@ -1,5 +1,8 @@
 ﻿namespace Messenger.Models
 {
+    /// <summary>
+    /// 文件传输状态
+    /// </summary>
     public enum PortStatus : int
     {
         默认 = 0,

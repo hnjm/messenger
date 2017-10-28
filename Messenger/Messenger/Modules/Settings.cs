@@ -2,6 +2,9 @@
 
 namespace Messenger.Modules
 {
+    /// <summary>
+    /// 管理用户界面设置
+    /// </summary>
     internal class Settings
     {
         private const string _KeyCtrlEnter = "setting-ctrlenter";
@@ -10,6 +13,9 @@ namespace Messenger.Modules
 
         private static Settings s_ins = new Settings();
 
+        /// <summary>
+        /// 使用 ctrl + enter 发送消息还是 enter
+        /// </summary>
         public static bool UseCtrlEnter { get => s_ins._ctrlenter; set => s_ins._ctrlenter = value; }
 
         [AutoLoad(8, AutoLoadFlag.OnLoad)]

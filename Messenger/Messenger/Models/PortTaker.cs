@@ -55,6 +55,7 @@ namespace Messenger.Models
             var inf = default(FileInfo);
             var str = default(FileStream);
 
+            // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
             async Task _Emit()
             {
                 for (int i = 0; i < _ieps.Count && soc == null; i++)
@@ -94,6 +95,7 @@ namespace Messenger.Models
                 }
             }
 
+            // 在接收函数退出时设置状态并释放资源
             return _Emit().ContinueWith(t =>
             {
                 if (t.Exception == null)
@@ -109,6 +111,9 @@ namespace Messenger.Models
             });
         }
 
+        /// <summary>
+        /// 循环接收文件, 并设置传输进度 (异步)
+        /// </summary>
         private async Task _Receive()
         {
             while (_socket != null && _position < _length)
@@ -122,6 +127,10 @@ namespace Messenger.Models
             }
         }
 
+        /// <summary>
+        /// 清理资源, 若文件没有成功接收, 则删除该文件
+        /// </summary>
+        /// <param name="task"></param>
         private void _ReceiveClean(Task task)
         {
             var res = (task.Exception == null && _position == _length);

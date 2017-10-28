@@ -6,6 +6,9 @@ using System.Windows;
 
 namespace Messenger.Models
 {
+    /// <summary>
+    /// 文件传输控制类
+    /// </summary>
     public class Cargo : INotifyPropertyChanged
     {
         private class _Record

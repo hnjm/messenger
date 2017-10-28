@@ -6,7 +6,10 @@ namespace Messenger.Extensions
 {
     internal static class Collections
     {
-        public static IEnumerable<T> _Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> equals)
+        /// <summary>
+        /// 返回集合中所有唯一的项目
+        /// </summary>
+        public static List<T> _Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> equals)
         {
             var lst = new List<T>();
             foreach (var val in source)
@@ -14,12 +17,14 @@ namespace Messenger.Extensions
                 if (lst.FirstOrDefault(tmp => equals.Invoke(val, tmp)) != null)
                     continue;
                 lst.Add(val);
-                yield return val;
             }
-            lst.Clear();
+            return lst;
         }
 
-        public static IList<T> _Remove<T>(this IList<T> lst, Func<T, bool> fun)
+        /// <summary>
+        /// 移除源列表中所有符合条件的项目, 返回被移除的项目
+        /// </summary>
+        public static List<T> _Remove<T>(this IList<T> lst, Func<T, bool> fun)
         {
             var idx = 0;
             var res = new List<T>();

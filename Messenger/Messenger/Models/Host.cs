@@ -2,6 +2,9 @@
 
 namespace Messenger.Models
 {
+    /// <summary>
+    ///服务器信息
+    /// </summary>
     public class Host
     {
         /// <summary>

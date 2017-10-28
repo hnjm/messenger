@@ -7,9 +7,15 @@ using System.Windows;
 
 namespace Messenger.Handles
 {
+    /// <summary>
+    /// 文件传输
+    /// </summary>
     [Handle("file")]
     public class Thing : LinkPacket
     {
+        /// <summary>
+        /// 处理传入的文件信息
+        /// </summary>
         [Handle("info")]
         public void Take()
         {

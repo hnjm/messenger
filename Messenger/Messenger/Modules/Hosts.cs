@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace Messenger.Modules
 {
+    /// <summary>
+    /// 搜索和管理服务器信息
+    /// </summary>
     internal class Hosts
     {
         private const int _Timeout = 1000;

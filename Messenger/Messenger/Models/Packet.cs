@@ -21,14 +21,17 @@ namespace Messenger.Models
         /// 收信人编号
         /// </summary>
         public int Target { get => _target; set => _target = value; }
+
         /// <summary>
         /// 发信人编号
         /// </summary>
         public int Source { get => _source; set => _source = value; }
+
         /// <summary>
         /// 分组编号
         /// </summary>
         public int Groups { get => _groups; set => _groups = value; }
+
         /// <summary>
         /// 消息类型
         /// </summary>
@@ -38,6 +41,7 @@ namespace Messenger.Models
         /// 底层数据 (怎么解读取决于 <see cref="Path"/>)
         /// </summary>
         public object Value { get => _value; set => _value = value; }
+
         /// <summary>
         /// 消息时间
         /// </summary>
@@ -55,6 +59,7 @@ namespace Messenger.Models
                 return null;
             }
         }
+
         /// <summary>
         /// 图像路径
         /// </summary>
@@ -67,6 +72,7 @@ namespace Messenger.Models
                 return _image;
             }
         }
+
         /// <summary>
         /// 用户信息
         /// </summary>

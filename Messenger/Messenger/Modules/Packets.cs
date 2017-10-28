@@ -102,8 +102,7 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con);
-                    cmd.CommandText = "insert into messages values(@sid, @tid, @gid, @tim, @typ, @msg)";
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "insert into messages values(@sid, @tid, @gid, @tim, @typ, @msg)" };
                     cmd.Parameters.Add(new SQLiteParameter("@sid", pkt.Source));
                     cmd.Parameters.Add(new SQLiteParameter("@tid", pkt.Target));
                     cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Groups));

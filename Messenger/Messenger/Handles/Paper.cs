@@ -4,9 +4,15 @@ using Mikodev.Network;
 
 namespace Messenger.Handles
 {
+    /// <summary>
+    /// 消息处理
+    /// </summary>
     [Handle("msg")]
     public class Paper : LinkPacket
     {
+        /// <summary>
+        /// 文本消息
+        /// </summary>
         [Handle("text")]
         public void Text()
         {
@@ -14,6 +20,9 @@ namespace Messenger.Handles
             Packets.Insert(Source, Target, txt);
         }
 
+        /// <summary>
+        /// 图片消息
+        /// </summary>
         [Handle("image")]
         public void Image()
         {

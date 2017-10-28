@@ -57,6 +57,9 @@ namespace Messenger.Modules
             }
         }
 
+        /// <summary>
+        /// 从本地缓存查找指定 Hash 值的图像
+        /// </summary>
         public static string GetPath(string code)
         {
             var dir = new DirectoryInfo(s_ins._dir);
@@ -64,6 +67,10 @@ namespace Messenger.Modules
             return pth;
         }
 
+        /// <summary>
+        /// 写入本地缓存, 将 Hash 值作为文件名
+        /// </summary>
+        /// <param name="returnPath">返回完整路径(真), 返回 Hash 值 (假)</param>
         public static string SetBuffer(byte[] buffer, bool returnPath, bool nothrow = true)
         {
             var fst = default(FileStream);
@@ -97,6 +104,9 @@ namespace Messenger.Modules
             }
         }
 
+        /// <summary>
+        /// 从图像中裁剪出正方形区域 (用于个人头像)
+        /// </summary>
         public static byte[] ImageSquare(string filepath)
         {
             var bmp = new Bitmap(filepath);
@@ -112,6 +122,9 @@ namespace Messenger.Modules
             return _LoadImage(bmp, src, dst, ImageFormat.Jpeg);
         }
 
+        /// <summary>
+        /// 按比例缩放图像 (用于聊天)
+        /// </summary>
         public static byte[] ImageResize(string filepath)
         {
             var bmp = new Bitmap(filepath);

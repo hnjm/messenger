@@ -4,6 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace Messenger.Models
 {
+    /// <summary>
+    /// 用户信息
+    /// </summary>
     public class Profile : INotifyPropertyChanging, INotifyPropertyChanged
     {
         public static event PropertyChangedEventHandler InstancePropertyChanged;
@@ -45,6 +48,9 @@ namespace Messenger.Models
             set => _EmitChange(ref _id, value);
         }
 
+        /// <summary>
+        /// 未读消息计数
+        /// </summary>
         public int Hint
         {
             get => _hint;

@@ -8,6 +8,9 @@ using System.Reflection;
 
 namespace Messenger.Modules
 {
+    /// <summary>
+    /// 处理消息, 并分发给各个消息处理函数
+    /// </summary>
     internal class Routers
     {
         private class _Record

@@ -7,6 +7,9 @@ using System.Xml;
 
 namespace Messenger.Modules
 {
+    /// <summary>
+    /// 管理用户设置
+    /// </summary>
     internal class Options
     {
         private const string _Path = nameof(Messenger) + ".opt";

@@ -8,6 +8,9 @@ namespace Messenger.Extensions
     {
         internal static readonly IReadOnlyList<string> _units = new string[] { string.Empty, "K", "M", "G", "T", "P", "E" };
 
+        /// <summary>
+        /// 分离主机字符串 (如 "some-host:7500" 分离成 "some-host" 和 7500)
+        /// </summary>
         internal static bool _GetHost(string str, out string host, out int port)
         {
             if (string.IsNullOrWhiteSpace(str))
@@ -44,7 +47,6 @@ namespace Messenger.Extensions
         /// <param name="length">数据大小</param>
         /// <param name="len">长度</param>
         /// <param name="pos">单位</param>
-        /// <returns></returns>
         internal static bool _GetLength(long length, out double len, out string pos)
         {
             len = 0;

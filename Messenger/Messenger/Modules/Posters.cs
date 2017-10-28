@@ -33,6 +33,9 @@ namespace Messenger.Modules
             Packets.Insert(target, val);
         }
 
+        /// <summary>
+        /// 向指定用户发送本机用户信息
+        /// </summary>
         public static void UserProfile(int target)
         {
             var pro = Profiles.Current;
@@ -65,6 +68,9 @@ namespace Messenger.Modules
             Linkers.Enqueue(buf);
         }
 
+        /// <summary>
+        /// 发送请求监听的用户组
+        /// </summary>
         public static void UserGroups()
         {
             var wtr = PacketWriter.Serialize(new
@@ -78,6 +84,9 @@ namespace Messenger.Modules
             Linkers.Enqueue(buf);
         }
 
+        /// <summary>
+        /// 发送文件信息
+        /// </summary>
         public static Cargo File(int target, string filepath)
         {
             var mak = default(PortMaker);

@@ -11,6 +11,9 @@ using System.Windows;
 
 namespace Messenger.Modules
 {
+    /// <summary>
+    /// 管理用户信息
+    /// </summary>
     internal class Profiles : INotifyPropertyChanging, INotifyPropertyChanged
     {
         private const string _KeyCode = "profile-code";
@@ -29,7 +32,7 @@ namespace Messenger.Modules
         private BindingList<Profile> _recent = new BindingList<Profile>();
         private BindingList<Profile> _client = new BindingList<Profile>();
         private BindingList<Profile> _groups = new BindingList<Profile>();
-        private List<WeakReference<Profile>> _spaces = new List<WeakReference<Profile>>();
+        private ConditionalWeakTable<object, Profile> _spaces = new ConditionalWeakTable<object, Profile>();
         private Profile _local = new Profile();
         private Profile _inscope = null;
         private EventHandler _inscopechanged = null;
@@ -92,23 +95,23 @@ namespace Messenger.Modules
 
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
 
-        private static Profiles instance = new Profiles();
+        private static Profiles s_ins = new Profiles();
 
-        public static Profiles Instance => instance;
-        public static Profile Current => instance._local;
-        public static Profile Inscope => instance._inscope;
-        public static string GroupLabels => instance._grouptags;
-        public static string ImageSource { get => instance._imagesource; set => instance._imagesource = value; }
-        public static byte[] ImageBuffer { get => instance._imagebuffer; set => instance._imagebuffer = value; }
-        public static IEnumerable<int> GroupIDs => instance._groupids;
-        public static BindingList<Profile> RecentList => instance._recent;
-        public static BindingList<Profile> ClientList => instance._client;
-        public static BindingList<Profile> GroupsList => instance._groups;
-        public static event EventHandler InscopeChanged { add => instance._inscopechanged += value; remove => instance._inscopechanged -= value; }
+        public static Profiles Instance => s_ins;
+        public static Profile Current => s_ins._local;
+        public static Profile Inscope => s_ins._inscope;
+        public static string GroupLabels => s_ins._grouptags;
+        public static string ImageSource { get => s_ins._imagesource; set => s_ins._imagesource = value; }
+        public static byte[] ImageBuffer { get => s_ins._imagebuffer; set => s_ins._imagebuffer = value; }
+        public static IEnumerable<int> GroupIDs => s_ins._groupids;
+        public static BindingList<Profile> RecentList => s_ins._recent;
+        public static BindingList<Profile> ClientList => s_ins._client;
+        public static BindingList<Profile> GroupsList => s_ins._groups;
+        public static event EventHandler InscopeChanged { add => s_ins._inscopechanged += value; remove => s_ins._inscopechanged -= value; }
 
         public static void Clear()
         {
-            var clt = instance._client;
+            var clt = s_ins._client;
             Application.Current.Dispatcher.Invoke(() => clt.Clear());
         }
 
@@ -117,7 +120,7 @@ namespace Messenger.Modules
         /// </summary>
         public static void Insert(Profile profile)
         {
-            var clt = instance._client;
+            var clt = s_ins._client;
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var res = Query(profile.ID, true);
@@ -135,31 +138,29 @@ namespace Messenger.Modules
         /// <param name="create">指定编号不存在时创建对象</param>
         public static Profile Query(int id, bool create = false)
         {
-            if (id == instance._local.ID)
-                return instance._local;
-            instance._spaces._Remove((r) => r.TryGetTarget(out var _) == false);
-            foreach (var i in instance._spaces)
-                if (i.TryGetTarget(out var pro) && pro.ID == id)
-                    return pro;
-            var res = instance._client.Concat(instance._groups).Concat(instance._recent);
+            var ins = s_ins;
+            if (id == ins._local.ID)
+                return ins._local;
+            if (ins._spaces.TryGetValue(id, out var pro))
+                return pro;
+            var res = ins._client.Concat(ins._groups).Concat(ins._recent);
             var val = res.FirstOrDefault(t => t.ID == id);
             if (val != null)
                 return val;
             if (create == false)
                 return null;
             var tmp = new Profile() { ID = id, Name = $"未知 [{id}]" };
-            instance._spaces.Add(new WeakReference<Profile>(tmp));
-            return tmp;
+            return ins._spaces.GetValue(id, _ => tmp);
         }
 
         /// <summary>
         /// 移除所有 ID 不在给定集合的项目 并把含有未读消息的项目添加到最近列表
         /// </summary>
         /// <param name="ids">ID 集合</param>
-        public static IList<Profile> Remove(IEnumerable<int> ids)
+        public static List<Profile> Remove(IEnumerable<int> ids)
         {
-            var clt = instance._client;
-            var lst = new List<Profile>() as IList<Profile>;
+            var clt = s_ins._client;
+            var lst = default(List<Profile>);
             Application.Current.Dispatcher.Invoke(() =>
             {
                 lst = clt._Remove(r => ids.Contains(r.ID) == false);
@@ -177,13 +178,13 @@ namespace Messenger.Modules
         {
             var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
-            var kvs = tmp._Distinct((a, b) => a.Hash == b.Hash).ToList();
+            var kvs = tmp._Distinct((a, b) => a.Hash == b.Hash);
             if (kvs.Count > Links.Group)
                 return false;
             var ids = from i in kvs select i.Hash;
-            instance._grouptags = args;
-            instance._groupids = ids;
-            var gro = instance._groups;
+            s_ins._grouptags = args;
+            s_ins._groupids = ids;
+            var gro = s_ins._groups;
             Posters.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -210,16 +211,16 @@ namespace Messenger.Modules
         {
             if (profile == null)
             {
-                instance._inscope = null;
+                s_ins._inscope = null;
                 return;
             }
 
             profile.Hint = 0;
-            if (ReferenceEquals(profile, instance._inscope))
+            if (ReferenceEquals(profile, s_ins._inscope))
                 return;
 
-            instance._inscope = profile;
-            instance._inscopechanged?.Invoke(instance, new EventArgs());
+            s_ins._inscope = profile;
+            s_ins._inscopechanged?.Invoke(s_ins, new EventArgs());
         }
 
         /// <summary>
@@ -227,7 +228,7 @@ namespace Messenger.Modules
         /// </summary>
         public static void SetRecent(Profile profile)
         {
-            var rec = instance._recent;
+            var rec = s_ins._recent;
             for (var i = 0; i < rec.Count; i++)
             {
                 if (rec[i].ID == profile.ID)
@@ -246,9 +247,9 @@ namespace Messenger.Modules
         {
             try
             {
-                instance._local.ID = int.Parse(Options.GetOption(_KeyCode, new Random().Next(1, int.MaxValue).ToString()));
-                instance._local.Name = Options.GetOption(_KeyName);
-                instance._local.Text = Options.GetOption(_KeyText);
+                s_ins._local.ID = int.Parse(Options.GetOption(_KeyCode, new Random().Next(1, int.MaxValue).ToString()));
+                s_ins._local.Name = Options.GetOption(_KeyName);
+                s_ins._local.Text = Options.GetOption(_KeyText);
                 var lbs = Options.GetOption(_KeyLabel);
                 SetGroupLabels(lbs);
                 var pth = Options.GetOption(_KeyImage);
@@ -256,9 +257,9 @@ namespace Messenger.Modules
                     return;
                 var buf = Caches.ImageSquare(pth);
                 var sha = Caches.SetBuffer(buf, false);
-                instance._local.Image = Caches.GetPath(sha);
-                instance._imagesource = pth;
-                instance._imagebuffer = buf;
+                s_ins._local.Image = Caches.GetPath(sha);
+                s_ins._imagesource = pth;
+                s_ins._imagebuffer = buf;
             }
             catch (Exception ex)
             {
@@ -270,11 +271,11 @@ namespace Messenger.Modules
         [AutoLoad(8, AutoLoadFlag.OnExit)]
         public static void Save()
         {
-            Options.SetOption(_KeyCode, instance._local.ID.ToString());
-            Options.SetOption(_KeyName, instance._local.Name);
-            Options.SetOption(_KeyText, instance._local.Text);
-            Options.SetOption(_KeyImage, instance._imagesource);
-            Options.SetOption(_KeyLabel, instance._grouptags);
+            Options.SetOption(_KeyCode, s_ins._local.ID.ToString());
+            Options.SetOption(_KeyName, s_ins._local.Name);
+            Options.SetOption(_KeyText, s_ins._local.Text);
+            Options.SetOption(_KeyImage, s_ins._imagesource);
+            Options.SetOption(_KeyLabel, s_ins._grouptags);
         }
     }
 }
