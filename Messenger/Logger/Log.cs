@@ -7,6 +7,10 @@ namespace Mikodev.Logger
 {
     public static class Log
     {
+        /// <summary>
+        /// 日志固定前缀 (防止循环记录日志)
+        /// </summary>
+        internal const string _con = "[时间: ";
         internal static Logger s_log = null;
         internal static string s_pre = null;
         internal static int s_idx = 0;
@@ -22,6 +26,7 @@ namespace Mikodev.Logger
             var pre = pth.Substring(0, idx);
             s_pre = pre;
             s_idx = pre.Length;
+            Trace.Listeners.Add(new LogTrace());
         }
 
         public static void SetPath(string path)
@@ -41,7 +46,7 @@ namespace Mikodev.Logger
             if (file != null && file.StartsWith(s_pre))
                 file = '~' + file.Substring(s_idx);
 
-            var msg = $"[时间: {DateTime.Now:u}]" + lbr +
+            var msg = $"{_con}{DateTime.Now:u}]" + lbr +
                 $"[文件: {file}]" + lbr +
                 $"[行号: {line}]" + lbr +
                 $"[方法: {name}]" + lbr +
@@ -61,11 +66,11 @@ namespace Mikodev.Logger
 
         internal static void _Trace(string txt)
         {
-            if (txt == null || txt.StartsWith("["))
+            if (txt == null || txt.Contains(_con))
                 return;
 
             var lbr = Environment.NewLine;
-            var msg = $"[时间: {DateTime.Now:u}]" + lbr +
+            var msg = $"{_con}{DateTime.Now:u}]" + lbr +
                 $"[来源: {nameof(Trace)}]" + lbr +
                 $"{txt}" + lbr + lbr;
 
