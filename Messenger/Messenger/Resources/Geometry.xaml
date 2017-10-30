@@ -37,38 +37,38 @@
         </Style.Triggers>
     </Style>
 
-    <Path x:Key="PathSymbol" x:Shared="False"  Stroke="#E0E0E0" StrokeThickness="1" Width="32" Height="32">
+    <Path x:Key="PathSymbol" x:Shared="False"  Stroke="White" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
-                <EllipseGeometry Center="11,11" RadiusX="1" RadiusY="1" />
-                <EllipseGeometry Center="21,11" RadiusX="1" RadiusY="1"/>
-                <PathGeometry Figures="M 9,18 A 7.5,7.5 0 0 0 23,18"/>
+                <EllipseGeometry Center="10.5,10.5" RadiusX="1" RadiusY="1" />
+                <EllipseGeometry Center="20.5,10.5" RadiusX="1" RadiusY="1"/>
+                <PathGeometry Figures="M 8.5,17.5 A 7.5,7.5 0 0 0 22.5,17.5"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathArrow" x:Shared="False" Stroke="Gray" StrokeThickness="2" StrokeLineJoin="Round" Width="40" Height="40">
+    <Path x:Key="PathArrow" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1.5" StrokeLineJoin="Round" Width="40" Height="40">
         <Path.Data>
             <GeometryGroup>
-                <EllipseGeometry Center="20,20" RadiusX="18" RadiusY="18"/>
-                <PathGeometry Figures="M 10,10 32,20 10,30 16,20 Z"/>
+                <EllipseGeometry Center="19.5,19.5" RadiusX="18" RadiusY="18"/>
+                <PathGeometry Figures="M 9.5,9.5 31.5,19.5 9.5,29.5 15.5,19.5 Z"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathDirectory" x:Shared="False" Stroke="#FFFFFF" StrokeThickness="1" Width="32" Height="32">
+    <Path x:Key="PathDirectory" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
-                <PathGeometry Figures="M 7,11 L 7,23 25,23 25,12 7,12 7,8 16,8 16,12"/>
+                <PathGeometry Figures="M 6.5,10.5 L 6.5,22.5 24.5,22.5 24.5,11.5 6.5,11.5 6.5,7.5 15.5,7.5 15.5,11.5"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathImage" x:Shared="False" Stroke="#FFFFFF" StrokeThickness="1" Width="32" Height="32">
+    <Path x:Key="PathImage" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
-                <PathGeometry Figures="M 6,9 L 6,23 26,23 26,9 6,9"/>
-                <PathGeometry Figures="M 6,18 L 10,14 18,18 22,14 26,16"/>
+                <PathGeometry Figures="M 5.5,8.5 L 5.5,22.5 25.5,22.5 25.5,8.5 5.5,8.5"/>
+                <PathGeometry Figures="M 5.5,17.5 L 9.5,13.5 17.5,17.5 21.5,13.5 25.5,15.5"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
@@ -103,12 +103,12 @@
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathRemove" x:Shared="False" Stroke="#FFFFFF" StrokeThickness="1" Width="32" Height="32">
+    <Path x:Key="PathRemove" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
-                <LineGeometry StartPoint="12,7" EndPoint="20,7"/>
-                <LineGeometry StartPoint="8,10" EndPoint="24,10"/>
-                <PathGeometry Figures="M 11,12 L 11,24 21,24 21,12"/>
+                <LineGeometry StartPoint="11.5,6.5" EndPoint="19.5,6.5"/>
+                <LineGeometry StartPoint="7.5,9.5" EndPoint="23.5,9.5"/>
+                <PathGeometry Figures="M 10.5,11.5 L 10.5,23.5 20.5,23.5 20.5,11.5"/>
             </GeometryGroup>
         </Path.Data>
     </Path>

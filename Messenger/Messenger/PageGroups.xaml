@@ -52,13 +52,13 @@
                     HorizontalContentAlignment="Center"
                     VerticalContentAlignment="Center"
                     Width="32" Height="32">
-                <Path Grid.Column="0" Stroke="#FFC0C0C0" Width="24" Height="24">
+                <Path Grid.Column="0" Stroke="#FFE0E0E0" Width="24" Height="24">
                     <Path.Data>
                         <GeometryGroup>
-                            <EllipseGeometry Center="11,7" RadiusX="5" RadiusY="5"/>
-                            <PathGeometry Figures="M 2,22 A 9,9 0 0 1 21,22"/>
-                            <LineGeometry StartPoint="17,3" EndPoint="23,3"/>
-                            <LineGeometry StartPoint="20,0" EndPoint="20,6"/>
+                            <EllipseGeometry Center="10.5,6.5" RadiusX="5" RadiusY="5"/>
+                            <PathGeometry Figures="M 1.5,21.5 A 9,9 0 0 1 20.5,21.5"/>
+                            <LineGeometry StartPoint="16.5,3.5" EndPoint="22.5,3.5"/>
+                            <LineGeometry StartPoint="19.5,0.5" EndPoint="19.5,6.5"/>
                         </GeometryGroup>
                     </Path.Data>
                 </Path>
