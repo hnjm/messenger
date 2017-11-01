@@ -32,7 +32,7 @@ namespace Messenger.Modules
         private BindingList<Profile> _recent = new BindingList<Profile>();
         private BindingList<Profile> _client = new BindingList<Profile>();
         private BindingList<Profile> _groups = new BindingList<Profile>();
-        private ConditionalWeakTable<object, Profile> _spaces = new ConditionalWeakTable<object, Profile>();
+        private List<WeakReference> _spaces = new List<WeakReference>();
         private Profile _local = new Profile();
         private Profile _inscope = null;
         private EventHandler _inscopechanged = null;
@@ -141,16 +141,33 @@ namespace Messenger.Modules
             var ins = s_ins;
             if (id == ins._local.ID)
                 return ins._local;
-            if (ins._spaces.TryGetValue(id, out var pro))
+            var spa = ins._spaces;
+
+            var idx = 0;
+            var pro = default(Profile);
+            while (idx < spa.Count)
+            {
+                var tar = (Profile)spa[idx].Target;
+                if (tar != null)
+                {
+                    if (pro == null && tar.ID == id)
+                        pro = tar;
+                    idx++;
+                    continue;
+                }
+                spa.RemoveAt(idx);
+            }
+
+            if (pro != null)
                 return pro;
-            var res = ins._client.Concat(ins._groups).Concat(ins._recent);
-            var val = res.FirstOrDefault(t => t.ID == id);
-            if (val != null)
-                return val;
+            pro = ins._client.Concat(ins._groups).Concat(ins._recent).FirstOrDefault(t => t.ID == id);
+            if (pro != null)
+                return pro;
             if (create == false)
                 return null;
-            var tmp = new Profile() { ID = id, Name = $"未知 [{id}]" };
-            return ins._spaces.GetValue(id, _ => tmp);
+            pro = new Profile() { ID = id, Name = $"未知 [{id}]" };
+            spa.Add(new WeakReference(pro));
+            return pro;
         }
 
         /// <summary>
