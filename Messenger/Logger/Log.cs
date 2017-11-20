@@ -10,7 +10,7 @@ namespace Mikodev.Logger
         /// <summary>
         /// 日志固定前缀 (防止循环记录日志)
         /// </summary>
-        internal const string _con = "[时间: ";
+        internal static readonly string _prefix = $"[{nameof(Logger)}]";
         internal static Logger s_log = null;
         internal static string s_pre = null;
         internal static int s_idx = 0;
@@ -35,7 +35,7 @@ namespace Mikodev.Logger
             s_log = log;
         }
 
-        public static void Err(Exception ex, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0, [CallerMemberName] string name = null)
+        public static void Err(Exception ex, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
             if (ex == null)
                 return;
@@ -46,13 +46,13 @@ namespace Mikodev.Logger
             if (file != null && file.StartsWith(s_pre))
                 file = '~' + file.Substring(s_idx);
 
-            var msg = $"{_con}{DateTime.Now:u}]" + lbr +
+            var msg = $"[时间: {DateTime.Now:u}]" + lbr +
                 $"[文件: {file}]" + lbr +
                 $"[行号: {line}]" + lbr +
                 $"[方法: {name}]" + lbr +
                 $"{ex}" + lbr + lbr;
 
-            Trace.Write(msg);
+            Trace.Write(_prefix + Environment.NewLine + msg);
             s_log?._Write(msg).ContinueWith(_Next);
         }
 
@@ -61,16 +61,16 @@ namespace Mikodev.Logger
             var x = t.Exception;
             if (x == null)
                 return;
-            Trace.WriteLine(x);
+            Trace.WriteLine(_prefix + Environment.NewLine + x);
         }
 
         internal static void _Trace(string txt)
         {
-            if (txt == null || txt.Contains(_con))
+            if (string.IsNullOrEmpty(txt) || txt.Contains(_prefix))
                 return;
 
             var lbr = Environment.NewLine;
-            var msg = $"{_con}{DateTime.Now:u}]" + lbr +
+            var msg = $"[时间: {DateTime.Now:u}]" + lbr +
                 $"[来源: {nameof(Trace)}]" + lbr +
                 $"{txt}" + lbr + lbr;
 
