@@ -12,6 +12,7 @@ namespace Messenger.Models
         protected bool _disposed = false;
         protected object _loc = new object();
 
+        protected bool _batch = false;
         protected long _length = 0;
         protected long _position = 0;
         protected string _name = null;
@@ -40,6 +41,11 @@ namespace Messenger.Models
         protected void _EmitDisposed() => Task.Run(() => Disposed?.Invoke(this, new EventArgs()));
 
         public virtual bool CanStart => IsStarted == false && IsDisposed == false;
+
+        /// <summary>
+        /// 是否为批量传输 [文件夹 (真) 或单个文件 (假)]
+        /// </summary>
+        public virtual bool IsBatch => _batch;
 
         public virtual bool IsStarted => _started;
 

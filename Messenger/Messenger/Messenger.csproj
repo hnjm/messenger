@@ -95,6 +95,7 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Extensions\Collections.cs" />
     <Compile Include="Extensions\Converts.cs" />
+    <Compile Include="Extensions\Streams.cs" />
     <Compile Include="Handles\Paper.cs" />
     <Compile Include="Handles\People.cs" />
     <Compile Include="Handles\Thing.cs" />

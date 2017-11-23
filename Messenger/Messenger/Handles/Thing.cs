@@ -22,7 +22,7 @@ namespace Messenger.Handles
             var tak = default(PortTaker);
             try
             {
-                tak = new PortTaker(Data, () => Ports.FindPath(Data["filename"].Pull<string>()));
+                tak = new PortTaker(Data);
             }
             catch (Exception ex)
             {

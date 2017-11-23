@@ -166,10 +166,9 @@ namespace Messenger.Modules
         /// <summary>
         /// 检查文件名在指定目录下是否可用 如果冲突则添加随机后缀并重试 再次失败则抛出异常
         /// </summary>
-        /// <param name="dir">目录路径</param>
         /// <param name="name">文件名</param>
         /// <exception cref="IOException"></exception>
-        public static string FindPath(string name)
+        public static FileInfo FindAvailablePath(string name)
         {
             var dif = new DirectoryInfo(s_ins._savepath);
             if (!dif.Exists)
@@ -177,13 +176,14 @@ namespace Messenger.Modules
             var pth = Path.Combine(dif.FullName, name);
             var fif = new FileInfo(pth);
             if (!fif.Exists)
-                return fif.FullName;
+                return fif;
             int idx = fif.FullName.LastIndexOf(fif.Extension);
             var pathNoExt = (idx < 0 ? fif.FullName : fif.FullName.Substring(0, idx));
-            var str = $"{pathNoExt} [{new Random().Next():x8}]{fif.Extension}";
-            if (!File.Exists(str))
-                return str;
-            throw new IOException();
+            var str = $"{pathNoExt} [{DateTime.Now:yyyyMMdd-HHmmss-fff}-{new Random().Next():x8}]{fif.Extension}";
+            var inf = new FileInfo(str);
+            if (inf.Exists)
+                throw new IOException();
+            return inf;
         }
 
         [AutoLoad(32, AutoLoadFlag.OnLoad)]

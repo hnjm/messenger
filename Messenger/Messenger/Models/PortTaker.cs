@@ -1,11 +1,13 @@
-﻿using Mikodev.Logger;
+﻿using Messenger.Extensions;
+using Messenger.Modules;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Messenger.Models
@@ -15,25 +17,22 @@ namespace Messenger.Models
     /// </summary>
     public class PortTaker : Port
     {
-        private string _path = null;
-        private FileStream _stream = null;
+        private CancellationTokenSource _cancel = new CancellationTokenSource();
         private Socket _socket = null;
         private List<IPEndPoint> _ieps = null;
-        private Func<string> _callback = null;
 
         /// <summary>
         /// 初始化对象 并设定文件保存路径函数
         /// </summary>
-        public PortTaker(PacketReader reader, Func<string> callback)
+        public PortTaker(PacketReader reader)
         {
-            if (reader == null || callback == null)
+            if (reader == null)
                 throw new ArgumentNullException();
             _key = reader["guid"].Pull<Guid>();
             _name = reader["filename"].Pull<string>();
             _ieps = reader["endpoints"].PullList<IPEndPoint>().ToList();
             _length = reader["filesize"].Pull<long>();
             _status = PortStatus.等待;
-            _callback = callback;
         }
 
         /// <summary>
@@ -52,9 +51,6 @@ namespace Messenger.Models
             }
 
             var soc = default(Socket);
-            var inf = default(FileInfo);
-            var str = default(FileStream);
-
             // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
             async Task _Emit()
             {
@@ -80,18 +76,12 @@ namespace Messenger.Models
                     throw new ApplicationException("Network unreachable.");
                 var buf = PacketWriter.Serialize(_key);
                 await soc._SendExtendAsync(buf.GetBytes());
-                inf = new FileInfo(_callback.Invoke());
-                str = new FileStream(inf.FullName, FileMode.CreateNew);
-
-                _name = inf.Name;
-                _path = inf.FullName;
 
                 lock (_loc)
                 {
                     if (_disposed)
                         throw new InvalidOperationException();
                     _socket = soc;
-                    _stream = str;
                 }
             }
 
@@ -100,61 +90,42 @@ namespace Messenger.Models
             {
                 if (t.Exception == null)
                 {
-                    _Receive().ContinueWith(_ReceiveClean);
+                    _Receive().ContinueWith(_Clean);
                     return;
                 }
                 soc?.Dispose();
-                str?.Dispose();
-                soc = null;
-                str = null;
                 Dispose();
             });
         }
 
         /// <summary>
-        /// 循环接收文件, 并设置传输进度 (异步)
+        /// 接收文件, 并设置传输进度 (异步)
         /// </summary>
         private async Task _Receive()
         {
-            while (_socket != null && _position < _length)
-            {
-                if (_stream.Position != _position)
-                    _stream.Seek(_position, SeekOrigin.Begin);
-                var sub = (int)Math.Min(_length - _position, Links.Buffer);
-                var buf = await _socket._ReceiveAsync(sub);
-                _stream.Write(buf, 0, buf.Length);
-                _position += sub;
-            }
+            if (_batch)
+                throw new NotImplementedException();
+
+            var inf = Ports.FindAvailablePath(_name);
+            _name = inf.Name;
+            await _socket._ReceiveFile(inf.FullName, _length, r => _position += r, _cancel.Token);
         }
 
         /// <summary>
         /// 清理资源, 若文件没有成功接收, 则删除该文件
         /// </summary>
         /// <param name="task"></param>
-        private void _ReceiveClean(Task task)
+        private void _Clean(Task task)
         {
-            var res = (task.Exception == null && _position == _length);
             lock (_loc)
             {
                 if (_disposed == false)
                 {
-                    _status = res ? PortStatus.成功 : PortStatus.中断;
+                    _status = (task.Exception == null) ? PortStatus.成功 : PortStatus.中断;
                     if (task.Exception != null)
                         _exception = task.Exception;
                     _Dispose();
                 }
-            }
-
-            if (res == true || File.Exists(_path) == false)
-                return;
-
-            try
-            {
-                File.Delete(_path);
-            }
-            catch (Exception ex)
-            {
-                Log.Err(ex);
             }
         }
 
@@ -173,8 +144,6 @@ namespace Messenger.Models
 
             _socket?.Dispose();
             _socket = null;
-            _stream?.Dispose();
-            _stream = null;
 
             _disposed = true;
             _EmitDisposed();
