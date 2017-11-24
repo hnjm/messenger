@@ -4,6 +4,7 @@ using Mikodev.Logger;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -12,20 +13,21 @@ namespace Messenger
     /// <summary>
     /// Interaction logic for Transform.xaml
     /// </summary>
-    public partial class Transport : Page
+    public partial class PageShare : Page
     {
-        public Transport()
+        public PageShare()
         {
             InitializeComponent();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (sender == buttonClean)
+            var src = e.OriginalSource;
+            if (src == buttonClean)
             {
                 Ports.Remove();
             }
-            else if (sender == buttonChange)
+            else if (src == buttonChange)
             {
                 var dfd = new System.Windows.Forms.FolderBrowserDialog();
                 if (Directory.Exists(Ports.SavePath))
@@ -33,21 +35,20 @@ namespace Messenger
                 if (dfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     Ports.SavePath = dfd.SelectedPath;
             }
-            else if (sender == buttonOpen)
+            else if (src == buttonOpen)
             {
-                try
+                Task.Run(() =>
                 {
-                    if (Directory.Exists(Ports.SavePath))
-                    {
-                        Process.Start("explorer", "/e," + Ports.SavePath);
-                    }
-                }
-                catch (Exception ex)
+                    if (Directory.Exists(Ports.SavePath) == false)
+                        return;
+                    Process.Start("explorer", "/e," + Ports.SavePath);
+                })
+                .ContinueWith(task =>
                 {
-                    Log.Err(ex);
-                }
+                    Log.Err(task.Exception);
+                });
             }
-            else if (sender == buttonStopAll)
+            else if (src == buttonStopAll)
             {
                 Ports.Close();
             }

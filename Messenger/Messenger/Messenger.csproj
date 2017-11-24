@@ -105,12 +105,10 @@
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoLoadFlag.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
-    <Compile Include="Models\PortMaker.cs" />
     <Compile Include="Models\PortTaker.cs" />
     <Compile Include="Models\Port.cs" />
     <Compile Include="Models\PortStatus.cs" />
     <Compile Include="Models\Share.cs" />
-    <Compile Include="Models\ShareEventArgs.cs" />
     <Compile Include="Models\ShareWorker.cs" />
     <Compile Include="Modules\Options.cs" />
     <Compile Include="Modules\Posters.cs" />
@@ -148,8 +146,8 @@
     <Compile Include="Tools\StringEmptyConverter.cs" />
     <Compile Include="Tools\LengthConverter.cs" />
     <Compile Include="Tools\PromptConverter.cs" />
-    <Compile Include="Transport.xaml.cs">
-      <DependentUpon>Transport.xaml</DependentUpon>
+    <Compile Include="PageShare.xaml.cs">
+      <DependentUpon>PageShare.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\NativeMethods.cs" />
     <Page Include="Chatter.xaml">
@@ -224,7 +222,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Transport.xaml">
+    <Page Include="PageShare.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

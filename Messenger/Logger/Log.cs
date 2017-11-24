@@ -42,7 +42,7 @@ namespace Mikodev.Logger
         {
             if (ex == null)
                 return;
-            if (ex is AggregateException a && a.InnerExceptions.Count == 1)
+            while (ex is AggregateException a && a.InnerExceptions.Count == 1)
                 ex = a.InnerException;
             var lbr = Environment.NewLine;
 

@@ -97,12 +97,34 @@ namespace Messenger.Modules
             {
                 source = Linkers.ID,
                 target = target,
-                path = "file.info",
+                path = "share.file",
                 data = new
                 {
                     key = sha._key,
+                    type = "file",
                     name = sha.Name,
                     length = sha.Length,
+                    endpoints = Linkers.GetEndPoints(),
+                }
+            });
+            var buf = wtr.GetBytes();
+            Linkers.Enqueue(buf);
+            return sha;
+        }
+
+        public static Share Directory(int target, string directory)
+        {
+            var sha = new Share(new DirectoryInfo(directory));
+            var wtr = PacketWriter.Serialize(new
+            {
+                source = Linkers.ID,
+                target = target,
+                path = "share.dir",
+                data = new
+                {
+                    key = sha._key,
+                    type = "dir",
+                    name = sha.Name,
                     endpoints = Linkers.GetEndPoints(),
                 }
             });

@@ -53,12 +53,6 @@ namespace Messenger.Models
         {
             _tid = id;
             _trans = val;
-
-            if (val is PortMaker mak)
-            {
-                //Linkers.Requests += mak.PortRequests;
-                //val.Disposed += (s, e) => Linkers.Requests -= mak.PortRequests;
-            }
         }
 
         /// <summary>

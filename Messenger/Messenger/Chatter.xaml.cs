@@ -23,9 +23,12 @@ namespace Messenger
         public Chatter()
         {
             InitializeComponent();
+
+            Loaded += _Loaded;
+            Unloaded += _Unloaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
             Packets.Receiving += ModuleMessage_Receiving;
             (Application.Current as App).TextBoxKeyDown += TextBox_KeyDown;
@@ -41,7 +44,7 @@ namespace Messenger
             _ScrollToEnd();
         }
 
-        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        private void _Unloaded(object sender, RoutedEventArgs e)
         {
             listboxMessage.ItemsSource = null;
             Packets.Receiving -= ModuleMessage_Receiving;
@@ -93,7 +96,7 @@ namespace Messenger
             {
                 var dia = new System.Windows.Forms.OpenFileDialog();
                 if (dia.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    _InsertTrans(dia.FileName);
+                    _InsertFile(dia.FileName);
             }
 
             if (sender == buttonText)
@@ -119,7 +122,7 @@ namespace Messenger
                 return;
             listboxMessage.ScrollIntoView(_messages[idx]);
         }
-        
+
         private void _InsertText(TextBox textbox, string str)
         {
             var txt = textbox.Text;
@@ -160,12 +163,21 @@ namespace Messenger
             }
         }
 
-        private void _InsertTrans(string path)
+        private void _InsertFile(string path)
         {
             var trs = Posters.File(_profile.ID, path);
             if (trs == null)
                 return;
             var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "file", Value = trs };
+            _messages.Add(pkt);
+        }
+
+        private void _InsertDir(string path)
+        {
+            var trs = Posters.Directory(_profile.ID, path);
+            if (trs == null)
+                return;
+            var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "dir", Value = trs };
             _messages.Add(pkt);
         }
 
@@ -186,9 +198,11 @@ namespace Messenger
             if (fil == null || fil.Length < 1)
                 return;
             var val = fil[0];
-            if (File.Exists(val) == false)
-                return;
-            _InsertTrans(val);
+            if (File.Exists(val))
+                _InsertFile(val);
+            else if (Directory.Exists(val))
+                _InsertDir(val);
+            return;
         }
     }
 }

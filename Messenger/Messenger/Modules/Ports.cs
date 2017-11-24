@@ -168,19 +168,41 @@ namespace Messenger.Modules
         /// </summary>
         /// <param name="name">文件名</param>
         /// <exception cref="IOException"></exception>
-        public static FileInfo FindAvailablePath(string name)
+        public static FileInfo AvailableFileName(string name)
         {
             var dif = new DirectoryInfo(s_ins._savepath);
-            if (!dif.Exists)
+            if (dif.Exists == false)
                 dif.Create();
             var pth = Path.Combine(dif.FullName, name);
             var fif = new FileInfo(pth);
-            if (!fif.Exists)
+            if (fif.Exists == false)
                 return fif;
             int idx = fif.FullName.LastIndexOf(fif.Extension);
             var pathNoExt = (idx < 0 ? fif.FullName : fif.FullName.Substring(0, idx));
             var str = $"{pathNoExt} [{DateTime.Now:yyyyMMdd-HHmmss-fff}-{new Random().Next():x8}]{fif.Extension}";
             var inf = new FileInfo(str);
+            if (inf.Exists)
+                throw new IOException();
+            return inf;
+        }
+
+        /// <summary>
+        /// 检查目录名在指定目录下是否可用 如果冲突则添加随机后缀并重试 再次失败则抛出异常
+        /// </summary>
+        /// <param name="name">目录名</param>
+        /// <exception cref="IOException"></exception>
+        public static DirectoryInfo AvailableDirectoryName(string name)
+        {
+            var dif = new DirectoryInfo(s_ins._savepath);
+            if (dif.Exists == false)
+                dif.Create();
+            var pth = Path.Combine(dif.FullName, name);
+            var fif = new DirectoryInfo(pth);
+            if (fif.Exists == false)
+                return fif;
+
+            var str = $"{name} [{DateTime.Now:yyyyMMdd-HHmmss-fff}-{new Random().Next():x8}]";
+            var inf = new DirectoryInfo(Path.Combine(dif.FullName, str));
             if (inf.Exists)
                 throw new IOException();
             return inf;

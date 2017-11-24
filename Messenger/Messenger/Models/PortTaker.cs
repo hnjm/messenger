@@ -4,6 +4,7 @@ using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -27,10 +28,18 @@ namespace Messenger.Models
         public PortTaker(PacketReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(reader));
+
+            var typ = reader["type"].Pull<string>();
+            if (typ == "file")
+                _length = reader["length"].Pull<long>();
+            else if (typ == "dir")
+                _batch = true;
+            else
+                throw new ApplicationException("Invalid share type!");
+
             _key = reader["key"].Pull<Guid>();
             _name = reader["name"].Pull<string>();
-            _length = reader["length"].Pull<long>();
             _endpoints = reader["endpoints"].PullList<IPEndPoint>().ToList();
             _status = PortStatus.等待;
         }
@@ -104,14 +113,57 @@ namespace Messenger.Models
         /// <summary>
         /// 接收文件, 并设置传输进度 (异步)
         /// </summary>
-        private async Task _Receive()
+        private Task _Receive()
         {
+            // 接收目录
             if (_batch)
-                throw new NotImplementedException();
-
-            var inf = Ports.FindAvailablePath(_name);
+                return _ReceiveDir().ContinueWith(task => Log.Err(task.Exception));
+            // 接收单个文件
+            var inf = Ports.AvailableFileName(_name);
             _name = inf.Name;
-            await _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
+            return _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
+        }
+
+        internal async Task _ReceiveDir()
+        {
+            // 文件接收根目录
+            var inf = Ports.AvailableDirectoryName(_name);
+            var top = inf.FullName;
+            inf.Create();
+            _name = inf.Name;
+            // 当前目录
+            var cur = inf;
+
+            while (true)
+            {
+                var buf = await _socket.ReceiveAsyncExt();
+                var rea = new PacketReader(buf);
+
+                switch (rea["type"].Pull<string>())
+                {
+                    case "end":
+                        return;
+
+                    case "dir":
+                        // 以根目录为基础重新拼接路径
+                        var lst = new List<string>() { top };
+                        var dir = rea["path"].PullList<string>();
+                        lst.AddRange(dir);
+                        cur = new DirectoryInfo(Path.Combine(lst.ToArray()));
+                        cur.Create();
+                        break;
+
+                    case "file":
+                        var key = rea["path"].Pull<string>();
+                        var len = rea["length"].Pull<long>();
+                        var pth = Path.Combine(cur.FullName, key);
+                        await _socket.ReceiveFileEx(pth, len, r => _length += r, _cancel.Token);
+                        break;
+
+                    default:
+                        throw new ApplicationException("Batch receive error!");
+                }
+            }
         }
 
         /// <summary>

@@ -63,7 +63,7 @@ namespace Messenger
             if (btn == radiobuttonMyself)
                 Navigate<Shower>(frameFull);
             else if (btn == radiobuttonTransf)
-                Navigate<Transport>(frameFull);
+                Navigate<PageShare>(frameFull);
             else if (btn == radiobuttonOption)
                 Navigate<PageOption>(frameFull);
             else if (btn != radiobuttonSwitch)

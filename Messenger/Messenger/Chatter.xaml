@@ -1,21 +1,76 @@
 ﻿<Page x:Class="Messenger.Chatter"
+      x:Name="page"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Messenger"
+      xmlns:tool="clr-namespace:Messenger.Tools"
       xmlns:mods="clr-namespace:Messenger.Modules"
-      xmlns:tools="clr-namespace:Messenger.Tools"
       mc:Ignorable="d" 
-      x:Name="page"
       d:DesignHeight="300" d:DesignWidth="500"
-      KeepAlive="False"
-      FontSize="14"
-      Loaded="Page_Loaded" Unloaded="Page_Unloaded">
+      KeepAlive="False" FontSize="14">
     <Page.Resources>
-        <tools:LengthConverter x:Key="lengthConverter"/>
-        <ControlTemplate x:Key="messageItem">
-            <Grid Margin="5" Width="{Binding ElementName=gridMessage, Path=ActualWidth}">
+        <tool:LengthConverter x:Key="LengthConverter"/>
+
+        <!--文件共享-->
+        <ControlTemplate x:Key="ShareTemplate">
+            <Grid Margin="8,4" DataContext="{Binding Path=Value}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto" Name="MiddleRow"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock FontSize="14" Foreground="#FF808080" Name="SharePrefix"/>
+                    <TextBlock FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
+                </StackPanel>
+                <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthConverter}}"/>
+                <TextBlock Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="False">
+                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件] "/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="True">
+                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件夹] "/>
+                    <Setter TargetName="MiddleRow" Property="Height" Value="0"/>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!--文本消息-->
+        <ControlTemplate x:Key="TextTemplate">
+            <TextBox Padding="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
+                     Text="{Binding Path=MessageText, Mode=OneWay}"
+                     Background="Transparent"
+                     SelectionBrush="LightGreen"
+                     Foreground="#C0C0C0">
+                <TextBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="ApplicationCommands.Copy" Header="复制选定内容"/>
+                        <MenuItem Command="{x:Static local:Commands.CopyText}"/>
+                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
+            </TextBox>
+        </ControlTemplate>
+
+        <!--图片消息-->
+        <ControlTemplate x:Key="ImageTemplate">
+            <Image HorizontalAlignment="Left" Source="{Binding Path=MessageImage}" Stretch="None">
+                <Image.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                        <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
+                    </ContextMenu>
+                </Image.ContextMenu>
+            </Image>
+        </ControlTemplate>
+
+        <!--消息模板-->
+        <ControlTemplate x:Key="MessageTemplate">
+            <Grid Margin="5" Width="{Binding ElementName=uiMessageGrid, Path=ActualWidth}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="32"/>
                     <ColumnDefinition/>
@@ -53,71 +108,18 @@
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="text">
-                    <Setter TargetName="controlShow" Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate>
-                                <TextBox Padding="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
-                                         Text="{Binding Path=MessageText, Mode=OneWay}"
-                                         Background="Transparent"
-                                         SelectionBrush="LightGreen"
-                                         Foreground="#C0C0C0">
-                                    <TextBox.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Command="ApplicationCommands.Copy" Header="复制选定内容"/>
-                                            <MenuItem Command="{x:Static local:Commands.CopyText}"/>
-                                            <MenuItem Command="{x:Static local:Commands.Remove}"/>
-                                        </ContextMenu>
-                                    </TextBox.ContextMenu>
-                                </TextBox>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
+                    <Setter TargetName="controlShow" Property="Template" Value="{StaticResource TextTemplate}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="image">
-                    <Setter TargetName="controlShow" Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate>
-                                <Image HorizontalAlignment="Left" Source="{Binding Path=MessageImage}" Stretch="None">
-                                    <Image.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Command="{x:Static local:Commands.Remove}"/>
-                                            <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
-                                        </ContextMenu>
-                                    </Image.ContextMenu>
-                                </Image>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
+                    <Setter TargetName="controlShow" Property="Template" Value="{StaticResource ImageTemplate}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="file">
-                    <Setter TargetName="controlShow" Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate>
-                                <Grid Margin="8,4" DataContext="{Binding Path=Value}">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Port.Name}"/>
-                                    <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080">
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="文件大小: {0}, 状态: {1}, 剩余时间: {2:hh\:mm\:ss}">
-                                                <Binding Path="Port.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
-                                                <Binding Path="Port.Status" Mode="OneWay"/>
-                                                <Binding Path="Remain" Mode="OneWay"/>
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                    <ProgressBar x:Name="progressBar" Grid.Row="2" Margin="0,4" Height="2" Minimum="0" Maximum="100" SnapsToDevicePixels="True" Value="{Binding Path=Progress, Mode=OneWay}"/>
-                                </Grid>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
+                    <Setter TargetName="controlShow" Property="Template" Value="{StaticResource ShareTemplate}"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Page.Resources>
+
     <Grid x:Name="grid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -162,13 +164,13 @@
                 <ColumnDefinition Width="8*" MinWidth="500"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            <Grid x:Name="gridMessage" Margin="32,0" Grid.Column="1"/>
+            <Grid x:Name="uiMessageGrid" Margin="32,0" Grid.Column="1"/>
             <ListBox x:Name="listboxMessage" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Background" Value="#303030"/>
                         <Setter Property="HorizontalAlignment" Value="Left"/>
-                        <Setter Property="Template" Value="{StaticResource ResourceKey=messageItem}"/>
+                        <Setter Property="Template" Value="{StaticResource ResourceKey=MessageTemplate}"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#202020"/>

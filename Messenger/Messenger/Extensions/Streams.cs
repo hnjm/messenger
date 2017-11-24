@@ -56,7 +56,7 @@ namespace Messenger.Extensions
         internal static async Task SendFileEx(this Socket socket, string path, long length, Action<long> slice, CancellationToken token)
         {
             var idx = 0L;
-            var fst = new FileStream(path, FileMode.Open, FileAccess.Read);
+            var fst = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
             try
             {
