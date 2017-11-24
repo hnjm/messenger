@@ -12,8 +12,8 @@ namespace Mikodev.Network
 {
     public sealed partial class LinkListener
     {
-        internal int _climit = Links.Count;
-        internal int _port = Links.Port;
+        internal int _climit = Links.ClientCountLimit;
+        internal int _port = Links.ListenPort;
         internal readonly object _loc = new object();
 
         internal Socket _soc = null;
@@ -21,7 +21,7 @@ namespace Mikodev.Network
         internal readonly Dictionary<int, HashSet<int>> _gro = new Dictionary<int, HashSet<int>>();
         internal readonly Dictionary<int, HashSet<int>> _set = new Dictionary<int, HashSet<int>>();
 
-        public Task Listen(int port = Links.Port, int count = Links.Count)
+        public Task Listen(int port = Links.ListenPort, int count = Links.ClientCountLimit)
         {
             if (count < 1)
                 throw new ArgumentOutOfRangeException(nameof(count), "Count limit must bigger than zero!");
@@ -61,7 +61,7 @@ namespace Mikodev.Network
             {
                 try
                 {
-                    var clt = await _soc._AcceptAsync();
+                    var clt = await _soc.AcceptAsyncEx();
                     _Invoke(clt);
                 }
                 catch (SocketException ex)
@@ -90,11 +90,10 @@ namespace Mikodev.Network
 
             var key = LinkCrypto.GetKey();
             var blk = LinkCrypto.GetBlock();
-            var buf = default(byte[]);
             var err = LinkError.None;
             var cid = 0;
 
-            byte[] _Respond()
+            byte[] _Respond(byte[] buf)
             {
                 var rea = new PacketReader(buf);
                 var rsa = new RSACryptoServiceProvider();
@@ -115,12 +114,10 @@ namespace Mikodev.Network
 
             try
             {
-                if (Task.Run(async () => buf = await client._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
-                    throw new TimeoutException("Listener request timeout.");
-                if (client._SendExtendAsync(_Respond()).Wait(Links.Timeout) == false)
-                    throw new TimeoutException("Listener response timeout.");
-                if (err != LinkError.Success)
-                    throw new LinkException(err);
+                var buf = client.ReceiveAsyncExt().WaitTimeout("Listener request timeout.");
+                var res = _Respond(buf);
+                client.SendAsyncExt(res).WaitTimeout("Listener response timeout.");
+                LinkException.ThrowError(err);
             }
             catch (Exception)
             {
@@ -228,7 +225,7 @@ namespace Mikodev.Network
                 case Links.ID when rea.Path == "user.group":
                     var lst = rea.Data.PullList<int>().Where(r => r < Links.ID);
                     var set = new HashSet<int>(lst);
-                    if (set.Count > Links.Group)
+                    if (set.Count > Links.GroupLabelLimit)
                         throw new LinkException(LinkError.GroupLimited, "Group count out of range.");
                     lock (_loc)
                         _ResetGroup(src, set);

@@ -50,7 +50,7 @@
     <Compile Include="LinkError.cs" />
     <Compile Include="LinkEventArgs.cs" />
     <Compile Include="LinkException.cs" />
-    <Compile Include="LinkExtends.cs" />
+    <Compile Include="LinkExtension.cs" />
     <Compile Include="LinkListener.cs" />
     <Compile Include="LinkPacket.cs" />
     <Compile Include="Links.cs" />

@@ -25,9 +25,9 @@ namespace Launcher
         static void Entrance(string[] args)
         {
             var nam = default(string);
-            var max = Links.Count;
-            var pot = Links.Port;
-            var bro = Links.Port;
+            var max = Links.ClientCountLimit;
+            var pot = Links.ListenPort;
+            var bro = Links.ListenPort;
             var dic = new Dictionary<string, string>();
             foreach (var i in args)
             {

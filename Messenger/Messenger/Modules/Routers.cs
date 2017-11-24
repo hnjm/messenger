@@ -52,7 +52,7 @@ namespace Messenger.Modules
         {
             var rcd = s_ins._dic[arg.Path];
             var obj = rcd.Construct.Invoke();
-            obj._Load(arg.Buffer);
+            obj.LoadValue(arg.Buffer);
             rcd.Function.Invoke((dynamic)obj);
         }
 

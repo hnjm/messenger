@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Messenger.Extensions;
+using System.Threading;
 
 namespace Messenger.Models
 {
@@ -11,8 +13,9 @@ namespace Messenger.Models
     /// </summary>
     public class PortMaker : Port
     {
-        private FileStream _stream = null;
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
         private Socket _socket = null;
+        private readonly string _path;
 
         /// <summary>
         /// 由事件触发 不可直接启动
@@ -25,53 +28,11 @@ namespace Messenger.Models
         /// <param name="path">文件路径</param>
         public PortMaker(string path)
         {
-            var inf = default(FileInfo);
-            var str = default(FileStream);
-
-            try
-            {
-                inf = new FileInfo(path);
-                str = File.OpenRead(inf.FullName);
-            }
-            catch (Exception)
-            {
-                str?.Dispose();
-                str = null;
-            }
-
-            _stream = str;
+            var inf = new FileInfo(path);
+            _path = inf.FullName;
             _name = inf.Name;
-            _length = str.Length;
+            _length = inf.Length;
             _status = PortStatus.等待;
-        }
-
-        /// <summary>
-        /// 循环发送文件
-        /// </summary>
-        private async Task _Read()
-        {
-            while (_socket != null)
-            {
-                if (_position >= _length)
-                    break;
-                if (_stream.Position != _position)
-                    _stream.Seek(_position, SeekOrigin.Begin);
-                var len = (long)Links.Buffer;
-                if (_length - _position < len)
-                    len = _length - _position;
-                var buf = new byte[len];
-                var sub = await _stream.ReadAsync(buf, 0, buf.Length);
-                if (sub < buf.Length)
-                {
-                    if (sub < 1)
-                        throw new IOException("Read file error!");
-                    var tmp = new byte[sub];
-                    Buffer.BlockCopy(buf, 0, tmp, 0, sub);
-                    buf = tmp;
-                }
-                await _socket._SendAsync(buf);
-                _position += sub;
-            }
         }
 
         /// <summary>
@@ -84,6 +45,7 @@ namespace Messenger.Models
             if (_key.Equals(key) == false || soc == null)
                 return;
             e.Finish = true;
+
             lock (_loc)
             {
                 if (_started || _disposed)
@@ -92,20 +54,27 @@ namespace Messenger.Models
                 _socket = soc;
                 _status = PortStatus.运行;
             }
+
             _EmitStarted();
-            _Read().ContinueWith(t =>
+            soc.SendFileEx(_path, _length, r => _position += r, _cancel.Token).ContinueWith(_Clean);
+        }
+
+        internal void _Clean(Task task)
+        {
+            lock (_loc)
             {
-                var res = (t.Exception == null && _position == _length);
-                lock (_loc)
-                {
-                    if (_disposed == false)
-                    {
-                        _status = res ? PortStatus.成功 : PortStatus.中断;
-                        _exception = t.Exception;
-                        _Dispose();
-                    }
-                }
-            });
+                if (_disposed)
+                    return;
+                var exc = task.Exception;
+                if (task.IsCanceled)
+                    _status = PortStatus.取消;
+                else if (exc != null)
+                    _status = PortStatus.中断;
+                else
+                    _status = PortStatus.成功;
+                _exception = exc;
+                _Dispose();
+            }
         }
 
         #region 实现 IDisposable
@@ -116,15 +85,12 @@ namespace Messenger.Models
         {
             if (_disposed)
                 return;
-
-            var val = _status & PortStatus.终止;
-            if (val == 0)
+            if ((_status & PortStatus.终止) == 0)
                 _status = PortStatus.取消;
 
+            _cancel.Cancel();
             _socket?.Dispose();
             _socket = null;
-            _stream?.Dispose();
-            _stream = null;
 
             _disposed = true;
             _EmitDisposed();

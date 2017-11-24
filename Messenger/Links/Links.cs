@@ -4,7 +4,7 @@
     {
         public const string Protocol = "mikodev.messenger.v1.14";
 
-        public const int Port = 7550;
+        public const int ListenPort = 7550;
 
         public const int BroadcastPort = 7550;
 
@@ -16,16 +16,16 @@
 
         public const int ID = 0;
 
-        public const int Count = 256;
+        public const int ClientCountLimit = 256;
 
-        public const int Buffer = 4 * 1024;
+        public const int BufferLength = 4 * 1024;
 
-        public const int BufferLimit = 1024 * 1024;
+        public const int BufferLengthLimit = 1024 * 1024;
 
-        public const int Queue = 4 * 1024 * 1024;
+        public const int MessageQueueLimit = 4 * 1024 * 1024;
 
         public const int Delay = 4;
 
-        public const int Group = 32;
+        public const int GroupLabelLimit = 32;
     }
 }

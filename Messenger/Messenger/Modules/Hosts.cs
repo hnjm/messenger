@@ -77,7 +77,7 @@ namespace Messenger.Modules
                         continue;
                     }
 
-                    var buf = new byte[Math.Min(ava, Links.Buffer)];
+                    var buf = new byte[Math.Min(ava, Links.BufferLength)];
                     var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
                     var len = soc.ReceiveFrom(buf, ref iep);
                     var inf = gethost(buf, 0, len);

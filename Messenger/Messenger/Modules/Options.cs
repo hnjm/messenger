@@ -35,7 +35,7 @@ namespace Messenger.Modules
             try
             {
                 fst = new FileStream(_Path, FileMode.Open);
-                if (fst.Length <= Links.BufferLimit)
+                if (fst.Length <= Links.BufferLengthLimit)
                     doc.Load(fst);
                 s_ins._doc = doc;
             }

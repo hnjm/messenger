@@ -109,6 +109,8 @@
     <Compile Include="Models\PortTaker.cs" />
     <Compile Include="Models\Port.cs" />
     <Compile Include="Models\PortStatus.cs" />
+    <Compile Include="Models\Share.cs" />
+    <Compile Include="Models\ShareWorker.cs" />
     <Compile Include="Modules\Options.cs" />
     <Compile Include="Modules\Posters.cs" />
     <Compile Include="Modules\Routers.cs" />

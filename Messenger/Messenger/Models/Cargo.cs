@@ -56,8 +56,8 @@ namespace Messenger.Models
 
             if (val is PortMaker mak)
             {
-                Linkers.Requests += mak.PortRequests;
-                val.Disposed += (s, e) => Linkers.Requests -= mak.PortRequests;
+                //Linkers.Requests += mak.PortRequests;
+                //val.Disposed += (s, e) => Linkers.Requests -= mak.PortRequests;
             }
         }
 

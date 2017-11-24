@@ -59,9 +59,8 @@ namespace Messenger.Models
                     try
                     {
                         soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        if (Task.Run(() => soc.Connect(_ieps[i])).Wait(Links.Timeout) == false)
-                            throw new TimeoutException("Port receiver timeout.");
-                        soc._SetKeepAlive();
+                        soc.ConnectAsyncEx(_ieps[i]).WaitTimeout("Port receiver timeout.");
+                        soc.SetKeepAlive();
                         break;
                     }
                     catch (Exception ex) when (ex is SocketException || ex is TimeoutException)
@@ -75,7 +74,7 @@ namespace Messenger.Models
                 if (soc == null)
                     throw new ApplicationException("Network unreachable.");
                 var buf = PacketWriter.Serialize(_key);
-                await soc._SendExtendAsync(buf.GetBytes());
+                await soc.SendAsyncExt(buf.GetBytes());
 
                 lock (_loc)
                 {
@@ -108,7 +107,7 @@ namespace Messenger.Models
 
             var inf = Ports.FindAvailablePath(_name);
             _name = inf.Name;
-            await _socket._ReceiveFile(inf.FullName, _length, r => _position += r, _cancel.Token);
+            await _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
         }
 
         /// <summary>
@@ -119,13 +118,12 @@ namespace Messenger.Models
         {
             lock (_loc)
             {
-                if (_disposed == false)
-                {
-                    _status = (task.Exception == null) ? PortStatus.成功 : PortStatus.中断;
-                    if (task.Exception != null)
-                        _exception = task.Exception;
-                    _Dispose();
-                }
+                if (_disposed)
+                    return;
+                var exc = task.Exception;
+                _status = (exc == null) ? PortStatus.成功 : PortStatus.中断;
+                _exception = exc;
+                _Dispose();
             }
         }
 
@@ -137,11 +135,10 @@ namespace Messenger.Models
         {
             if (_disposed)
                 return;
-
-            var val = _status & PortStatus.终止;
-            if (val == 0)
+            if ((_status & PortStatus.终止) == 0)
                 _status = PortStatus.取消;
 
+            _cancel.Cancel();
             _socket?.Dispose();
             _socket = null;
 

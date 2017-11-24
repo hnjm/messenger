@@ -24,6 +24,8 @@ namespace Messenger.Modules
 
         private EventHandler<LinkEventArgs<Guid>> _Request = null;
 
+        private Func<Guid, Socket, bool> _request = null;
+
         private Socket _soc = null;
 
         private static Linkers s_ins = new Linkers();
@@ -32,7 +34,9 @@ namespace Messenger.Modules
 
         public static bool IsRunning => s_ins._clt?.IsRunning ?? false;
 
-        public static event EventHandler<LinkEventArgs<Guid>> Requests { add => s_ins._Request += value; remove => s_ins._Request -= value; }
+        // public static event EventHandler<LinkEventArgs<Guid>> Requests { add => s_ins._Request += value; remove => s_ins._Request -= value; }
+
+        public static Func<Guid, Socket, bool> Requests { get => s_ins._request; set => s_ins._request = value; }
 
         public static void Start(int id, IPEndPoint endpoint)
         {
@@ -46,7 +50,7 @@ namespace Messenger.Modules
             {
                 clt.Start(endpoint);
                 soc.Bind(clt.InnerEndPoint);
-                soc.Listen(Links.Count);
+                soc.Listen(Links.ClientCountLimit);
                 lock (s_ins._loc)
                 {
                     lock (s_ins._loc)
@@ -85,9 +89,7 @@ namespace Messenger.Modules
             {
                 Task.Run(() =>
                 {
-                    var buf = default(byte[]);
-                    if (Task.Run(async () => buf = await clt._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
-                        throw new TimeoutException("Timeout when accept transport header.");
+                    var buf = clt.ReceiveAsyncExt().WaitTimeout("Timeout when accept transport header.");
                     var rea = new PacketReader(buf);
                     var key = rea.Pull<Guid>();
                     var arg = new LinkEventArgs<Guid>() { Record = key, Source = clt };
@@ -109,7 +111,7 @@ namespace Messenger.Modules
             {
                 try
                 {
-                    var clt = await socket._AcceptAsync();
+                    var clt = await socket.AcceptAsyncEx();
                     _Invoke(clt);
                 }
                 catch (SocketException ex)

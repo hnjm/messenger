@@ -62,7 +62,6 @@ namespace Mikodev.Network
 
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var rsa = new RSACryptoServiceProvider();
-            var buf = default(byte[]);
             var req = PacketWriter.Serialize(new
             {
                 id = _id,
@@ -72,18 +71,15 @@ namespace Mikodev.Network
 
             try
             {
-                if (Task.Run(() => soc.Connect(ep)).Wait(Links.Timeout) == false)
-                    throw new TimeoutException("Timeout when connect to server.");
-                soc._SetKeepAlive();
-                if (soc._SendExtendAsync(req.GetBytes()).Wait(Links.Timeout) == false)
-                    throw new TimeoutException("Timeout when client request.");
-                if (Task.Run(async () => buf = await soc._ReceiveExtendAsync()).Wait(Links.Timeout) == false)
-                    throw new TimeoutException("Timeout when client response.");
+                soc.ConnectAsyncEx(ep).WaitTimeout("Timeout when connect to server.");
+                soc.SetKeepAlive();
+                soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout when client request.");
+                var buf = soc.ReceiveAsyncExt().WaitTimeout("Timeout when client response.");
 
                 var rea = new PacketReader(buf);
                 var err = rea["result"].Pull<LinkError>();
-                if (err != LinkError.Success)
-                    throw new LinkException(err);
+                LinkException.ThrowError(err);
+
                 var aeskey = rea["aeskey"].PullList();
                 var aesiv = rea["aesiv"].PullList();
                 var iep = rea["endpoint"].Pull<IPEndPoint>();
@@ -112,11 +108,11 @@ namespace Mikodev.Network
         public void Enqueue(byte[] buffer)
         {
             var len = buffer?.Length ?? throw new ArgumentNullException(nameof(buffer));
-            if (len < 1 || len > Links.BufferLimit)
+            if (len < 1 || len > Links.BufferLengthLimit)
                 throw new ArgumentOutOfRangeException(nameof(buffer));
             lock (_loc)
             {
-                if (_disposed || _msglen > Links.Queue)
+                if (_disposed || _msglen > Links.MessageQueueLimit)
                     return;
                 _msglen += len;
                 _msgs.Enqueue(buffer);
@@ -129,7 +125,7 @@ namespace Mikodev.Network
             {
                 lock (_loc)
                 {
-                    if (_msglen > Links.Queue)
+                    if (_msglen > Links.MessageQueueLimit)
                         throw new LinkException(LinkError.QueueLimited, "Message queue length out of range!");
                     if (_msglen > 0)
                     {
@@ -146,7 +142,7 @@ namespace Mikodev.Network
             while (_socket != null)
             {
                 if (dequeue(out var buf))
-                    await _socket._SendExtendAsync(LinkCrypto.Encrypt(buf, _key, _blk));
+                    await _socket.SendAsyncExt(LinkCrypto.Encrypt(buf, _key, _blk));
                 else
                     await Task.Delay(Links.Delay);
             }
@@ -156,9 +152,9 @@ namespace Mikodev.Network
         {
             while (_socket != null)
             {
-                var buf = await _socket._ReceiveExtendAsync();
+                var buf = await _socket.ReceiveAsyncExt();
                 var res = LinkCrypto.Decrypt(buf, _key, _blk);
-                _Received(new LinkPacket()._Load(res));
+                _Received(new LinkPacket().LoadValue(res));
             }
         }
 

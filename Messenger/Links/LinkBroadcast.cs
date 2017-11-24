@@ -56,7 +56,7 @@ namespace Mikodev.Network
 
                 try
                 {
-                    var buf = new byte[Math.Min(ava, Links.Buffer)];
+                    var buf = new byte[Math.Min(ava, Links.BufferLength)];
                     var iep = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
                     var len = _broad.ReceiveFrom(buf, ref iep);
 

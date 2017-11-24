@@ -196,7 +196,7 @@ namespace Messenger.Modules
             var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
             var kvs = tmp._Distinct((a, b) => a.Hash == b.Hash);
-            if (kvs.Count > Links.Group)
+            if (kvs.Count > Links.GroupLabelLimit)
                 return false;
             var ids = from i in kvs select i.Hash;
             s_ins._grouptags = args;
