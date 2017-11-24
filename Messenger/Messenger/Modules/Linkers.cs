@@ -22,10 +22,6 @@ namespace Messenger.Modules
 
         private LinkClient _clt = null;
 
-        private EventHandler<LinkEventArgs<Guid>> _Request = null;
-
-        private Func<Guid, Socket, bool> _request = null;
-
         private Socket _soc = null;
 
         private static Linkers s_ins = new Linkers();
@@ -33,10 +29,6 @@ namespace Messenger.Modules
         public static int ID => s_ins._clt?.ID ?? Profiles.Current.ID;
 
         public static bool IsRunning => s_ins._clt?.IsRunning ?? false;
-
-        // public static event EventHandler<LinkEventArgs<Guid>> Requests { add => s_ins._Request += value; remove => s_ins._Request -= value; }
-
-        public static Func<Guid, Socket, bool> Requests { get => s_ins._request; set => s_ins._request = value; }
 
         public static void Start(int id, IPEndPoint endpoint)
         {
@@ -67,12 +59,7 @@ namespace Messenger.Modules
                 throw;
             }
 
-            _Listen(soc).ContinueWith(tsk =>
-            {
-                if (tsk.Exception == null)
-                    return;
-                Log.Err(tsk.Exception);
-            });
+            _Listen(soc).ContinueWith(tsk => Log.Err(tsk.Exception));
 
             Packets.OnHandled += _Packets_OnHandled;
             Ports.Expect.ListChanged += _Ports_ListChanged;
@@ -85,34 +72,27 @@ namespace Messenger.Modules
 
         private static async Task _Listen(Socket socket)
         {
-            void _Invoke(Socket clt)
-            {
-                Task.Run(() =>
-                {
-                    var buf = clt.ReceiveAsyncExt().WaitTimeout("Timeout when accept transport header.");
-                    var rea = new PacketReader(buf);
-                    var key = rea.Pull<Guid>();
-                    var arg = new LinkEventArgs<Guid>() { Record = key, Source = clt };
-                    s_ins._Request?.Invoke(s_ins, arg);
-                    if (arg.Finish == true)
-                        return;
-                    clt.Dispose();
-                })
-                .ContinueWith(tsk =>
-                {
-                    if (tsk.Exception == null)
-                        return;
-                    Log.Err(tsk.Exception);
-                    clt.Dispose();
-                });
-            }
-
             while (true)
             {
                 try
                 {
                     var clt = await socket.AcceptAsyncEx();
-                    _Invoke(clt);
+#pragma warning disable 4014
+                    Task.Run(() =>
+                    {
+                        var buf = clt.ReceiveAsyncExt().WaitTimeout("Timeout when accept transport header.");
+                        var rea = new PacketReader(buf);
+                        var key = rea["data"].Pull<Guid>();
+                        var src = rea["source"].Pull<int>();
+
+                        Share.Notify(src, key, clt)?.Wait();
+                    })
+                    .ContinueWith(tsk =>
+                    {
+                        Log.Err(tsk.Exception);
+                        clt.Dispose();
+                    });
+#pragma warning restore 4014
                 }
                 catch (SocketException ex)
                 {

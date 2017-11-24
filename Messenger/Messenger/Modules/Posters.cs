@@ -2,6 +2,7 @@
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 
@@ -87,20 +88,11 @@ namespace Messenger.Modules
         /// <summary>
         /// 发送文件信息
         /// </summary>
-        public static Cargo File(int target, string filepath)
+        public static Share File(int target, string filepath)
         {
-            var mak = default(PortMaker);
-            try
-            {
-                mak = new PortMaker(filepath);
-            }
-            catch (Exception ex)
-            {
-                Log.Err(ex);
-                return null;
-            }
-            var car = new Cargo(target, mak);
-            Application.Current.Dispatcher.Invoke(() => Ports.Makers.Add(car));
+            var sha = new Share(new FileInfo(filepath));
+            //var car = new Cargo(target, mak);
+            //Application.Current.Dispatcher.Invoke(() => Ports.Makers.Add(car));
             var wtr = PacketWriter.Serialize(new
             {
                 source = Linkers.ID,
@@ -108,15 +100,15 @@ namespace Messenger.Modules
                 path = "file.info",
                 data = new
                 {
-                    filename = mak.Name,
-                    filesize = mak.Length,
-                    guid = mak.Key,
+                    key = sha._key,
+                    name = sha.Name,
+                    length = sha.Length,
                     endpoints = Linkers.GetEndPoints(),
                 }
             });
             var buf = wtr.GetBytes();
             Linkers.Enqueue(buf);
-            return car;
+            return sha;
         }
     }
 }

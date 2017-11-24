@@ -19,7 +19,7 @@ namespace Messenger.Models
     {
         private CancellationTokenSource _cancel = new CancellationTokenSource();
         private Socket _socket = null;
-        private List<IPEndPoint> _ieps = null;
+        private List<IPEndPoint> _endpoints = null;
 
         /// <summary>
         /// 初始化对象 并设定文件保存路径函数
@@ -28,10 +28,10 @@ namespace Messenger.Models
         {
             if (reader == null)
                 throw new ArgumentNullException();
-            _key = reader["guid"].Pull<Guid>();
-            _name = reader["filename"].Pull<string>();
-            _ieps = reader["endpoints"].PullList<IPEndPoint>().ToList();
-            _length = reader["filesize"].Pull<long>();
+            _key = reader["key"].Pull<Guid>();
+            _name = reader["name"].Pull<string>();
+            _length = reader["length"].Pull<long>();
+            _endpoints = reader["endpoints"].PullList<IPEndPoint>().ToList();
             _status = PortStatus.等待;
         }
 
@@ -54,12 +54,12 @@ namespace Messenger.Models
             // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
             async Task _Emit()
             {
-                for (int i = 0; i < _ieps.Count && soc == null; i++)
+                for (int i = 0; i < _endpoints.Count && soc == null; i++)
                 {
                     try
                     {
                         soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        soc.ConnectAsyncEx(_ieps[i]).WaitTimeout("Port receiver timeout.");
+                        soc.ConnectAsyncEx(_endpoints[i]).WaitTimeout("Port receiver timeout.");
                         soc.SetKeepAlive();
                         break;
                     }
@@ -73,7 +73,11 @@ namespace Messenger.Models
 
                 if (soc == null)
                     throw new ApplicationException("Network unreachable.");
-                var buf = PacketWriter.Serialize(_key);
+                var buf = PacketWriter.Serialize(new
+                {
+                    data = _key,
+                    source = Linkers.ID,
+                });
                 await soc.SendAsyncExt(buf.GetBytes());
 
                 lock (_loc)

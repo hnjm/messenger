@@ -35,6 +35,9 @@ namespace Mikodev.Logger
             s_log = log;
         }
 
+        /// <summary>
+        /// 记录异常和自定义消息 (如果异常为空则不记录)
+        /// </summary>
         public static void Err(Exception ex, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
             if (ex == null)
