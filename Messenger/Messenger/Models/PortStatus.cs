@@ -3,7 +3,7 @@
     /// <summary>
     /// 文件传输状态
     /// </summary>
-    public enum PortStatus : int
+    public enum ShareStatus : int
     {
         默认 = 0,
         等待 = 1,

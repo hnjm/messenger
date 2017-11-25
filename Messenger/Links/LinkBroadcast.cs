@@ -68,7 +68,7 @@ namespace Mikodev.Network
                 }
                 catch (SocketException ex)
                 {
-                    Log.Err(ex);
+                    Log.Error(ex);
                 }
             }
         }

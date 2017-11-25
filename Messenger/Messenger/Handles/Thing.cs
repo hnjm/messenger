@@ -26,18 +26,18 @@ namespace Messenger.Handles
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
                 return;
             }
             var trs = new Cargo(Source, tak);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Ports.Expect.Add(trs);
-                Ports.Takers.Add(trs);
-                tak.Started += Ports.Trans_Changed;
-                tak.Disposed += Ports.Trans_Changed;
+                ShareModule.Expect.Add(trs);
+                ShareModule.Takers.Add(trs);
+                tak.Started += ShareModule.Trans_Changed;
+                tak.Disposed += ShareModule.Trans_Changed;
             });
-            var pkt = new Packet() { Source = Source, Target = Linkers.ID, Groups = Source, Path = "file", Value = trs };
+            var pkt = new Packet() { Source = Source, Target = Linkers.ID, Groups = Source, Path = "share", Value = trs };
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var pks = Packets.Query(Source);
@@ -58,18 +58,18 @@ namespace Messenger.Handles
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
                 return;
             }
             var trs = new Cargo(Source, tak);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Ports.Expect.Add(trs);
-                Ports.Takers.Add(trs);
-                tak.Started += Ports.Trans_Changed;
-                tak.Disposed += Ports.Trans_Changed;
+                ShareModule.Expect.Add(trs);
+                ShareModule.Takers.Add(trs);
+                tak.Started += ShareModule.Trans_Changed;
+                tak.Disposed += ShareModule.Trans_Changed;
             });
-            var pkt = new Packet() { Source = Source, Target = Linkers.ID, Groups = Source, Path = "dir", Value = trs };
+            var pkt = new Packet() { Source = Source, Target = Linkers.ID, Groups = Source, Path = "share", Value = trs };
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var pks = Packets.Query(Source);

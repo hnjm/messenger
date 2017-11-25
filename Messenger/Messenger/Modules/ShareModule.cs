@@ -13,9 +13,9 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理传输并提供界面绑定功能
     /// </summary>
-    internal class Ports : INotifyPropertyChanging, INotifyPropertyChanged
+    internal class ShareModule : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        private const string _KeyPath = "port-path";
+        private const string _KeyPath = "share-path";
 
         private bool _hasexcept = false;
         private bool _hastakers = false;
@@ -29,6 +29,7 @@ namespace Messenger.Modules
         private BindingList<Cargo> _expect = new BindingList<Cargo>();
         private BindingList<Cargo> _takers = new BindingList<Cargo>();
         private BindingList<Cargo> _makers = new BindingList<Cargo>();
+        private readonly BindingList<Share> _shareList = new BindingList<Share>();
 
         public bool HasExcept
         {
@@ -61,7 +62,7 @@ namespace Messenger.Modules
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        private Ports()
+        private ShareModule()
         {
             _expect.ListChanged += BindingList_ListChanged;
             _takers.ListChanged += BindingList_ListChanged;
@@ -95,14 +96,16 @@ namespace Messenger.Modules
 
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 
-        private static Ports s_ins = new Ports();
+        private static ShareModule s_ins = new ShareModule();
 
         public static long TimeTick => s_ins._watch?.ElapsedMilliseconds ?? 0L;
         public static string SavePath { get => s_ins._savepath; set => s_ins._savepath = value; }
-        public static Ports Instance => s_ins;
+        public static ShareModule Instance => s_ins;
         public static BindingList<Cargo> Expect => s_ins._expect;
         public static BindingList<Cargo> Takers => s_ins._takers;
         public static BindingList<Cargo> Makers => s_ins._makers;
+
+        public static BindingList<Share> ShareList => s_ins._shareList;
 
         internal static void Trans_Changed(object sender, EventArgs e)
         {
@@ -168,7 +171,7 @@ namespace Messenger.Modules
         /// </summary>
         /// <param name="name">文件名</param>
         /// <exception cref="IOException"></exception>
-        public static FileInfo AvailableFileName(string name)
+        public static FileInfo AvailableFile(string name)
         {
             var dif = new DirectoryInfo(s_ins._savepath);
             if (dif.Exists == false)
@@ -191,7 +194,7 @@ namespace Messenger.Modules
         /// </summary>
         /// <param name="name">目录名</param>
         /// <exception cref="IOException"></exception>
-        public static DirectoryInfo AvailableDirectoryName(string name)
+        public static DirectoryInfo AvailableDirectory(string name)
         {
             var dif = new DirectoryInfo(s_ins._savepath);
             if (dif.Exists == false)
@@ -208,7 +211,7 @@ namespace Messenger.Modules
             return inf;
         }
 
-        [AutoLoad(32, AutoLoadFlag.OnLoad)]
+        [AutoLoad(32, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             var pth = Options.GetOption(_KeyPath);
@@ -217,7 +220,7 @@ namespace Messenger.Modules
             s_ins._savepath = pth;
         }
 
-        [AutoLoad(4, AutoLoadFlag.OnExit)]
+        [AutoLoad(4, AutoLoadFlags.OnExit)]
         public static void Save()
         {
             Options.SetOption(_KeyPath, s_ins._savepath);

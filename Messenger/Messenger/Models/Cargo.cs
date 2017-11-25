@@ -68,7 +68,7 @@ namespace Messenger.Models
             var spd = _AverageSpeed(tick);
             _speed = spd * 1000;  // 毫秒 -> 秒
             _remain = (spd > 0 && _trans.Position > 0) ? TimeSpan.FromMilliseconds((_trans.Length - _trans.Position) / spd) : TimeSpan.Zero;
-            _progress = (_trans.Length > 0) ? (100.0 * _trans.Position / _trans.Length) : (_trans.Status == PortStatus.成功 ? 100 : 0);
+            _progress = (_trans.Length > 0) ? (100.0 * _trans.Position / _trans.Length) : (_trans.Status == ShareStatus.成功 ? 100 : 0);
 
             OnPropertyChanged(nameof(Speed));
             OnPropertyChanged(nameof(Remain));

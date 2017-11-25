@@ -24,7 +24,7 @@ namespace Messenger.Modules
 
         private Options() { }
 
-        [AutoLoad(0, AutoLoadFlag.OnLoad)]
+        [AutoLoad(0, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             if (s_ins._doc != null)
@@ -41,7 +41,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
                 s_ins._doc = new XmlDocument();
             }
             finally
@@ -50,7 +50,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoLoad(int.MaxValue, AutoLoadFlag.OnExit)]
+        [AutoLoad(int.MaxValue, AutoLoadFlags.OnExit)]
         public static void Save()
         {
             var str = default(FileStream);
@@ -67,7 +67,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
             }
             finally
             {
@@ -115,7 +115,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
             }
             return empty;
         }
@@ -137,7 +137,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
                 return false;
             }
         }

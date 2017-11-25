@@ -93,6 +93,12 @@
       <DependentUpon>Chatter.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands.cs" />
+    <Compile Include="ControlShare.xaml.cs">
+      <DependentUpon>ControlShare.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ControlShareWorker.xaml.cs">
+      <DependentUpon>ControlShareWorker.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Extensions\Collections.cs" />
     <Compile Include="Extensions\Converts.cs" />
     <Compile Include="Extensions\Streams.cs" />
@@ -103,12 +109,14 @@
       <DependentUpon>Fallback.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\AutoLoadAttribute.cs" />
-    <Compile Include="Models\AutoLoadFlag.cs" />
+    <Compile Include="Models\AutoLoadFlags.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
     <Compile Include="Models\PortTaker.cs" />
     <Compile Include="Models\Port.cs" />
     <Compile Include="Models\PortStatus.cs" />
     <Compile Include="Models\Share.cs" />
+    <Compile Include="Models\ShareReceiver.cs" />
+    <Compile Include="Models\ShareBasic.cs" />
     <Compile Include="Models\ShareWorker.cs" />
     <Compile Include="Modules\Options.cs" />
     <Compile Include="Modules\Posters.cs" />
@@ -134,7 +142,7 @@
       <DependentUpon>PageProfile.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modules\Symbols.cs" />
-    <Compile Include="Modules\Ports.cs" />
+    <Compile Include="Modules\ShareModule.cs" />
     <Compile Include="Models\Cargo.cs" />
     <Compile Include="Modules\Packets.cs" />
     <Compile Include="Models\Host.cs" />
@@ -142,6 +150,7 @@
     <Compile Include="Modules\Caches.cs" />
     <Compile Include="Tools\CodeValidation.cs" />
     <Compile Include="Tools\ImageConverter.cs" />
+    <Compile Include="Tools\ObjectTypeConverter.cs" />
     <Compile Include="Tools\PortValidation.cs" />
     <Compile Include="Tools\StringEmptyConverter.cs" />
     <Compile Include="Tools\LengthConverter.cs" />
@@ -155,6 +164,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Connection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ControlShare.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ControlShareWorker.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

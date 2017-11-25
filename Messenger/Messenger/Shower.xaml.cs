@@ -44,7 +44,7 @@ namespace Messenger
                 }
                 catch (Exception ex)
                 {
-                    Log.Err(ex);
+                    Log.Error(ex);
                 }
             }
         }

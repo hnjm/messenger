@@ -23,17 +23,17 @@
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0" Orientation="Horizontal">
                     <TextBlock FontSize="14" Foreground="#FF808080" Name="SharePrefix"/>
-                    <TextBlock FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
+                    <TextBlock FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Name}" Margin="4,0"/>
                 </StackPanel>
                 <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthConverter}}"/>
                 <TextBlock Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
             </Grid>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="False">
-                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件] "/>
+                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件]"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="True">
-                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件夹] "/>
+                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件夹]"/>
                     <Setter TargetName="MiddleRow" Property="Height" Value="0"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
@@ -97,8 +97,8 @@
                         </TextBlock>
                     </Grid>
                     <Grid Grid.Row="1">
-                        <Border x:Name="borderShow" Grid.Row="1" CornerRadius="2" Background="{TemplateBinding Background}"/>
-                        <Control x:Name="controlShow"/>
+                        <Border x:Name="ViewBorder" Grid.Row="1" CornerRadius="2" Background="{TemplateBinding Background}"/>
+                        <Control x:Name="ViewControl"/>
                     </Grid>
                 </Grid>
             </Grid>
@@ -108,25 +108,25 @@
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="text">
-                    <Setter TargetName="controlShow" Property="Template" Value="{StaticResource TextTemplate}"/>
+                    <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource TextTemplate}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="image">
-                    <Setter TargetName="controlShow" Property="Template" Value="{StaticResource ImageTemplate}"/>
+                    <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ImageTemplate}"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Path}" Value="file">
-                    <Setter TargetName="controlShow" Property="Template" Value="{StaticResource ShareTemplate}"/>
+                <DataTrigger Binding="{Binding Path=Path}" Value="share">
+                    <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ShareTemplate}"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Page.Resources>
 
-    <Grid x:Name="grid">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid x:Name="gridProfile" Grid.Row="0" VerticalAlignment="Top" SnapsToDevicePixels="True">
+        <Grid x:Name="uiProfileGrid" Grid.Row="0" VerticalAlignment="Top" SnapsToDevicePixels="True">
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
@@ -165,7 +165,7 @@
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <Grid x:Name="uiMessageGrid" Margin="32,0" Grid.Column="1"/>
-            <ListBox x:Name="listboxMessage" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
+            <ListBox x:Name="uiMessageBox" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Background" Value="#303030"/>
@@ -180,7 +180,7 @@
                 </ListBox.ItemContainerStyle>
             </ListBox>
         </Grid>
-        <Grid Grid.Row="2" Width="{Binding ElementName=listboxMessage, Path=ActualWidth}">
+        <Grid Grid.Row="2" Width="{Binding ElementName=uiMessageBox, Path=ActualWidth}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
@@ -214,8 +214,8 @@
                 </StackPanel>
             </StackPanel>
         </Grid>
-        <Grid x:Name="gridSymbol" Grid.RowSpan="2"
-              Width="{Binding ElementName=listboxMessage, Path=ActualWidth}"
+        <Grid x:Name="uiSymbolGrid" Grid.RowSpan="2"
+              Width="{Binding ElementName=uiMessageBox, Path=ActualWidth}"
               VerticalAlignment="Bottom" Visibility="Collapsed"
               SnapsToDevicePixels="True">
             <Grid Margin="5,0" HorizontalAlignment="Right">

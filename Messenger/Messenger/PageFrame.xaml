@@ -294,7 +294,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Ports.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:ShareModule.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>

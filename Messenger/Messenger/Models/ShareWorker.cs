@@ -1,4 +1,5 @@
 ﻿using Messenger.Extensions;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
@@ -7,10 +8,11 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Messenger.Models
 {
-    internal class ShareWorker : IDisposable
+    internal class ShareWorker : ShareBasic
     {
         internal readonly int _id;
         internal readonly Share _source;
@@ -18,38 +20,47 @@ namespace Messenger.Models
         internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
         internal long _position = 0;
         internal int _started = 0;
-        internal int _disposed = 0;
+        internal int _closed = 0;
+        internal ShareStatus _status;
 
-        /// <summary>
-        /// 目标 ID (接收者 ID)
-        /// </summary>
-        public int Target => _id;
+        protected override int ID => _id;
 
-        public bool IsBatch => _source.IsBatch;
+        public override long Length => _source.Length;
 
-        /// <summary>
-        /// 已发送的数据量
-        /// </summary>
-        public long Position => _position;
+        public override bool IsBatch => _source.IsBatch;
+
+        public override bool IsClosed => Volatile.Read(ref _closed) != 0;
+
+        public override string Name => _source._name;
+
+        public override string Path => _source._path;
+
+        public override long Position => _position;
+
+        public override ShareStatus Status => _status;
 
         public ShareWorker(Share share, int id, Socket socket)
         {
             _id = id;
             _source = share;
             _socket = socket;
+            _status = ShareStatus.等待;
         }
 
         public Task Start()
         {
-            if (Volatile.Read(ref _disposed) != 0 || Interlocked.CompareExchange(ref _started, 1, 0) != 0)
+            if (IsClosed || Interlocked.CompareExchange(ref _started, 1, 0) != 0)
                 throw new InvalidOperationException();
 
+            _status = ShareStatus.运行;
+            Register();
+
             if (_source._info is FileInfo inf)
-                return _socket.SendFileEx(_source._path, _source._length, r => _position += r, _cancel.Token);
-            return _SendDir((DirectoryInfo)_source._info, Enumerable.Empty<string>());
+                return _socket.SendFileEx(_source._path, _source._length, r => _position += r, _cancel.Token).ContinueWith(_Finish);
+            return _SendDir((DirectoryInfo)_source._info, Enumerable.Empty<string>()).ContinueWith(_Finish);
         }
 
-        async Task _SendDir(DirectoryInfo subdir, IEnumerable<string> relative)
+        internal async Task _SendDir(DirectoryInfo subdir, IEnumerable<string> relative)
         {
             var lst = relative.ToList();
             if (lst.Count > 0)
@@ -96,10 +107,25 @@ namespace Messenger.Models
             }
         }
 
-        public void Dispose()
+        internal void _Finish(Task task)
         {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+            var exc = task.Exception;
+            Log.Error(exc);
+
+            if (_cancel.IsCancellationRequested)
+                _status = ShareStatus.取消;
+            else if (exc != null)
+                _status = ShareStatus.中断;
+            else
+                _status = ShareStatus.成功;
+            Close();
+        }
+
+        public void Close()
+        {
+            if (Interlocked.CompareExchange(ref _closed, 1, 0) != 0)
                 return;
+            Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(IsClosed)));
             _cancel.Cancel();
         }
     }

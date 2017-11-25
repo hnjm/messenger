@@ -61,7 +61,7 @@ namespace Messenger.Modules
                 }
                 catch (Exception ex)
                 {
-                    Log.Err(ex);
+                    Log.Error(ex);
                     return null;
                 }
             }
@@ -103,7 +103,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
-                Log.Err(ex);
+                Log.Error(ex);
             }
 
             soc?.Dispose();
@@ -115,7 +115,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 读取服务器搜索列表
         /// </summary>
-        [AutoLoad(4, AutoLoadFlag.OnLoad)]
+        [AutoLoad(4, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             var lst = new List<IPEndPoint>();
@@ -133,7 +133,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
             }
             if (s_ins._broadcast != null)
                 lst.Add(s_ins._broadcast);
@@ -143,7 +143,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 保存列表到文件
         /// </summary>
-        [AutoLoad(32, AutoLoadFlag.OnExit)]
+        [AutoLoad(32, AutoLoadFlags.OnExit)]
         public static void Save()
         {
             var stb = new StringBuilder();

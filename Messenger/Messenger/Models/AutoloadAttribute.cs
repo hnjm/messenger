@@ -10,13 +10,13 @@ namespace Messenger.Models
     {
         private int _lev = 0;
 
-        private AutoLoadFlag _flag = AutoLoadFlag.None;
+        private AutoLoadFlags _flag = AutoLoadFlags.None;
 
         public int Level => _lev;
 
-        public AutoLoadFlag Flag => _flag;
+        public AutoLoadFlags Flag => _flag;
 
-        public AutoLoadAttribute(int level, AutoLoadFlag flag)
+        public AutoLoadAttribute(int level, AutoLoadFlags flag)
         {
             _lev = level;
             _flag = flag;

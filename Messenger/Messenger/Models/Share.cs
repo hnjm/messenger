@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,7 +66,7 @@ namespace Messenger.Models
         /// </summary>
         public long Length => _length;
 
-        public BindingList<ShareWorker> Workers => _list;
+        public BindingList<ShareWorker> WorkerList => _list;
 
         internal Share(FileSystemInfo info)
         {
@@ -98,6 +100,10 @@ namespace Messenger.Models
             if (Interlocked.CompareExchange(ref _closed, 1, 0) != 0)
                 return;
             _backlog -= _Accept;
+
+            var lst = default(List<ShareWorker>);
+            Application.Current.Dispatcher.Invoke(() => lst = _list.ToList());
+            lst.ForEach(r => r.Close());
         }
     }
 }

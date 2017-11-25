@@ -1,4 +1,5 @@
 ﻿using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
@@ -50,13 +51,19 @@ namespace Messenger.Modules
 
         public static void Handle(LinkPacket arg)
         {
-            var rcd = s_ins._dic[arg.Path];
-            var obj = rcd.Construct.Invoke();
-            obj.LoadValue(arg.Buffer);
-            rcd.Function.Invoke((dynamic)obj);
+            if (s_ins._dic.TryGetValue(arg.Path, out var rcd))
+            {
+                var obj = rcd.Construct.Invoke();
+                obj.LoadValue(arg.Buffer);
+                rcd.Function.Invoke((dynamic)obj);
+            }
+            else
+            {
+                Log.Notice($"Path \"{arg.Path}\" not supported.");
+            }
         }
 
-        [AutoLoad(1, AutoLoadFlag.OnLoad)]
+        [AutoLoad(1, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             if (s_ins != null)

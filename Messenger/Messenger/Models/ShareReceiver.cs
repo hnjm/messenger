@@ -10,26 +10,51 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Messenger.Models
 {
-    /// <summary>
-    /// 文件接收类 (线程安全)
-    /// </summary>
-    public class PortTaker : Port
+    internal class ShareReceiver : ShareBasic
     {
-        private CancellationTokenSource _cancel = new CancellationTokenSource();
+        private readonly object _locker = new object();
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+
+        internal readonly int _id;
+        internal readonly Guid _key;
+        internal readonly long _length;
+        internal readonly bool _batch = false;
+
+        internal bool _started = false;
+        internal bool _closed = false;
+        internal long _position = 0;
+        internal string _name = null;
+        internal ShareStatus _status;
+
         private Socket _socket = null;
         private List<IPEndPoint> _endpoints = null;
 
-        /// <summary>
-        /// 初始化对象 并设定文件保存路径函数
-        /// </summary>
-        public PortTaker(PacketReader reader)
+        public override long Length => throw new NotImplementedException();
+
+        public override bool IsBatch => throw new NotImplementedException();
+
+        public override bool IsClosed => throw new NotImplementedException();
+
+        public override string Name => throw new NotImplementedException();
+
+        public override string Path => throw new NotImplementedException();
+
+        public override long Position => throw new NotImplementedException();
+
+        public override ShareStatus Status => throw new NotImplementedException();
+
+        protected override int ID => throw new NotImplementedException();
+
+        public ShareReceiver(int id, PacketReader reader)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
+            _id = id;
             var typ = reader["type"].Pull<string>();
             if (typ == "file")
                 _length = reader["length"].Pull<long>();
@@ -44,19 +69,14 @@ namespace Messenger.Models
             _status = ShareStatus.等待;
         }
 
-        /// <summary>
-        /// 启动文件接收 失败时自动调用 <see cref="_Dispose(bool)"/>
-        /// </summary>
         public Task Start()
         {
-            lock (_loc)
+            lock (_locker)
             {
-                if (_started || _disposed)
+                if (_started || _closed)
                     throw new InvalidOperationException();
                 _started = true;
-
                 _status = ShareStatus.运行;
-                _EmitStarted();
             }
 
             var soc = default(Socket);
@@ -89,9 +109,9 @@ namespace Messenger.Models
                 });
                 await soc.SendAsyncExt(buf.GetBytes());
 
-                lock (_loc)
+                lock (_locker)
                 {
-                    if (_disposed)
+                    if (_closed)
                         throw new InvalidOperationException();
                     _socket = soc;
                 }
@@ -102,17 +122,22 @@ namespace Messenger.Models
             {
                 if (t.Exception == null)
                 {
-                    _Receive().ContinueWith(_Clean);
+                    _Receive().ContinueWith(_Finish);
                     return;
                 }
+
                 soc?.Dispose();
-                Dispose();
+
+                lock (_locker)
+                {
+                    if (_closed)
+                        return;
+                    _status = ShareStatus.中断;
+                    Close();
+                }
             });
         }
 
-        /// <summary>
-        /// 接收文件, 并设置传输进度 (异步)
-        /// </summary>
         private Task _Receive()
         {
             // 接收目录
@@ -149,15 +174,15 @@ namespace Messenger.Models
                         var lst = new List<string>() { top };
                         var dir = rea["path"].PullList<string>();
                         lst.AddRange(dir);
-                        cur = new DirectoryInfo(Path.Combine(lst.ToArray()));
+                        cur = new DirectoryInfo(System.IO.Path.Combine(lst.ToArray()));
                         cur.Create();
                         break;
 
                     case "file":
                         var key = rea["path"].Pull<string>();
                         var len = rea["length"].Pull<long>();
-                        var pth = Path.Combine(cur.FullName, key);
-                        await _socket.ReceiveFileEx(pth, len, r => _length += r, _cancel.Token);
+                        var pth = System.IO.Path.Combine(cur.FullName, key);
+                        await _socket.ReceiveFileEx(pth, len, r => _position += r, _cancel.Token);
                         break;
 
                     default:
@@ -166,41 +191,36 @@ namespace Messenger.Models
             }
         }
 
-        /// <summary>
-        /// 清理资源, 若文件没有成功接收, 则删除该文件
-        /// </summary>
-        /// <param name="task"></param>
-        private void _Clean(Task task)
+        private void _Finish(Task task)
         {
-            lock (_loc)
+            lock (_locker)
             {
-                if (_disposed)
+                if (_closed)
                     return;
                 var exc = task.Exception;
-                _status = (exc == null) ? ShareStatus.成功 : ShareStatus.中断;
-                _exception = exc;
-                _Dispose();
+                _status = (exc == null)
+                    ? ShareStatus.成功
+                    : ShareStatus.中断;
+                Close();
             }
         }
 
-        #region 实现 IDisposable
-        /// <summary>
-        /// 释放资源并在后台触发 <see cref="Port.Disposed"/> 事件 (不含 lock 语句)
-        /// </summary>
-        protected override void _Dispose()
+        public void Close()
         {
-            if (_disposed)
-                return;
-            if ((_status & ShareStatus.终止) == 0)
-                _status = ShareStatus.取消;
+            lock (_locker)
+            {
+                if (_closed)
+                    return;
+                if ((_status & ShareStatus.终止) == 0)
+                    _status = ShareStatus.取消;
+            }
 
             _cancel.Cancel();
             _socket?.Dispose();
             _socket = null;
 
-            _disposed = true;
-            _EmitDisposed();
+            _closed = true;
+            Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(IsClosed)));
         }
-        #endregion
     }
 }

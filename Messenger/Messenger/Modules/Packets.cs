@@ -113,7 +113,7 @@ namespace Messenger.Modules
                 }
                 catch (Exception ex)
                 {
-                    Log.Err(ex);
+                    Log.Error(ex);
                 }
                 finally
                 {
@@ -161,7 +161,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
                 return lst;
             }
             finally
@@ -174,7 +174,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 初始化数据库 (非线程安全)
         /// </summary>
-        [AutoLoad(1, AutoLoadFlag.OnLoad)]
+        [AutoLoad(1, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             var con = default(SQLiteConnection);
@@ -193,7 +193,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
                 con?.Dispose();
             }
             finally
@@ -222,7 +222,7 @@ namespace Messenger.Modules
                     }
                     catch (Exception ex)
                     {
-                        Log.Err(ex);
+                        Log.Error(ex);
                     }
                     finally
                     {
@@ -253,7 +253,7 @@ namespace Messenger.Modules
                     }
                     catch (Exception ex)
                     {
-                        Log.Err(ex);
+                        Log.Error(ex);
                     }
                     finally
                     {
@@ -265,7 +265,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 关闭数据库
         /// </summary>
-        [AutoLoad(2, AutoLoadFlag.OnExit)]
+        [AutoLoad(2, AutoLoadFlags.OnExit)]
         public static void Save()
         {
             s_ins._con?.Dispose();

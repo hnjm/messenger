@@ -115,6 +115,7 @@ namespace Messenger.Modules
         public static Share Directory(int target, string directory)
         {
             var sha = new Share(new DirectoryInfo(directory));
+            Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
                 source = Linkers.ID,

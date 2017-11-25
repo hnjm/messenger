@@ -18,7 +18,7 @@ namespace Messenger.Modules
         /// </summary>
         public static bool UseCtrlEnter { get => s_ins._ctrlenter; set => s_ins._ctrlenter = value; }
 
-        [AutoLoad(8, AutoLoadFlag.OnLoad)]
+        [AutoLoad(8, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             var str = Options.GetOption(_KeyCtrlEnter);
@@ -27,7 +27,7 @@ namespace Messenger.Modules
             return;
         }
 
-        [AutoLoad(16, AutoLoadFlag.OnExit)]
+        [AutoLoad(16, AutoLoadFlags.OnExit)]
         public static void Save()
         {
             Options.SetOption(_KeyCtrlEnter, s_ins._ctrlenter.ToString());

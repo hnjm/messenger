@@ -36,14 +36,24 @@ namespace Mikodev.Logger
         }
 
         /// <summary>
-        /// 记录异常和自定义消息 (如果异常为空则不记录)
+        /// 记录异常 (如果异常为空则不记录)
         /// </summary>
-        public static void Err(Exception ex, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+        public static void Error(Exception ex, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
             if (ex == null)
                 return;
             while (ex is AggregateException a && a.InnerExceptions.Count == 1)
                 ex = a.InnerException;
+            Notice(ex.ToString(), name, file, line);
+        }
+
+        /// <summary>
+        /// 记录自定义消息 (如果异常为空则不记录)
+        /// </summary>
+        public static void Notice(string message, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+        {
+            if (message == null)
+                return;
             var lbr = Environment.NewLine;
 
             if (file != null && file.StartsWith(s_pre))
@@ -53,7 +63,7 @@ namespace Mikodev.Logger
                 $"[文件: {file}]" + lbr +
                 $"[行号: {line}]" + lbr +
                 $"[方法: {name}]" + lbr +
-                $"{ex}" + lbr + lbr;
+                $"{message}" + lbr + lbr;
 
             Trace.Write(_prefix + Environment.NewLine + msg);
             s_log?._Write(msg).ContinueWith(_Next);
@@ -69,7 +79,7 @@ namespace Mikodev.Logger
 
         internal static void _Trace(string txt)
         {
-            if (string.IsNullOrEmpty(txt) || txt.Contains(_prefix))
+            if (string.IsNullOrEmpty(txt) || txt.StartsWith(_prefix))
                 return;
 
             var lbr = Environment.NewLine;

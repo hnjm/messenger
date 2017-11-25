@@ -34,19 +34,19 @@ namespace Messenger
             (Application.Current as App).TextBoxKeyDown += TextBox_KeyDown;
 
             _profile = Profiles.Inscope;
-            if (_profile.ID <= Links.ID)
-                buttonFile.Visibility = Visibility.Collapsed;
-            gridProfile.DataContext = _profile;
+            //if (_profile.ID <= Links.ID)
+            //    buttonFile.Visibility = Visibility.Collapsed;
+            uiProfileGrid.DataContext = _profile;
 
             _messages = Packets.Query(_profile.ID);
-            listboxMessage.ItemsSource = _messages;
+            uiMessageBox.ItemsSource = _messages;
             _messages.ListChanged += Messages_ListChanged;
             _ScrollToEnd();
         }
 
         private void _Unloaded(object sender, RoutedEventArgs e)
         {
-            listboxMessage.ItemsSource = null;
+            uiMessageBox.ItemsSource = null;
             Packets.Receiving -= ModuleMessage_Receiving;
             (Application.Current as App).TextBoxKeyDown -= TextBox_KeyDown;
             _messages.ListChanged -= Messages_ListChanged;
@@ -87,16 +87,16 @@ namespace Messenger
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (sender == buttonSymbol && gridSymbol.Visibility != Visibility.Visible)
-                gridSymbol.Visibility = Visibility.Visible;
+            if (sender == buttonSymbol && uiSymbolGrid.Visibility != Visibility.Visible)
+                uiSymbolGrid.Visibility = Visibility.Visible;
             else
-                gridSymbol.Visibility = Visibility.Collapsed;
+                uiSymbolGrid.Visibility = Visibility.Collapsed;
 
             if (sender == buttonFile)
             {
                 var dia = new System.Windows.Forms.OpenFileDialog();
                 if (dia.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    _InsertFile(dia.FileName);
+                    _Share(dia.FileName);
             }
 
             if (sender == buttonText)
@@ -120,7 +120,7 @@ namespace Messenger
             var idx = _messages.Count - 1;
             if (idx < 0)
                 return;
-            listboxMessage.ScrollIntoView(_messages[idx]);
+            uiMessageBox.ScrollIntoView(_messages[idx]);
         }
 
         private void _InsertText(TextBox textbox, string str)
@@ -162,28 +162,23 @@ namespace Messenger
                 Entrance.ShowError("发送图片失败", ex);
             }
         }
-
-        private void _InsertFile(string path)
+        
+        private void _Share(string path)
         {
-            var trs = Posters.File(_profile.ID, path);
-            if (trs == null)
+            var sha = default(Share);
+            if (File.Exists(path))
+                sha = Posters.File(_profile.ID, path);
+            else if (Directory.Exists(path))
+                sha = Posters.Directory(_profile.ID, path);
+            if (sha == null)
                 return;
-            var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "file", Value = trs };
-            _messages.Add(pkt);
-        }
-
-        private void _InsertDir(string path)
-        {
-            var trs = Posters.Directory(_profile.ID, path);
-            if (trs == null)
-                return;
-            var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "dir", Value = trs };
+            var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "share", Value = sha };
             _messages.Add(pkt);
         }
 
         private void TextBox_PreviewDragOver(object sender, DragEventArgs e)
         {
-            if (_profile.ID <= Links.ID || e.Data.GetDataPresent(DataFormats.FileDrop) == false)
+            if (/*_profile.ID <= Links.ID || */e.Data.GetDataPresent(DataFormats.FileDrop) == false)
                 e.Effects = DragDropEffects.None;
             else
                 e.Effects = DragDropEffects.Copy;
@@ -192,17 +187,13 @@ namespace Messenger
 
         private void TextBox_PreviewDrop(object sender, DragEventArgs e)
         {
-            if (_profile.ID <= Links.ID || e.Data.GetDataPresent(DataFormats.FileDrop) == false)
+            if (/*_profile.ID <= Links.ID ||*/ e.Data.GetDataPresent(DataFormats.FileDrop) == false)
                 return;
             var fil = e.Data.GetData(DataFormats.FileDrop) as string[];
             if (fil == null || fil.Length < 1)
                 return;
             var val = fil[0];
-            if (File.Exists(val))
-                _InsertFile(val);
-            else if (Directory.Exists(val))
-                _InsertDir(val);
-            return;
+            _Share(val);
         }
     }
 }

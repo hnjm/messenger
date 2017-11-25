@@ -18,7 +18,7 @@ namespace Messenger.Models
         protected string _name = null;
         protected Guid _key = Guid.NewGuid();
         protected Exception _exception = null;
-        protected PortStatus _status = PortStatus.默认;
+        protected ShareStatus _status = ShareStatus.默认;
 
         public Guid Key => _key;
 
@@ -28,7 +28,7 @@ namespace Messenger.Models
 
         public string Name => _name;
 
-        public PortStatus Status => _status;
+        public ShareStatus Status => _status;
 
         public Exception Exception => _exception;
 

@@ -25,32 +25,32 @@ namespace Messenger
             var src = e.OriginalSource;
             if (src == buttonClean)
             {
-                Ports.Remove();
+                ShareModule.Remove();
             }
             else if (src == buttonChange)
             {
                 var dfd = new System.Windows.Forms.FolderBrowserDialog();
-                if (Directory.Exists(Ports.SavePath))
-                    dfd.SelectedPath = Ports.SavePath;
+                if (Directory.Exists(ShareModule.SavePath))
+                    dfd.SelectedPath = ShareModule.SavePath;
                 if (dfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    Ports.SavePath = dfd.SelectedPath;
+                    ShareModule.SavePath = dfd.SelectedPath;
             }
             else if (src == buttonOpen)
             {
                 Task.Run(() =>
                 {
-                    if (Directory.Exists(Ports.SavePath) == false)
+                    if (Directory.Exists(ShareModule.SavePath) == false)
                         return;
-                    Process.Start("explorer", "/e," + Ports.SavePath);
+                    Process.Start("explorer", "/e," + ShareModule.SavePath);
                 })
                 .ContinueWith(task =>
                 {
-                    Log.Err(task.Exception);
+                    Log.Error(task.Exception);
                 });
             }
             else if (src == buttonStopAll)
             {
-                Ports.Close();
+                ShareModule.Close();
             }
         }
 

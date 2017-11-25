@@ -59,10 +59,10 @@ namespace Messenger.Modules
                 throw;
             }
 
-            _Listen(soc).ContinueWith(tsk => Log.Err(tsk.Exception));
+            _Listen(soc).ContinueWith(tsk => Log.Error(tsk.Exception));
 
             Packets.OnHandled += _Packets_OnHandled;
-            Ports.Expect.ListChanged += _Ports_ListChanged;
+            ShareModule.Expect.ListChanged += _Ports_ListChanged;
             Profiles.Current.ID = id;
 
             Posters.UserProfile(Links.ID);
@@ -89,20 +89,20 @@ namespace Messenger.Modules
                     })
                     .ContinueWith(tsk =>
                     {
-                        Log.Err(tsk.Exception);
+                        Log.Error(tsk.Exception);
                         clt.Dispose();
                     });
 #pragma warning restore 4014
                 }
                 catch (SocketException ex)
                 {
-                    Log.Err(ex);
+                    Log.Error(ex);
                     continue;
                 }
             }
         }
 
-        [AutoLoad(0, AutoLoadFlag.OnExit)]
+        [AutoLoad(0, AutoLoadFlags.OnExit)]
         public static void Shutdown()
         {
             lock (s_ins._loc)
@@ -113,10 +113,10 @@ namespace Messenger.Modules
                 s_ins._soc = null;
             }
 
-            Ports.Close();
+            ShareModule.Close();
             Profiles.Clear();
             Packets.OnHandled -= _Packets_OnHandled;
-            Ports.Expect.ListChanged -= _Ports_ListChanged;
+            ShareModule.Expect.ListChanged -= _Ports_ListChanged;
         }
 
         public static void Enqueue(byte[] buffer) => s_ins._clt?.Enqueue(buffer);
@@ -153,7 +153,7 @@ namespace Messenger.Modules
 
         private static void _Ports_ListChanged(object sender, ListChangedEventArgs e)
         {
-            if (sender == Ports.Expect && e.ListChangedType == ListChangedType.ItemAdded)
+            if (sender == ShareModule.Expect && e.ListChangedType == ListChangedType.ItemAdded)
             {
                 if (Application.Current.MainWindow.IsActive == true)
                     return;

@@ -53,7 +53,7 @@ namespace Mikodev.Network
                 var ex = tsk.Exception;
                 if (ex == null)
                     return;
-                Log.Err(ex);
+                Log.Error(ex);
                 soc.Dispose();
             });
 
@@ -66,7 +66,7 @@ namespace Mikodev.Network
                 }
                 catch (SocketException ex)
                 {
-                    Log.Err(ex);
+                    Log.Error(ex);
                 }
             }
         }

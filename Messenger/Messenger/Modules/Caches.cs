@@ -32,7 +32,7 @@ namespace Messenger.Modules
 
         private Caches() { }
 
-        [AutoLoad(16, AutoLoadFlag.OnLoad)]
+        [AutoLoad(16, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             try
@@ -43,7 +43,7 @@ namespace Messenger.Modules
             }
             catch (Exception ex)
             {
-                Log.Err(ex);
+                Log.Error(ex);
             }
         }
 
@@ -94,7 +94,7 @@ namespace Messenger.Modules
             {
                 if (nothrow == false)
                     throw;
-                Log.Err(ex);
+                Log.Error(ex);
                 return null;
             }
             finally

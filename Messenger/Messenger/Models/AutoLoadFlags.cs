@@ -1,6 +1,6 @@
 ﻿namespace Messenger.Models
 {
-    public enum AutoLoadFlag
+    public enum AutoLoadFlags
     {
         None,
 

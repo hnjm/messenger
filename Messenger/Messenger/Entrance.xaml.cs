@@ -43,9 +43,9 @@ namespace Messenger
                 }
             }
 
-            var loa = find().Where(r => r.attribute.Flag == AutoLoadFlag.OnLoad).ToList();
+            var loa = find().Where(r => r.attribute.Flag == AutoLoadFlags.OnLoad).ToList();
             loa.Sort((a, b) => a.attribute.Level - b.attribute.Level);
-            var sav = find().Where(r => r.attribute.Flag == AutoLoadFlag.OnExit).ToList();
+            var sav = find().Where(r => r.attribute.Flag == AutoLoadFlags.OnExit).ToList();
             sav.Sort((a, b) => a.attribute.Level - b.attribute.Level);
 
             loa.ForEach(m => m.info.Invoke(null, null));

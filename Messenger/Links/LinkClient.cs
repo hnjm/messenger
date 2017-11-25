@@ -168,12 +168,11 @@ namespace Mikodev.Network
 
         internal int _Shutdown(Exception ex = null)
         {
-            if (ex != null)
-                Log.Err(ex);
             lock (_loc)
                 if (_disposed)
                     return 0;
-            if (ex !=null)
+            Log.Error(ex);
+            if (ex != null)
                 _exc = ex;
             Dispose();
             Shutdown?.Invoke(this, new EventArgs());
