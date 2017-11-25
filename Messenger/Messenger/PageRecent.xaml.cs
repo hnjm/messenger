@@ -16,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, Profiles.RecentList);
+            PageManager.SetProfilePage(this, listbox, ProfileModule.RecentList);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -26,7 +26,7 @@ namespace Messenger
                 return;
             if (btn == buttonClear)
             {
-                Profiles.RecentList.Clear();
+                ProfileModule.RecentList.Clear();
                 return;
             }
         }

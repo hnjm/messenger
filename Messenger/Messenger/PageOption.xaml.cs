@@ -16,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            var val = Settings.UseCtrlEnter;
+            var val = SettingModule.UseCtrlEnter;
             if (val == false)
                 radioEnter.IsChecked = true;
             else
@@ -30,7 +30,7 @@ namespace Messenger
                 return;
             if (btn == buttonExit)
             {
-                Linkers.Shutdown();
+                LinkModule.Shutdown();
                 Application.Current.MainWindow.Close();
             }
             else if (btn == buttonOut)
@@ -38,8 +38,8 @@ namespace Messenger
                 var mai = Application.Current.MainWindow as Entrance;
                 if (mai == null)
                     return;
-                Linkers.Shutdown();
-                Profiles.SetInscope(null);
+                LinkModule.Shutdown();
+                ProfileModule.SetInscope(null);
                 mai.frame.Navigate(new Connection());
             }
         }
@@ -48,9 +48,9 @@ namespace Messenger
         {
             var src = e.OriginalSource;
             if (src == radioEnter)
-                Settings.UseCtrlEnter = false;
+                SettingModule.UseCtrlEnter = false;
             else if (src == radioCtrlEnter)
-                Settings.UseCtrlEnter = true;
+                SettingModule.UseCtrlEnter = true;
         }
     }
 }

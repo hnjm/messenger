@@ -23,11 +23,11 @@ namespace Messenger
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var src = e.OriginalSource;
-            if (src == buttonClean)
+            if (src == uiCleanButton)
             {
                 ShareModule.Remove();
             }
-            else if (src == buttonChange)
+            else if (src == uiChangeButton)
             {
                 var dfd = new System.Windows.Forms.FolderBrowserDialog();
                 if (Directory.Exists(ShareModule.SavePath))
@@ -35,7 +35,7 @@ namespace Messenger
                 if (dfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     ShareModule.SavePath = dfd.SelectedPath;
             }
-            else if (src == buttonOpen)
+            else if (src == uiOpenButton)
             {
                 Task.Run(() =>
                 {
@@ -48,7 +48,7 @@ namespace Messenger
                     Log.Error(task.Exception);
                 });
             }
-            else if (src == buttonStopAll)
+            else if (src == uiStopButton)
             {
                 ShareModule.Close();
             }
@@ -59,7 +59,7 @@ namespace Messenger
             var btn = sender as Button;
             if (btn == null)
                 return;
-            var con = btn.DataContext as Cargo;
+            var con = btn.DataContext as ShareReceiver;
             var tag = btn.Tag as string;
             if (con == null || tag == null)
                 return;
@@ -67,7 +67,7 @@ namespace Messenger
             if (tag.Equals("Play"))
                 con.Start();
             else if (tag.Equals("Stop"))
-                con.Close();
+                con.Dispose();
             return;
         }
     }

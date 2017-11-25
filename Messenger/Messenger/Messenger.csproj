@@ -102,26 +102,25 @@
     <Compile Include="Extensions\Collections.cs" />
     <Compile Include="Extensions\Converts.cs" />
     <Compile Include="Extensions\Streams.cs" />
-    <Compile Include="Handles\Paper.cs" />
-    <Compile Include="Handles\People.cs" />
-    <Compile Include="Handles\Thing.cs" />
+    <Compile Include="Controllers\MessageController.cs" />
+    <Compile Include="Controllers\ProfileController.cs" />
+    <Compile Include="Controllers\ShareController.cs" />
     <Compile Include="Fallback.xaml.cs">
       <DependentUpon>Fallback.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoLoadFlags.cs" />
     <Compile Include="Models\HandlerAttribute.cs" />
-    <Compile Include="Models\PortTaker.cs" />
-    <Compile Include="Models\Port.cs" />
-    <Compile Include="Models\PortStatus.cs" />
+    <Compile Include="Models\IDisposed.cs" />
+    <Compile Include="Models\ShareStatus.cs" />
     <Compile Include="Models\Share.cs" />
     <Compile Include="Models\ShareReceiver.cs" />
     <Compile Include="Models\ShareBasic.cs" />
     <Compile Include="Models\ShareWorker.cs" />
-    <Compile Include="Modules\Options.cs" />
-    <Compile Include="Modules\Posters.cs" />
-    <Compile Include="Modules\Routers.cs" />
-    <Compile Include="Modules\Settings.cs" />
+    <Compile Include="Modules\OptionModule.cs" />
+    <Compile Include="Modules\PostModule.cs" />
+    <Compile Include="Modules\RouteModule.cs" />
+    <Compile Include="Modules\SettingModule.cs" />
     <Compile Include="PageClient.xaml.cs">
       <DependentUpon>PageClient.xaml</DependentUpon>
     </Compile>
@@ -141,17 +140,16 @@
     <Compile Include="PageProfile.xaml.cs">
       <DependentUpon>PageProfile.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modules\Symbols.cs" />
+    <Compile Include="Modules\SymbolModule.cs" />
     <Compile Include="Modules\ShareModule.cs" />
-    <Compile Include="Models\Cargo.cs" />
-    <Compile Include="Modules\Packets.cs" />
+    <Compile Include="Modules\HistoryModule.cs" />
     <Compile Include="Models\Host.cs" />
-    <Compile Include="Modules\Hosts.cs" />
-    <Compile Include="Modules\Caches.cs" />
+    <Compile Include="Modules\HostModule.cs" />
+    <Compile Include="Modules\CacheModule.cs" />
     <Compile Include="Tools\CodeValidation.cs" />
     <Compile Include="Tools\ImageConverter.cs" />
     <Compile Include="Tools\ObjectTypeConverter.cs" />
-    <Compile Include="Tools\PortValidation.cs" />
+    <Compile Include="Tools\SocketPortValidation.cs" />
     <Compile Include="Tools\StringEmptyConverter.cs" />
     <Compile Include="Tools\LengthConverter.cs" />
     <Compile Include="Tools\PromptConverter.cs" />
@@ -198,7 +196,7 @@
     <Compile Include="Connection.xaml.cs">
       <DependentUpon>Connection.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modules\Linkers.cs" />
+    <Compile Include="Modules\LinkModule.cs" />
     <Compile Include="Entrance.xaml.cs">
       <DependentUpon>Entrance.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -251,7 +249,7 @@
   <ItemGroup>
     <Compile Include="Models\Packet.cs" />
     <Compile Include="Models\Profile.cs" />
-    <Compile Include="Modules\Profiles.cs" />
+    <Compile Include="Modules\ProfileModule.cs" />
     <Compile Include="Shower.xaml.cs">
       <DependentUpon>Shower.xaml</DependentUpon>
     </Compile>

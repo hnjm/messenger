@@ -3,14 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Messenger.Models
 {
-    internal abstract class ShareBasic : INotifyPropertyChanging, INotifyPropertyChanged
+    public abstract class ShareBasic : INotifyPropertyChanged
     {
         internal class Tick
         {
@@ -37,29 +35,16 @@ namespace Messenger.Models
         });
 
         /// <summary>
-        /// 注册以便实时计算传输进度 (当 <see cref="IsClosed"/> 为真时自动取消注册)
+        /// 注册以便实时计算传输进度 (当 <see cref="IsDisposed"/> 为真时自动取消注册)
         /// </summary>
         protected void Register() => s_action += _Refresh;
 
         #region PropertyChange
-        public event PropertyChangingEventHandler PropertyChanging;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void PropertyChange<T>(ref T source, T target, [CallerMemberName] string name = null)
-        {
-            var eva = new PropertyChangingEventArgs(name);
-            PropertyChanging?.Invoke(this, eva);
-
-            if (Equals(source, target))
-                return;
-            source = target;
-
-            var evb = new PropertyChangedEventArgs(name);
-            PropertyChanged?.Invoke(this, evb);
-        }
-
-        protected void OnPropertyChanged(string str = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty));
+        protected void OnPropertyChanged(string str = null) =>
+            Application.Current.Dispatcher.Invoke(() =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty)));
         #endregion
 
         private double _speed = 0;
@@ -73,7 +58,7 @@ namespace Messenger.Models
 
         public abstract bool IsBatch { get; }
 
-        public abstract bool IsClosed { get; }
+        public abstract bool IsDisposed { get; }
 
         public abstract string Name { get; }
 
@@ -83,39 +68,38 @@ namespace Messenger.Models
 
         public abstract ShareStatus Status { get; }
 
-        public Profile Profile => Profiles.Query(ID, true);
+        public Profile Profile => ProfileModule.Query(ID, true);
 
         public TimeSpan Remain => _remain;
 
         public double Speed => _speed;
 
-        public double Progress => IsBatch ? 100 : _progress;
+        public double Progress => _progress;
 
         private void _Refresh()
         {
-            var unreg = IsClosed;
+            var unreg = IsDisposed;
 
             var avg = _AverageSpeed();
             _speed = avg * 1000; // 毫秒 -> 秒
+            _progress = (Length > 0)
+                ? (100.0 * Position / Length)
+                : (Status & ShareStatus.终止) == 0
+                    ? 0
+                    : 100;
 
             if (IsBatch == false)
             {
                 _remain = (avg > 0 && Position > 0) ? TimeSpan.FromMilliseconds((Length - Position) / avg) : TimeSpan.Zero;
-                _progress = (Length > 0)
-                    ? (100.0 * Position / Length)
-                    : (Status == ShareStatus.成功)
-                        ? 100
-                        : 0;
-
                 OnPropertyChanged(nameof(Remain));
-                OnPropertyChanged(nameof(Progress));
             }
 
             OnPropertyChanged(nameof(Speed));
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(Position));
+            OnPropertyChanged(nameof(Progress));
 
-            // 确保 IsClosed 为真后再计算一次
+            // 确保 IsDisposed 为真后再计算一次
             if (unreg)
             {
                 s_action -= _Refresh;

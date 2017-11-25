@@ -100,7 +100,7 @@
         <Frame x:Name="frame" Grid.Column="1" NavigationUIVisibility="Hidden"/>
         <Frame x:Name="frameFull" Grid.Column="1" NavigationUIVisibility="Hidden"/>
         <Border x:Name="borderFull" Grid.Column="1" Background="#80000000" Visibility="Hidden"/>
-        <Grid x:Name="gridNavigate" Grid.Column="0" Grid.ColumnSpan="2"
+        <Grid x:Name="uiNavigateGrid" Grid.Column="0" Grid.ColumnSpan="2"
               Width="48" MinWidth="48" MaxWidth="264" 
               HorizontalAlignment="Left" VerticalAlignment="Stretch"
               Background="#FF303030"
@@ -120,7 +120,7 @@
                 <RadioButton x:Name="radiobuttonSwitch">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                            <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                             <ColumnDefinition></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                         <Path Grid.Column="0" Stroke="White" Width="24" Height="24">
@@ -138,10 +138,10 @@
                         <EventTrigger RoutedEvent="RadioButton.Checked">
                             <BeginStoryboard>
                                 <Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="gridNavigate"
+                                    <DoubleAnimation Storyboard.TargetName="uiNavigateGrid"
                                                  Storyboard.TargetProperty="Width"
                                                  Duration="0:0:0.2"
-                                                 To="{Binding ElementName=gridNavigate, Path=MaxWidth}"/>
+                                                 To="{Binding ElementName=uiNavigateGrid, Path=MaxWidth}"/>
                                     <DoubleAnimation Storyboard.TargetName="border"
                                                  Storyboard.TargetProperty="Opacity"
                                                  Duration="0:0:0.2"
@@ -152,10 +152,10 @@
                         <EventTrigger RoutedEvent="RadioButton.Unchecked">
                             <BeginStoryboard>
                                 <Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="gridNavigate"
+                                    <DoubleAnimation Storyboard.TargetName="uiNavigateGrid"
                                              Storyboard.TargetProperty="Width"
                                              Duration="0:0:0.2"
-                                             To="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                                             To="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                                     <DoubleAnimation Storyboard.TargetName="border"
                                                  Storyboard.TargetProperty="Opacity"
                                                  Duration="0:0:0.2"
@@ -169,7 +169,7 @@
             <RadioButton x:Name="radiobuttonRecent" Grid.Row="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Stroke="#F0F0F0" Width="24" Height="24">
@@ -181,7 +181,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Profiles.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:ProfileModule.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -206,7 +206,7 @@
             <RadioButton x:Name="radiobuttonSingle" Grid.Row="2" IsChecked="True">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24">
@@ -217,7 +217,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Profiles.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:ProfileModule.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -242,7 +242,7 @@
             <RadioButton x:Name="radiobuttonGroups" Grid.Row="3">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24">
@@ -255,7 +255,7 @@
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
-                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:Profiles.Instance}">
+                    <Path Grid.Column="0" Fill="#FFFF3030" Width="24" Height="24" DataContext="{x:Static mods:ProfileModule.Instance}">
                         <Path.Data>
                             <GeometryGroup>
                                 <EllipseGeometry Center="20,4" RadiusX="4" RadiusY="4"/>
@@ -281,7 +281,7 @@
             <RadioButton x:Name="radiobuttonTransf" Grid.Row="6">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24" StrokeLineJoin="Round">
@@ -306,7 +306,7 @@
                         <Path.Style>
                             <Style TargetType="Path">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Path=HasExcept}" Value="False">
+                                    <DataTrigger Binding="{Binding Path=HasPending}" Value="False">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -319,7 +319,7 @@
             <RadioButton x:Name="radiobuttonOption" Grid.Row="7">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24" StrokeLineJoin="Round">
@@ -335,9 +335,9 @@
                 </Grid>
             </RadioButton>
             <RadioButton x:Name="radiobuttonMyself" Grid.Row="8">
-                <Grid DataContext="{x:Static mods:Profiles.Current}">
+                <Grid DataContext="{x:Static mods:ProfileModule.Current}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=gridNavigate, Path=MinWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Control Grid.Column="0" Width="36" Height="36" Template="{DynamicResource ClientImageTemplate}"/>

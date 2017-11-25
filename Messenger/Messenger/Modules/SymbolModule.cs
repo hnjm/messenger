@@ -7,15 +7,15 @@ namespace Messenger.Modules
     /// <summary>
     /// 提供 Unicode 表情文字
     /// </summary>
-    internal class Symbols
+    internal class SymbolModule
     {
         private readonly BindingList<string> _list = null;
 
-        private static Symbols s_ins = new Symbols();
+        private static SymbolModule s_ins = new SymbolModule();
 
         public static BindingList<string> List => s_ins._list;
 
-        private Symbols()
+        private SymbolModule()
         {
             var lst = new BindingList<string>();
             var idx = 0x1F600;

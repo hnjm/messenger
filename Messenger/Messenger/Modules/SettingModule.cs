@@ -5,13 +5,13 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理用户界面设置
     /// </summary>
-    internal class Settings
+    internal class SettingModule
     {
         private const string _KeyCtrlEnter = "setting-ctrlenter";
 
         private bool _ctrlenter = false;
 
-        private static Settings s_ins = new Settings();
+        private static SettingModule s_ins = new SettingModule();
 
         /// <summary>
         /// 使用 ctrl + enter 发送消息还是 enter
@@ -21,7 +21,7 @@ namespace Messenger.Modules
         [AutoLoad(8, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
-            var str = Options.GetOption(_KeyCtrlEnter);
+            var str = OptionModule.GetOption(_KeyCtrlEnter);
             if (str != null && bool.TryParse(str, out var res))
                 s_ins._ctrlenter = res;
             return;
@@ -30,7 +30,7 @@ namespace Messenger.Modules
         [AutoLoad(16, AutoLoadFlags.OnExit)]
         public static void Save()
         {
-            Options.SetOption(_KeyCtrlEnter, s_ins._ctrlenter.ToString());
+            OptionModule.SetOption(_KeyCtrlEnter, s_ins._ctrlenter.ToString());
         }
     }
 }

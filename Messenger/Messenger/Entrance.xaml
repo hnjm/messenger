@@ -8,7 +8,7 @@
         Width="960" Height="540" MinWidth="960" MinHeight="540" Background="#FF101010" WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded" Closing="Window_Closing">
     <Window.Title>
-        <Binding Source="{x:Static mods:Profiles.Current}" Path="ID" StringFormat="Messenger - [{0}]"/>
+        <Binding Source="{x:Static mods:ProfileModule.Current}" Path="ID" StringFormat="Messenger - [{0}]"/>
     </Window.Title>
     <Grid>
         <Frame x:Name="frame" NavigationUIVisibility="Hidden" Source="Connection.xaml"/>

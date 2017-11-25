@@ -26,7 +26,7 @@
         </Grid>
         <ListBox x:Name="listbox" Grid.Row="1"
                  Style="{DynamicResource ThinListBox}"
-                 ItemsSource="{x:Static mods:Profiles.RecentList}"
+                 ItemsSource="{x:Static mods:ProfileModule.RecentList}"
                  ItemContainerStyle="{DynamicResource ProfileItem}">
         </ListBox>
         <Border Grid.Row="2" Background="#404040" Height="1" SnapsToDevicePixels="True"/>

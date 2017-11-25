@@ -17,7 +17,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, Profiles.GroupsList);
+            PageManager.SetProfilePage(this, listbox, ProfileModule.GroupsList);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -30,9 +30,9 @@ namespace Messenger
                 var vis = gridEdit.Visibility;
                 gridEdit.Visibility = vis == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
             }
-            else if (btn == buttonApply && string.Equals(textboxEdit.Text, Profiles.GroupLabels) == false)
+            else if (btn == buttonApply && string.Equals(textboxEdit.Text, ProfileModule.GroupLabels) == false)
             {
-                var res = Profiles.SetGroupLabels(textboxEdit.Text);
+                var res = ProfileModule.SetGroupLabels(textboxEdit.Text);
                 if (res == false)
                     Entrance.ShowError($"最多允许 {Links.GroupLabelLimit} 个群组标签", null);
                 return;

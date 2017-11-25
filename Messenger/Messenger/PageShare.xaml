@@ -24,7 +24,18 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
-        <DataTemplate x:Key="transItem">
+        <DataTemplate x:Key="ReceiverTemplate">
+            <Border Name="uiBorder" Background="Transparent">
+                <local:ControlShareWorker Margin="10,5"/>
+            </Border>
+            <DataTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="uiBorder" Property="Background" Value="#FF202020"/>
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--<DataTemplate x:Key="transItem">
             <Grid SnapsToDevicePixels="True">
                 <Border x:Name="border" Background="Transparent"/>
                 <Grid Margin="10,5" SnapsToDevicePixels="True">
@@ -83,11 +94,7 @@
                     <Setter TargetName="progressBar" Property="Foreground" Value="#FFC0C000"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
-        </DataTemplate>
-        <LinearGradientBrush x:Key="titleBrush" StartPoint="0,1" EndPoint="1,1">
-            <GradientStop Offset="0" Color="White"/>
-            <GradientStop Offset="0.75" Color="Transparent"/>
-        </LinearGradientBrush>
+        </DataTemplate>-->
     </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -122,15 +129,15 @@
                         </Style>
                     </TextBlock.Style>-->
                 </TextBlock>
-                <ItemsControl ItemTemplate="{DynamicResource transItem}" ItemsSource="{x:Static mods:ShareModule.Takers}"/>
+                <ItemsControl ItemTemplate="{DynamicResource ReceiverTemplate}" ItemsSource="{x:Static mods:ShareModule.ReceiverList}"/>
             </StackPanel>
         </ScrollViewer>
         <Border Grid.Row="2" Background="#FF202020" Height="1"/>
         <StackPanel Grid.Row="3" Margin="10" Orientation="Horizontal" HorizontalAlignment="Left" SnapsToDevicePixels="True" Button.Click="Button_Click">
-            <Button x:Name="buttonStopAll" Content="{DynamicResource PathStop}" Style="{DynamicResource GeometryButton}" ToolTip="全部停止"/>
-            <Button x:Name="buttonClean" Margin="10,0" Content="{DynamicResource PathDelete}" Style="{DynamicResource GeometryButton}" ToolTip="清理列表"/>
-            <Button x:Name="buttonOpen" Content="{DynamicResource PathView}" Style="{DynamicResource GeometryButton}" ToolTip="打开保存文件夹"/>
-            <Button x:Name="buttonChange" Margin="10,0" Content="{DynamicResource PathBrowser}" Style="{DynamicResource GeometryButton}" ToolTip="更改保存文件夹"/>
+            <Button x:Name="uiStopButton" Content="{DynamicResource PathStop}" Style="{DynamicResource GeometryButton}" ToolTip="全部停止"/>
+            <Button x:Name="uiCleanButton" Margin="10,0" Content="{DynamicResource PathDelete}" Style="{DynamicResource GeometryButton}" ToolTip="清理列表"/>
+            <Button x:Name="uiOpenButton" Content="{DynamicResource PathView}" Style="{DynamicResource GeometryButton}" ToolTip="打开保存文件夹"/>
+            <Button x:Name="uiChangeButton" Margin="10,0" Content="{DynamicResource PathBrowser}" Style="{DynamicResource GeometryButton}" ToolTip="更改保存文件夹"/>
         </StackPanel>
     </Grid>
 </Page>

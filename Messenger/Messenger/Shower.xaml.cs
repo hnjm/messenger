@@ -24,9 +24,9 @@ namespace Messenger
                 return;
             if (src == buttonApply)
             {
-                Profiles.Current.Name = textboxName.Text;
-                Profiles.Current.Text = textboxText.Text;
-                Posters.UserProfile(Links.ID);
+                ProfileModule.Current.Name = textboxName.Text;
+                ProfileModule.Current.Text = textboxText.Text;
+                PostModule.UserProfile(Links.ID);
             }
             else if (src == buttonImage)
             {
@@ -35,12 +35,12 @@ namespace Messenger
                     return;
                 try
                 {
-                    var buf = Caches.ImageSquare(ofd.FileName);
-                    var str = Caches.SetBuffer(buf, true);
-                    Profiles.ImageSource = ofd.FileName;
-                    Profiles.ImageBuffer = buf;
-                    Profiles.Current.Image = str;
-                    Posters.UserProfile(Links.ID);
+                    var buf = CacheModule.ImageSquare(ofd.FileName);
+                    var str = CacheModule.SetBuffer(buf, true);
+                    ProfileModule.ImageSource = ofd.FileName;
+                    ProfileModule.ImageBuffer = buf;
+                    ProfileModule.Current.Image = str;
+                    PostModule.UserProfile(Links.ID);
                 }
                 catch (Exception ex)
                 {

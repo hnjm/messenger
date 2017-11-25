@@ -16,7 +16,7 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, Profiles.ClientList);
+            PageManager.SetProfilePage(this, listbox, ProfileModule.ClientList);
         }
     }
 }

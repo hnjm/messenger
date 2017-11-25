@@ -30,15 +30,15 @@ namespace Messenger
 
         private void _Loaded(object sender, RoutedEventArgs e)
         {
-            Packets.Receiving += ModuleMessage_Receiving;
+            HistoryModule.Receiving += ModuleMessage_Receiving;
             (Application.Current as App).TextBoxKeyDown += TextBox_KeyDown;
 
-            _profile = Profiles.Inscope;
+            _profile = ProfileModule.Inscope;
             //if (_profile.ID <= Links.ID)
             //    buttonFile.Visibility = Visibility.Collapsed;
             uiProfileGrid.DataContext = _profile;
 
-            _messages = Packets.Query(_profile.ID);
+            _messages = HistoryModule.Query(_profile.ID);
             uiMessageBox.ItemsSource = _messages;
             _messages.ListChanged += Messages_ListChanged;
             _ScrollToEnd();
@@ -47,7 +47,7 @@ namespace Messenger
         private void _Unloaded(object sender, RoutedEventArgs e)
         {
             uiMessageBox.ItemsSource = null;
-            Packets.Receiving -= ModuleMessage_Receiving;
+            HistoryModule.Receiving -= ModuleMessage_Receiving;
             (Application.Current as App).TextBoxKeyDown -= TextBox_KeyDown;
             _messages.ListChanged -= Messages_ListChanged;
         }
@@ -73,7 +73,7 @@ namespace Messenger
         {
             if (sender != textboxInput || e.Key != Key.Enter)
                 return;
-            var val = Settings.UseCtrlEnter;
+            var val = SettingModule.UseCtrlEnter;
             var mod = e.KeyboardDevice.Modifiers;
             if ((mod & ModifierKeys.Shift) == ModifierKeys.Shift)
                 return;
@@ -104,7 +104,7 @@ namespace Messenger
             else if (sender == buttonImage)
                 _InsertImage();
             else if (sender == buttonClean)
-                Packets.Clear(_profile.ID);
+                HistoryModule.Clear(_profile.ID);
             textboxInput.Focus();
         }
 
@@ -142,8 +142,8 @@ namespace Messenger
             if (str.Length < 1)
                 return;
             textboxInput.Text = string.Empty;
-            Posters.Message(_profile.ID, str);
-            Profiles.SetRecent(_profile);
+            PostModule.Message(_profile.ID, str);
+            ProfileModule.SetRecent(_profile);
         }
 
         private void _InsertImage()
@@ -153,9 +153,9 @@ namespace Messenger
                 return;
             try
             {
-                var buf = Caches.ImageResize(ofd.FileName);
-                Posters.Message(_profile.ID, buf);
-                Profiles.SetRecent(_profile);
+                var buf = CacheModule.ImageResize(ofd.FileName);
+                PostModule.Message(_profile.ID, buf);
+                ProfileModule.SetRecent(_profile);
             }
             catch (Exception ex)
             {
@@ -167,12 +167,12 @@ namespace Messenger
         {
             var sha = default(Share);
             if (File.Exists(path))
-                sha = Posters.File(_profile.ID, path);
+                sha = PostModule.File(_profile.ID, path);
             else if (Directory.Exists(path))
-                sha = Posters.Directory(_profile.ID, path);
+                sha = PostModule.Directory(_profile.ID, path);
             if (sha == null)
                 return;
-            var pkt = new Packet() { Source = Linkers.ID, Target = _profile.ID, Groups = _profile.ID, Path = "share", Value = sha };
+            var pkt = new Packet() { Source = LinkModule.ID, Target = _profile.ID, Groups = _profile.ID, Path = "share", Value = sha };
             _messages.Add(pkt);
         }
 

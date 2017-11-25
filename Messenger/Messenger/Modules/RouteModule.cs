@@ -12,7 +12,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 处理消息, 并分发给各个消息处理函数
     /// </summary>
-    internal class Routers
+    internal class RouteModule
     {
         private class _Record
         {
@@ -20,15 +20,15 @@ namespace Messenger.Modules
             public dynamic Function = null;
         }
 
-        private static Routers s_ins = null;
+        private static RouteModule s_ins = null;
 
         private Dictionary<string, _Record> _dic = new Dictionary<string, _Record>();
 
-        private Routers() { }
+        private RouteModule() { }
 
         private void _Load()
         {
-            var ass = typeof(Routers).Assembly;
+            var ass = typeof(RouteModule).Assembly;
             foreach (var t in ass.GetTypes())
             {
                 if (t.IsSubclassOf(typeof(LinkPacket)) == false)
@@ -68,7 +68,7 @@ namespace Messenger.Modules
         {
             if (s_ins != null)
                 return;
-            s_ins = new Routers();
+            s_ins = new RouteModule();
             s_ins._Load();
         }
     }

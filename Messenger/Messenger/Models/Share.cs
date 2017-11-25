@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Messenger.Models
 {
-    internal class Share
+    public class Share : IDisposed
     {
         internal static Func<int, Guid, Socket, Task> _backlog;
 
@@ -68,6 +68,8 @@ namespace Messenger.Models
 
         public BindingList<ShareWorker> WorkerList => _list;
 
+        public bool IsDisposed => Volatile.Read(ref _closed) != 0;
+
         internal Share(FileSystemInfo info)
         {
             _info = info;
@@ -95,7 +97,7 @@ namespace Messenger.Models
             return obj.Start();
         }
 
-        public void Close()
+        public void Dispose()
         {
             if (Interlocked.CompareExchange(ref _closed, 1, 0) != 0)
                 return;
@@ -103,7 +105,7 @@ namespace Messenger.Models
 
             var lst = default(List<ShareWorker>);
             Application.Current.Dispatcher.Invoke(() => lst = _list.ToList());
-            lst.ForEach(r => r.Close());
+            lst.ForEach(r => r.Dispose());
         }
     }
 }

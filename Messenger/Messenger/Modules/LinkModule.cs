@@ -16,7 +16,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 维持客户端与服务器的连接, 并负责引发事件
     /// </summary>
-    internal class Linkers
+    internal class LinkModule
     {
         private readonly object _loc = new object();
 
@@ -24,16 +24,16 @@ namespace Messenger.Modules
 
         private Socket _soc = null;
 
-        private static Linkers s_ins = new Linkers();
+        private static LinkModule s_ins = new LinkModule();
 
-        public static int ID => s_ins._clt?.ID ?? Profiles.Current.ID;
+        public static int ID => s_ins._clt?.ID ?? ProfileModule.Current.ID;
 
         public static bool IsRunning => s_ins._clt?.IsRunning ?? false;
 
         public static void Start(int id, IPEndPoint endpoint)
         {
             var clt = new LinkClient(id);
-            clt.Received += (s, e) => Routers.Handle(e.Record);
+            clt.Received += (s, e) => RouteModule.Handle(e.Record);
             clt.Shutdown += (s, e) => Entrance.ShowError("连接已断开", s_ins._clt?.Exception);
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -61,13 +61,13 @@ namespace Messenger.Modules
 
             _Listen(soc).ContinueWith(tsk => Log.Error(tsk.Exception));
 
-            Packets.OnHandled += _Packets_OnHandled;
-            ShareModule.Expect.ListChanged += _Ports_ListChanged;
-            Profiles.Current.ID = id;
+            HistoryModule.OnHandled += _Packets_OnHandled;
+            ShareModule.PendingList.ListChanged += _PendingListChanged;
+            ProfileModule.Current.ID = id;
 
-            Posters.UserProfile(Links.ID);
-            Posters.UserRequest();
-            Posters.UserGroups();
+            PostModule.UserProfile(Links.ID);
+            PostModule.UserRequest();
+            PostModule.UserGroups();
         }
 
         private static async Task _Listen(Socket socket)
@@ -114,9 +114,9 @@ namespace Messenger.Modules
             }
 
             ShareModule.Close();
-            Profiles.Clear();
-            Packets.OnHandled -= _Packets_OnHandled;
-            ShareModule.Expect.ListChanged -= _Ports_ListChanged;
+            ProfileModule.Clear();
+            HistoryModule.OnHandled -= _Packets_OnHandled;
+            ShareModule.PendingList.ListChanged -= _PendingListChanged;
         }
 
         public static void Enqueue(byte[] buffer) => s_ins._clt?.Enqueue(buffer);
@@ -140,7 +140,7 @@ namespace Messenger.Modules
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var pro = Profiles.Query(e.Record.Groups);
+                var pro = ProfileModule.Query(e.Record.Groups);
                 if (pro == null)
                     return;
                 var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
@@ -151,9 +151,9 @@ namespace Messenger.Modules
             });
         }
 
-        private static void _Ports_ListChanged(object sender, ListChangedEventArgs e)
+        private static void _PendingListChanged(object sender, ListChangedEventArgs e)
         {
-            if (sender == ShareModule.Expect && e.ListChangedType == ListChangedType.ItemAdded)
+            if (sender == ShareModule.PendingList && e.ListChangedType == ListChangedType.ItemAdded)
             {
                 if (Application.Current.MainWindow.IsActive == true)
                     return;

@@ -10,11 +10,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Messenger.Models
 {
-    internal class ShareReceiver : ShareBasic
+    public class ShareReceiver : ShareBasic, IDisposed
     {
         private readonly object _locker = new object();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
@@ -25,29 +24,32 @@ namespace Messenger.Models
         internal readonly bool _batch = false;
 
         internal bool _started = false;
-        internal bool _closed = false;
+        internal bool _disposed = false;
         internal long _position = 0;
         internal string _name = null;
+        internal string _path = null;
         internal ShareStatus _status;
 
         private Socket _socket = null;
         private List<IPEndPoint> _endpoints = null;
 
-        public override long Length => throw new NotImplementedException();
+        public bool IsStarted => _started;
 
-        public override bool IsBatch => throw new NotImplementedException();
+        public override long Length => _length;
 
-        public override bool IsClosed => throw new NotImplementedException();
+        public override bool IsBatch => _batch;
 
-        public override string Name => throw new NotImplementedException();
+        public override bool IsDisposed => _disposed;
 
-        public override string Path => throw new NotImplementedException();
+        public override string Name => _name;
 
-        public override long Position => throw new NotImplementedException();
+        public override string Path => _path;
 
-        public override ShareStatus Status => throw new NotImplementedException();
+        public override long Position => _position;
 
-        protected override int ID => throw new NotImplementedException();
+        public override ShareStatus Status => _status;
+
+        protected override int ID => _id;
 
         public ShareReceiver(int id, PacketReader reader)
         {
@@ -73,10 +75,11 @@ namespace Messenger.Models
         {
             lock (_locker)
             {
-                if (_started || _closed)
+                if (_started || _disposed)
                     throw new InvalidOperationException();
                 _started = true;
                 _status = ShareStatus.运行;
+                OnPropertyChanged(nameof(IsStarted));
             }
 
             var soc = default(Socket);
@@ -105,13 +108,13 @@ namespace Messenger.Models
                 var buf = PacketWriter.Serialize(new
                 {
                     data = _key,
-                    source = Linkers.ID,
+                    source = LinkModule.ID,
                 });
                 await soc.SendAsyncExt(buf.GetBytes());
 
                 lock (_locker)
                 {
-                    if (_closed)
+                    if (_disposed)
                         throw new InvalidOperationException();
                     _socket = soc;
                 }
@@ -130,10 +133,10 @@ namespace Messenger.Models
 
                 lock (_locker)
                 {
-                    if (_closed)
+                    if (_disposed)
                         return;
                     _status = ShareStatus.中断;
-                    Close();
+                    Dispose();
                 }
             });
         }
@@ -146,6 +149,9 @@ namespace Messenger.Models
             // 接收单个文件
             var inf = ShareModule.AvailableFile(_name);
             _name = inf.Name;
+            _path = inf.FullName;
+            OnPropertyChanged(nameof(Name));
+            OnPropertyChanged(nameof(Path));
             return _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
         }
 
@@ -195,21 +201,21 @@ namespace Messenger.Models
         {
             lock (_locker)
             {
-                if (_closed)
+                if (_disposed)
                     return;
                 var exc = task.Exception;
                 _status = (exc == null)
                     ? ShareStatus.成功
                     : ShareStatus.中断;
-                Close();
+                Dispose();
             }
         }
 
-        public void Close()
+        public void Dispose()
         {
             lock (_locker)
             {
-                if (_closed)
+                if (_disposed)
                     return;
                 if ((_status & ShareStatus.终止) == 0)
                     _status = ShareStatus.取消;
@@ -219,8 +225,8 @@ namespace Messenger.Models
             _socket?.Dispose();
             _socket = null;
 
-            _closed = true;
-            Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(IsClosed)));
+            _disposed = true;
+            OnPropertyChanged(nameof(IsDisposed));
         }
     }
 }

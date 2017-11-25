@@ -3,13 +3,13 @@ using Messenger.Modules;
 using Mikodev.Network;
 using System.Linq;
 
-namespace Messenger.Handles
+namespace Messenger.Controllers
 {
     /// <summary>
     /// 用户信息处理
     /// </summary>
     [Handle("user")]
-    public class People : LinkPacket
+    public class ProfileController : LinkPacket
     {
         /// <summary>
         /// 向发送者返回本机的用户信息
@@ -17,7 +17,7 @@ namespace Messenger.Handles
         [Handle("request")]
         public void Request()
         {
-            Posters.UserProfile(Source);
+            PostModule.UserProfile(Source);
         }
 
         /// <summary>
@@ -35,8 +35,8 @@ namespace Messenger.Handles
 
             var buf = Data["image"].PullList();
             if (buf.Length > 0)
-                pro.Image = Caches.SetBuffer(buf, true);
-            Profiles.Insert(pro);
+                pro.Image = CacheModule.SetBuffer(buf, true);
+            ProfileModule.Insert(pro);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Messenger.Handles
         public void List()
         {
             var lst = Data.PullList<int>().ToList();
-            Profiles.Remove(lst);
+            ProfileModule.Remove(lst);
         }
     }
 }

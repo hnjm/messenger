@@ -54,7 +54,7 @@ namespace Messenger
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (Linkers.IsRunning == false)
+            if (LinkModule.IsRunning == false)
                 return;
             if (WindowState != WindowState.Minimized)
                 WindowState = WindowState.Minimized;

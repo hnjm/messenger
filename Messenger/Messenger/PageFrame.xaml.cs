@@ -35,12 +35,12 @@ namespace Messenger
                 };
             borderFull.MouseDown += (s, arg) => act.Invoke();
             borderFull.TouchDown += (s, arg) => act.Invoke();
-            Packets.Receiving += ModulePacket_Receiving;
+            HistoryModule.Receiving += ModulePacket_Receiving;
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
-            Packets.Receiving -= ModulePacket_Receiving;
+            HistoryModule.Receiving -= ModulePacket_Receiving;
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Messenger
             if (_vis == false)
             {
                 frameFull.Content = null;
-                var sco = Profiles.Inscope;
+                var sco = ProfileModule.Inscope;
                 if (sco != null)
                     sco.Hint = 0;
             }
@@ -84,7 +84,7 @@ namespace Messenger
             else if (btn == radiobuttonRecent)
                 Navigate<PageRecent>(_profPage.frameLeft);
 
-            if (gridNavigate.Width > gridNavigate.MinWidth)
+            if (uiNavigateGrid.Width > uiNavigateGrid.MinWidth)
                 radiobuttonSwitch.IsChecked = false;
             if (btn != radiobuttonSwitch)
                 _profPage.textbox.Text = null;

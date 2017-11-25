@@ -55,7 +55,7 @@ namespace Messenger
                 return;
             try
             {
-                var flp = Caches.GetPath(str);
+                var flp = CacheModule.GetPath(str);
                 Process.Start(flp);
             }
             catch (Exception ex)
@@ -79,7 +79,7 @@ namespace Messenger
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
                 return;
-            Packets.Remove(msg);
+            HistoryModule.Remove(msg);
             e.Handled = true;
         }
 

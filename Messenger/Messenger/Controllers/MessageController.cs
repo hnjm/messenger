@@ -2,13 +2,13 @@
 using Messenger.Modules;
 using Mikodev.Network;
 
-namespace Messenger.Handles
+namespace Messenger.Controllers
 {
     /// <summary>
     /// 消息处理
     /// </summary>
     [Handle("msg")]
-    public class Paper : LinkPacket
+    public class MessageController : LinkPacket
     {
         /// <summary>
         /// 文本消息
@@ -17,7 +17,7 @@ namespace Messenger.Handles
         public void Text()
         {
             var txt = Data.Pull<string>();
-            Packets.Insert(Source, Target, txt);
+            HistoryModule.Insert(Source, Target, txt);
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Messenger.Handles
         public void Image()
         {
             var buf = Data.PullList();
-            Packets.Insert(Source, Target, buf);
+            HistoryModule.Insert(Source, Target, buf);
         }
     }
 }

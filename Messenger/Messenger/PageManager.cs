@@ -13,12 +13,12 @@ namespace Messenger
             if (lst.Count < 1)
                 return;
             var itm = lst[0] as Profile;
-            Profiles.SetInscope(itm);
+            ProfileModule.SetInscope(itm);
         }
 
         public static void SetSelectedProfile(ListBox listbox, BindingList<Profile> list)
         {
-            var idx = list.IndexOf(Profiles.Inscope);
+            var idx = list.IndexOf(ProfileModule.Inscope);
             listbox.SelectedIndex = idx;
         }
 

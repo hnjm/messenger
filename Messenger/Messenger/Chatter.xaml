@@ -103,7 +103,7 @@
                 </Grid>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static mods:Linkers.ID}">
+                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static mods:LinkModule.ID}">
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>
@@ -231,7 +231,7 @@
                 <TextBlock Margin="5" Grid.Row="0" HorizontalAlignment="Left" Foreground="#C0C0C0" FontSize="16">表情</TextBlock>
                 <ListBox x:Name="listboxSymbol" Grid.Row="1" Margin="5,0,5,5" Width="342" Height="172" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          Style="{DynamicResource ThinListBox}" 
-                         ItemsSource="{x:Static mods:Symbols.List}">
+                         ItemsSource="{x:Static mods:SymbolModule.List}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel IsItemsHost="True"/>

@@ -13,9 +13,9 @@ namespace Messenger.Modules
     /// <summary>
     /// 负责管理图片缓存 (被动初始化)
     /// </summary>
-    internal class Caches
+    internal class CacheModule
     {
-        private const string _CacheFolder = nameof(Caches);
+        private const string _CacheFolder = nameof(CacheModule);
         private const string _CacheExtension = ".jpg";
 
         private const int _Limit = 384;
@@ -28,18 +28,18 @@ namespace Messenger.Modules
         private float _imgdpi = _Density;
         private string _dir = _CacheFolder;
 
-        private static Caches s_ins = new Caches();
+        private static CacheModule s_ins = new CacheModule();
 
-        private Caches() { }
+        private CacheModule() { }
 
         [AutoLoad(16, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
             try
             {
-                s_ins._dir = Options.GetOption(_KeyCache, _CacheFolder);
-                s_ins._imgLimit = int.Parse(Options.GetOption(_KeyLimit, _Limit.ToString()));
-                s_ins._imgdpi = float.Parse(Options.GetOption(_KeyDensity, _Density.ToString()));
+                s_ins._dir = OptionModule.GetOption(_KeyCache, _CacheFolder);
+                s_ins._imgLimit = int.Parse(OptionModule.GetOption(_KeyLimit, _Limit.ToString()));
+                s_ins._imgdpi = float.Parse(OptionModule.GetOption(_KeyDensity, _Density.ToString()));
             }
             catch (Exception ex)
             {

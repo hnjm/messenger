@@ -1,5 +1,4 @@
 ﻿using Messenger.Models;
-using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.IO;
@@ -8,7 +7,7 @@ using System.Windows;
 
 namespace Messenger.Modules
 {
-    internal class Posters
+    internal class PostModule
     {
         /// <summary>
         /// Post text message or image
@@ -24,14 +23,14 @@ namespace Messenger.Modules
 
             var wtr = PacketWriter.Serialize(new
             {
-                source = Linkers.ID,
+                source = LinkModule.ID,
                 target = target,
                 path = pth,
                 data = val,
             });
             var buf = wtr.GetBytes();
-            Linkers.Enqueue(buf);
-            Packets.Insert(target, val);
+            LinkModule.Enqueue(buf);
+            HistoryModule.Insert(target, val);
         }
 
         /// <summary>
@@ -39,10 +38,10 @@ namespace Messenger.Modules
         /// </summary>
         public static void UserProfile(int target)
         {
-            var pro = Profiles.Current;
+            var pro = ProfileModule.Current;
             var wtr = PacketWriter.Serialize(new
             {
-                source = Linkers.ID,
+                source = LinkModule.ID,
                 target = target,
                 path = "user.profile",
                 data = new
@@ -50,23 +49,23 @@ namespace Messenger.Modules
                     id = pro.ID,
                     name = pro.Name,
                     text = pro.Text,
-                    image = Profiles.ImageBuffer,
+                    image = ProfileModule.ImageBuffer,
                 },
             });
             var buf = wtr.GetBytes();
-            Linkers.Enqueue(buf);
+            LinkModule.Enqueue(buf);
         }
 
         public static void UserRequest()
         {
             var wtr = PacketWriter.Serialize(new
             {
-                source = Linkers.ID,
+                source = LinkModule.ID,
                 target = Links.ID,
                 path = "user.request",
             });
             var buf = wtr.GetBytes();
-            Linkers.Enqueue(buf);
+            LinkModule.Enqueue(buf);
         }
 
         /// <summary>
@@ -76,13 +75,13 @@ namespace Messenger.Modules
         {
             var wtr = PacketWriter.Serialize(new
             {
-                source = Linkers.ID,
+                source = LinkModule.ID,
                 target = Links.ID,
                 path = "user.group",
-                data = Profiles.GroupIDs?.ToList(),
+                data = ProfileModule.GroupIDs?.ToList(),
             });
             var buf = wtr.GetBytes();
-            Linkers.Enqueue(buf);
+            LinkModule.Enqueue(buf);
         }
 
         /// <summary>
@@ -91,24 +90,23 @@ namespace Messenger.Modules
         public static Share File(int target, string filepath)
         {
             var sha = new Share(new FileInfo(filepath));
-            //var car = new Cargo(target, mak);
-            //Application.Current.Dispatcher.Invoke(() => Ports.Makers.Add(car));
+            Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
-                source = Linkers.ID,
+                source = LinkModule.ID,
                 target = target,
-                path = "share.file",
+                path = "share.info",
                 data = new
                 {
                     key = sha._key,
                     type = "file",
                     name = sha.Name,
                     length = sha.Length,
-                    endpoints = Linkers.GetEndPoints(),
+                    endpoints = LinkModule.GetEndPoints(),
                 }
             });
             var buf = wtr.GetBytes();
-            Linkers.Enqueue(buf);
+            LinkModule.Enqueue(buf);
             return sha;
         }
 
@@ -118,19 +116,19 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
-                source = Linkers.ID,
+                source = LinkModule.ID,
                 target = target,
-                path = "share.dir",
+                path = "share.info",
                 data = new
                 {
                     key = sha._key,
                     type = "dir",
                     name = sha.Name,
-                    endpoints = Linkers.GetEndPoints(),
+                    endpoints = LinkModule.GetEndPoints(),
                 }
             });
             var buf = wtr.GetBytes();
-            Linkers.Enqueue(buf);
+            LinkModule.Enqueue(buf);
             return sha;
         }
     }

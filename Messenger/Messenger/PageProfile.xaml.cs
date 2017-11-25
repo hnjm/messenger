@@ -20,20 +20,20 @@ namespace Messenger
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            Profiles.InscopeChanged += ModuleProfile_InscopeChanged;
+            ProfileModule.InscopeChanged += ModuleProfile_InscopeChanged;
             listbox.SelectionChanged += PageManager.ListBox_SelectionChanged;
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
-            Profiles.InscopeChanged -= ModuleProfile_InscopeChanged;
+            ProfileModule.InscopeChanged -= ModuleProfile_InscopeChanged;
             listbox.SelectionChanged -= PageManager.ListBox_SelectionChanged;
         }
 
         private void ModuleProfile_InscopeChanged(object sender, EventArgs e)
         {
             var pag = frameRight.Content as Chatter;
-            if (pag == null || pag.Profile.ID != Profiles.Inscope.ID)
+            if (pag == null || pag.Profile.ID != ProfileModule.Inscope.ID)
                 frameRight.Navigate(new Chatter());
         }
 
@@ -54,10 +54,10 @@ namespace Messenger
             else
             {
                 var txt = textbox.Text.ToLower();
-                var val = (from i in Profiles.ClientList.Union(Profiles.GroupsList).Union(Profiles.RecentList)
+                var val = (from i in ProfileModule.ClientList.Union(ProfileModule.GroupsList).Union(ProfileModule.RecentList)
                            where i.Name?.ToLower().Contains(txt) == true || i.Text?.ToLower().Contains(txt) == true
                            select i).ToList();
-                var idx = val.IndexOf(Profiles.Inscope);
+                var idx = val.IndexOf(ProfileModule.Inscope);
                 listbox.ItemsSource = val;
                 listbox.SelectedIndex = idx;
                 grid.Visibility = Visibility.Visible;

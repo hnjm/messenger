@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Messenger.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,22 @@ namespace Messenger
         public ControlShareWorker()
         {
             InitializeComponent();
+        }
+
+        private void _Click(object sender, RoutedEventArgs e)
+        {
+            var btn = e.OriginalSource as Button;
+            if (btn == null)
+                return;
+            var con = btn.DataContext as ShareReceiver;
+            var tag = btn.Tag as string;
+            if (con == null || tag == null)
+                return;
+            if (tag == "play")
+                con.Start();
+            else if (tag == "stop")
+                con.Dispose();
+            return;
         }
     }
 }

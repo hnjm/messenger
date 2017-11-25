@@ -12,15 +12,16 @@ using System.Windows;
 
 namespace Messenger.Models
 {
-    internal class ShareWorker : ShareBasic
+    public class ShareWorker : ShareBasic, IDisposable
     {
         internal readonly int _id;
+        internal readonly object _locker = new object();
         internal readonly Share _source;
         internal readonly Socket _socket;
         internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
         internal long _position = 0;
-        internal int _started = 0;
-        internal int _closed = 0;
+        internal bool _started = false;
+        internal bool _disposed = false;
         internal ShareStatus _status;
 
         protected override int ID => _id;
@@ -29,7 +30,7 @@ namespace Messenger.Models
 
         public override bool IsBatch => _source.IsBatch;
 
-        public override bool IsClosed => Volatile.Read(ref _closed) != 0;
+        public override bool IsDisposed => _disposed;
 
         public override string Name => _source._name;
 
@@ -49,11 +50,14 @@ namespace Messenger.Models
 
         public Task Start()
         {
-            if (IsClosed || Interlocked.CompareExchange(ref _started, 1, 0) != 0)
-                throw new InvalidOperationException();
-
-            _status = ShareStatus.运行;
-            Register();
+            lock (_locker)
+            {
+                if (_started || _disposed)
+                    throw new InvalidOperationException();
+                _started = true;
+                _status = ShareStatus.运行;
+                Register();
+            }
 
             if (_source._info is FileInfo inf)
                 return _socket.SendFileEx(_source._path, _source._length, r => _position += r, _cancel.Token).ContinueWith(_Finish);
@@ -118,14 +122,19 @@ namespace Messenger.Models
                 _status = ShareStatus.中断;
             else
                 _status = ShareStatus.成功;
-            Close();
+            Dispose();
         }
 
-        public void Close()
+        public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _closed, 1, 0) != 0)
-                return;
-            Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(IsClosed)));
+            lock (_locker)
+            {
+                if (_disposed)
+                    return;
+                _disposed = true;
+            }
+
+            Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(IsDisposed)));
             _cancel.Cancel();
         }
     }

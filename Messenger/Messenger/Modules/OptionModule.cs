@@ -10,7 +10,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理用户设置
     /// </summary>
-    internal class Options
+    internal class OptionModule
     {
         private const string _Path = nameof(Messenger) + ".opt";
         private const string _Root = "options-root";
@@ -20,9 +20,9 @@ namespace Messenger.Modules
 
         private XmlDocument _doc = null;
 
-        private static Options s_ins = new Options();
+        private static OptionModule s_ins = new OptionModule();
 
-        private Options() { }
+        private OptionModule() { }
 
         [AutoLoad(0, AutoLoadFlags.OnLoad)]
         public static void Load()

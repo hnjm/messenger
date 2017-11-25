@@ -28,19 +28,20 @@ namespace Messenger
         public Connection()
         {
             InitializeComponent();
-            gridTable.DataContext = new _Temp();
+            uiTableGrid.DataContext = new _Temp();
+            Loaded += _Loaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
-            if (Hosts.Name != null)
+            if (HostModule.Name != null)
             {
-                textboxHost.Text = Hosts.Name;
-                textboxPort.Text = Hosts.Port.ToString();
+                uiHostBox.Text = HostModule.Name;
+                uiPortBox.Text = HostModule.Port.ToString();
             }
-            textboxNumber.Text = Profiles.Current.ID.ToString();
-            listboxServer.ItemsSource = _hosts;
-            listboxServer.SelectionChanged += ListBox_SelectionChanged;
+            uiCodeBox.Text = ProfileModule.Current.ID.ToString();
+            uiServerList.ItemsSource = _hosts;
+            uiServerList.SelectionChanged += ListBox_SelectionChanged;
         }
 
         private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -50,17 +51,19 @@ namespace Messenger
             var itm = e.AddedItems[0] as Host;
             if (itm == null)
                 return;
-            textboxHost.Text = itm.Address?.ToString();
-            textboxPort.Text = itm.Port.ToString();
-            listboxServer.SelectedIndex = -1;
+            uiHostBox.Text = itm.Address?.ToString();
+            uiPortBox.Text = itm.Port.ToString();
+            uiServerList.SelectedIndex = -1;
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void _Click(object sender, RoutedEventArgs e)
         {
+            var src = (Button)e.OriginalSource;
+
             async void refresh()
             {
-                buttonRefresh.IsEnabled = false;
-                var lst = await Task.Run(() => Hosts.Refresh());
+                uiRefreshButton.IsEnabled = false;
+                var lst = await Task.Run(() => HostModule.Refresh());
                 foreach (var inf in lst)
                 {
                     int idx = _hosts.IndexOf(inf);
@@ -68,37 +71,37 @@ namespace Messenger
                         _hosts.Add(inf);
                     else _hosts[idx] = inf;
                 }
-                buttonRefresh.IsEnabled = true;
+                uiRefreshButton.IsEnabled = true;
             }
 
-            if (sender == buttonBrowser)
+            if (src == uiBrowserButton)
             {
-                buttonBrowser.Visibility = Visibility.Collapsed;
-                buttonClear.Visibility =
-                buttonRefresh.Visibility =
-                gridList.Visibility = Visibility.Visible;
+                uiBrowserButton.Visibility = Visibility.Collapsed;
+                uiClearButton.Visibility =
+                uiRefreshButton.Visibility =
+                uiListGrid.Visibility = Visibility.Visible;
                 refresh();
                 return;
             }
-            else if (sender == buttonRefresh)
+            else if (src == uiRefreshButton)
             {
                 refresh();
                 return;
             }
-            else if (sender == buttonClear)
+            else if (src == uiClearButton)
             {
                 _hosts.Clear();
                 return;
             }
 
             var flg = false;
-            buttonConnect.IsEnabled = false;
+            uiConnectButton.IsEnabled = false;
 
             try
             {
-                var uid = int.Parse(textboxNumber.Text);
-                var pot = int.Parse(textboxPort.Text);
-                var hos = textboxHost.Text;
+                var uid = int.Parse(uiCodeBox.Text);
+                var pot = int.Parse(uiPortBox.Text);
+                var hos = uiHostBox.Text;
 
                 await Task.Run(() =>
                 {
@@ -106,9 +109,9 @@ namespace Messenger
                     if (add == false)
                         hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
                     var iep = new IPEndPoint(hst, pot);
-                    Linkers.Start(uid, iep);
-                    Hosts.Name = hos;
-                    Hosts.Port = pot;
+                    LinkModule.Start(uid, iep);
+                    HostModule.Name = hos;
+                    HostModule.Port = pot;
                     flg = true;
                 });
             }
@@ -119,7 +122,7 @@ namespace Messenger
 
             if (flg == true)
                 NavigationService.Navigate(new PageFrame());
-            buttonConnect.IsEnabled = true;
+            uiConnectButton.IsEnabled = true;
         }
     }
 }

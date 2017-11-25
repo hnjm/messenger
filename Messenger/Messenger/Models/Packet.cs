@@ -68,7 +68,7 @@ namespace Messenger.Models
             get
             {
                 if (_image == null && _value is string str && _path == "image")
-                    _image = Caches.GetPath(str);
+                    _image = CacheModule.GetPath(str);
                 return _image;
             }
         }
@@ -81,7 +81,7 @@ namespace Messenger.Models
             get
             {
                 if (_profile == null)
-                    _profile = Profiles.Query(_source, true);
+                    _profile = ProfileModule.Query(_source, true);
                 return _profile;
             }
         }

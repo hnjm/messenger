@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace Messenger.Tools
 {
-    internal class PortValidation : ValidationRule
+    internal class SocketPortValidation : ValidationRule
     {
         public override ValidationResult Validate(object value, CultureInfo cultureInfo)
         {

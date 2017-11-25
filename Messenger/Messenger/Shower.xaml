@@ -9,7 +9,7 @@
       d:DesignHeight="420" d:DesignWidth="640"
       KeepAlive="False" FontSize="14"
       Background="#000000">
-    <Grid DataContext="{x:Static mods:Profiles.Current}">
+    <Grid DataContext="{x:Static mods:ProfileModule.Instance}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>

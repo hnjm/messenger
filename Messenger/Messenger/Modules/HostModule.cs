@@ -16,7 +16,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 搜索和管理服务器信息
     /// </summary>
-    internal class Hosts
+    internal class HostModule
     {
         private const int _Timeout = 1000;
         private const string _KeyLast = "server-last";
@@ -28,7 +28,7 @@ namespace Messenger.Modules
         private int _port = 0;
         private IEnumerable<IPEndPoint> _points = new List<IPEndPoint>();
 
-        private static Hosts s_ins = new Hosts();
+        private static HostModule s_ins = new HostModule();
 
         public static string Name { get => s_ins._host; set => s_ins._host = value; }
         public static int Port { get => s_ins._port; set => s_ins._port = value; }
@@ -121,12 +121,12 @@ namespace Messenger.Modules
             var lst = new List<IPEndPoint>();
             try
             {
-                var pot = Options.GetOption(_KeyPort, Links.BroadcastPort.ToString());
+                var pot = OptionModule.GetOption(_KeyPort, Links.BroadcastPort.ToString());
                 if (pot != null)
                     s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
-                var str = Options.GetOption(_KeyLast);
+                var str = OptionModule.GetOption(_KeyLast);
                 Converts._GetHost(str, out s_ins._host, out s_ins._port);
-                var sts = Options.GetOption(_KeyList) ?? string.Empty;
+                var sts = OptionModule.GetOption(_KeyList) ?? string.Empty;
                 var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in arr)
                     lst.Add(s._ToEndPoint());
@@ -160,8 +160,8 @@ namespace Messenger.Modules
                 }
             }
             if (s_ins._host != null)
-                Options.SetOption(_KeyLast, $"{s_ins._host}:{s_ins._port}");
-            Options.SetOption(_KeyList, stb.ToString());
+                OptionModule.SetOption(_KeyLast, $"{s_ins._host}:{s_ins._port}");
+            OptionModule.SetOption(_KeyList, stb.ToString());
         }
     }
 }
