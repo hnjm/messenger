@@ -1,5 +1,4 @@
 ﻿<Page x:Class="Messenger.Chatter"
-      x:Name="page"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,6 +11,7 @@
       KeepAlive="False" FontSize="14">
     <Page.Resources>
         <tool:LengthUnitConverter x:Key="LengthUnitConverter"/>
+        <tool:StringEmptyConverter x:Key="StringEmptyConverter"/>
 
         <!--文件共享-->
         <ControlTemplate x:Key="ShareTemplate">
@@ -26,7 +26,7 @@
                     <TextBlock FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Name}" Margin="4,0"/>
                 </StackPanel>
                 <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
-                <TextBlock Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
+                <TextBlock Name="PathText" Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
             </Grid>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="False">
@@ -35,6 +35,9 @@
                 <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="True">
                     <Setter TargetName="SharePrefix" Property="Text" Value="[文件夹]"/>
                     <Setter TargetName="MiddleRow" Property="Height" Value="0"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Value.Path, Converter={StaticResource StringEmptyConverter}}" Value="True">
+                    <Setter TargetName="PathText" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>

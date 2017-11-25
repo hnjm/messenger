@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
-    public class ShareWorker : ShareBasic, IDisposable
+    public class ShareWorker : ShareBasic, IDisposed
     {
         internal readonly int _id;
         internal readonly object _locker = new object();

@@ -35,7 +35,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock FontSize="14" Grid.Row="0" Grid.Column="0" Name="uiPrefixText" Foreground="#FFA0A0A0"/>
+                    <TextBlock FontSize="14" Grid.Row="0" Grid.Column="0" Name="uiPrefixText"/>
                     <TextBlock FontSize="14" Grid.Row="0" Grid.Column="2" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
                     <TextBlock Name="PathText" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Path=Path}"/>
                 </Grid>

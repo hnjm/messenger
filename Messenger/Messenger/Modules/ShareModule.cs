@@ -10,7 +10,7 @@ using System.Windows;
 namespace Messenger.Modules
 {
     /// <summary>
-    /// 管理传输并提供界面绑定功能
+    /// 管理共享并提供界面绑定功能
     /// </summary>
     internal class ShareModule : INotifyPropertyChanging, INotifyPropertyChanged
     {
@@ -134,6 +134,8 @@ namespace Messenger.Modules
 
             Application.Current.Dispatcher.Invoke(() =>
             {
+                foreach (var i in s_ins._shareList)
+                    remove(i.WorkerList);
                 remove(s_ins._shareList);
                 remove(s_ins._receiverList);
             });

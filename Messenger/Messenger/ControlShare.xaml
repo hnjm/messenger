@@ -33,7 +33,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                        <TextBlock FontSize="14" Name="uiPrefixText" Foreground="#FFC0C0C0"/>
+                        <TextBlock FontSize="14" Name="uiPrefixText"/>
                         <TextBlock FontSize="14" Margin="4,0" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
