@@ -13,29 +13,30 @@ namespace Messenger
         public PageGroups()
         {
             InitializeComponent();
+            Loaded += _Loaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, ProfileModule.GroupsList);
+            PageManager.SetProfilePage(this, uiListbox, ProfileModule.GroupsList);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            var btn = e.OriginalSource as Button;
-            if (btn == null)
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+            if (tag == null)
                 return;
-            if (btn == buttonEdit)
+            if (tag == "edit")
             {
-                var vis = gridEdit.Visibility;
-                gridEdit.Visibility = vis == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+                var vis = uiEditGrid.Visibility;
+                uiEditGrid.Visibility = (vis == Visibility.Visible) ? Visibility.Collapsed : Visibility.Visible;
             }
-            else if (btn == buttonApply && string.Equals(textboxEdit.Text, ProfileModule.GroupLabels) == false)
+            else if (tag == "apply")
             {
-                var res = ProfileModule.SetGroupLabels(textboxEdit.Text);
-                if (res == false)
+                if (string.Equals(uiEditBox.Text, ProfileModule.GroupLabels) == false && ProfileModule.SetGroupLabels(uiEditBox.Text) == false)
                     Entrance.ShowError($"最多允许 {Links.GroupLabelLimit} 个群组标签", null);
-                return;
+                else
+                    uiEditGrid.Visibility = Visibility.Collapsed;
             }
         }
     }

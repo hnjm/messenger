@@ -16,41 +16,15 @@ namespace Messenger.Modules
     {
         private const string _KeyPath = "share-path";
 
-        //private bool _hasexcept = false;
-        //private bool _hastakers = false;
-        //private bool _hasmakers = false;
-
         private bool _hasShare = false;
         private bool _hasReceiver = false;
         private bool _hasPending = false;
 
         private string _savepath = null;
 
-        //private BindingList<Cargo> _expect = new BindingList<Cargo>();
-        //private BindingList<Cargo> _takers = new BindingList<Cargo>();
-        //private BindingList<Cargo> _makers = new BindingList<Cargo>();
-
         private readonly BindingList<Share> _shareList = new BindingList<Share>();
         private readonly BindingList<ShareReceiver> _receiverList = new BindingList<ShareReceiver>();
         private readonly BindingList<ShareReceiver> _pendingList = new BindingList<ShareReceiver>();
-
-        //public bool HasExcept
-        //{
-        //    get => _hasexcept;
-        //    set => _EmitChange(ref _hasexcept, value);
-        //}
-
-        //public bool HasTakers
-        //{
-        //    get => _hastakers;
-        //    set => _EmitChange(ref _hastakers, value);
-        //}
-
-        //public bool HasMakers
-        //{
-        //    get => _hasmakers;
-        //    set => _EmitChange(ref _hasmakers, value);
-        //}
 
         public bool HasShare
         {
@@ -90,43 +64,22 @@ namespace Messenger.Modules
             _shareList.ListChanged += (s, e) => HasShare = _shareList.Count > 0;
             _receiverList.ListChanged += (s, e) => HasReceiver = _receiverList.Count > 0;
             _pendingList.ListChanged += (s, e) => HasPending = _pendingList.Count > 0;
-            //_expect.ListChanged += BindingList_ListChanged;
-            //_takers.ListChanged += BindingList_ListChanged;
-            //_makers.ListChanged += BindingList_ListChanged;
         }
-
-        //private void DispatcherTimer_Tick(object sender, EventArgs e)
-        //{
-        //    foreach (var t in _takers)
-        //        t.Refresh(_watch.ElapsedMilliseconds);
-        //    foreach (var t in _makers)
-        //        t.Refresh(_watch.ElapsedMilliseconds);
-        //}
-
-        //private void BindingList_ListChanged(object sender, ListChangedEventArgs e)
-        //{
-        //    if (sender == _expect)
-        //        HasExcept = _expect.Count > 0;
-        //    else if (sender == _takers)
-        //        HasTakers = _takers.Count > 0;
-        //    else if (sender == _makers)
-        //        HasMakers = _makers.Count > 0;
-        //}
 
         // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 
-        private static ShareModule s_ins = new ShareModule();
+        private static readonly ShareModule s_ins = new ShareModule();
 
         public static string SavePath { get => s_ins._savepath; set => s_ins._savepath = value; }
         public static ShareModule Instance => s_ins;
-        //public static BindingList<Cargo> Expect => s_ins._expect;
-        //public static BindingList<Cargo> Takers => s_ins._takers;
-        //public static BindingList<Cargo> Makers => s_ins._makers;
 
         public static BindingList<Share> ShareList => s_ins._shareList;
         public static BindingList<ShareReceiver> ReceiverList => s_ins._receiverList;
         public static BindingList<ShareReceiver> PendingList => s_ins._pendingList;
 
+        /// <summary>
+        /// 注册一个接收器并添加到待办列表 (在其启动或关闭后自动从待办列表中移除)
+        /// </summary>
         public static void Register(ShareReceiver receiver)
         {
             s_ins._receiverList.Add(receiver);
@@ -134,7 +87,7 @@ namespace Messenger.Modules
             receiver.PropertyChanged += _RemovePending;
         }
 
-        internal static void _RemovePending(object sender, PropertyChangedEventArgs e)
+        private static void _RemovePending(object sender, PropertyChangedEventArgs e)
         {
             var pro = e.PropertyName;
             if (pro != nameof(ShareReceiver.IsStarted) && pro != nameof(ShareReceiver.IsDisposed))
@@ -146,35 +99,9 @@ namespace Messenger.Modules
             obj.PropertyChanged -= _RemovePending;
         }
 
-        //internal static void Trans_Changed(object sender, EventArgs e)
-        //{
-        //    Application.Current.Dispatcher.Invoke(() =>
-        //    {
-        //        for (var i = 0; i < s_ins._expect.Count; i++)
-        //        {
-        //            var tra = s_ins._expect[i].Port;
-        //            if (tra == sender)
-        //            {
-        //                s_ins._expect.RemoveAt(i);
-        //                tra.Started -= Trans_Changed;
-        //                tra.Disposed -= Trans_Changed;
-        //                return;
-        //            }
-        //        }
-        //    });
-        //}
-
-        //public static void Close()
-        //{
-        //    Application.Current.Dispatcher.Invoke(() =>
-        //    {
-        //        foreach (var i in s_ins._takers)
-        //            i.Close();
-        //        foreach (var i in s_ins._makers)
-        //            i.Close();
-        //    });
-        //}
-
+        /// <summary>
+        /// 取消所有共享任务
+        /// </summary>
         public static void Close()
         {
             Application.Current.Dispatcher.Invoke(() =>

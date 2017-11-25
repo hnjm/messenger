@@ -48,6 +48,19 @@ namespace Messenger.Models
         public DateTime Timestamp { get => _time; set => _time = value; }
 
         /// <summary>
+        /// 用户信息
+        /// </summary>
+        public Profile Profile
+        {
+            get
+            {
+                if (_profile == null)
+                    _profile = ProfileModule.Query(_source, true);
+                return _profile;
+            }
+        }
+
+        /// <summary>
         /// 消息文本
         /// </summary>
         public string MessageText
@@ -70,19 +83,6 @@ namespace Messenger.Models
                 if (_image == null && _value is string str && _path == "image")
                     _image = CacheModule.GetPath(str);
                 return _image;
-            }
-        }
-
-        /// <summary>
-        /// 用户信息
-        /// </summary>
-        public Profile Profile
-        {
-            get
-            {
-                if (_profile == null)
-                    _profile = ProfileModule.Query(_source, true);
-                return _profile;
             }
         }
     }

@@ -35,6 +35,7 @@ namespace Messenger.Modules
         /// 消息接收事件
         /// </summary>
         public static event EventHandler<LinkEventArgs<Packet>> Receiving { add => s_ins._rec += value; remove => s_ins._rec -= value; }
+
         /// <summary>
         /// 消息接收事件处理后
         /// </summary>
@@ -52,7 +53,7 @@ namespace Messenger.Modules
                 pkt.Value = CacheModule.SetBuffer(buf, false);
                 pkt.Path = "image";
             }
-            else throw new ApplicationException();
+            else throw new InvalidOperationException();
             return pkt;
         }
 
@@ -185,7 +186,8 @@ namespace Messenger.Modules
                 con.Open();
                 cmd = new SQLiteCommand(con);
                 // 消息类型(枚举), 消息时间(时间戳) 均转换成整形存储
-                cmd.CommandText = "create table if not exists messages(source integer not null, target integer not null, groups integer not null, " +
+                cmd.CommandText = "create table if not exists messages(" +
+                    "source integer not null, target integer not null, groups integer not null, " +
                     "time integer not null, path varchar not null, text varchar not null)";
                 cmd.ExecuteNonQuery();
                 // 确保连接有效
@@ -210,25 +212,25 @@ namespace Messenger.Modules
                 return;
 
             Task.Run(() =>
+            {
+                var cmd = default(SQLiteCommand);
+                try
                 {
-                    var cmd = default(SQLiteCommand);
-                    try
-                    {
-                        cmd = new SQLiteCommand(s_ins._con);
-                        cmd.CommandText = "delete from messages where groups == @gid and time == @mrt";
-                        cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
-                        cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp.ToBinary()));
-                        cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex);
-                    }
-                    finally
-                    {
-                        cmd?.Dispose();
-                    }
-                });
+                    cmd = new SQLiteCommand(s_ins._con);
+                    cmd.CommandText = "delete from messages where groups == @gid and time == @mrt";
+                    cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
+                    cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp.ToBinary()));
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+                finally
+                {
+                    cmd?.Dispose();
+                }
+            });
         }
 
         /// <summary>
@@ -242,24 +244,24 @@ namespace Messenger.Modules
                 return;
 
             Task.Run(() =>
+            {
+                var cmd = default(SQLiteCommand);
+                try
                 {
-                    var cmd = default(SQLiteCommand);
-                    try
-                    {
-                        cmd = new SQLiteCommand(s_ins._con);
-                        cmd.CommandText = "delete from messages where groups == @gid";
-                        cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
-                        cmd.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex);
-                    }
-                    finally
-                    {
-                        cmd?.Dispose();
-                    }
-                });
+                    cmd = new SQLiteCommand(s_ins._con);
+                    cmd.CommandText = "delete from messages where groups == @gid";
+                    cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+                finally
+                {
+                    cmd?.Dispose();
+                }
+            });
         }
 
         /// <summary>

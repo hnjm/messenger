@@ -1,7 +1,5 @@
-﻿using Messenger.Models;
-using Messenger.Modules;
+﻿using Messenger.Modules;
 using Mikodev.Logger;
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -20,14 +18,17 @@ namespace Messenger
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            var src = e.OriginalSource;
-            if (src == uiCleanButton)
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+            if (tag == null)
+                return;
+
+            if (tag == "clean")
             {
                 ShareModule.Remove();
             }
-            else if (src == uiChangeButton)
+            else if (tag == "change")
             {
                 var dfd = new System.Windows.Forms.FolderBrowserDialog();
                 if (Directory.Exists(ShareModule.SavePath))
@@ -35,7 +36,7 @@ namespace Messenger
                 if (dfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     ShareModule.SavePath = dfd.SelectedPath;
             }
-            else if (src == uiOpenButton)
+            else if (tag == "open")
             {
                 Task.Run(() =>
                 {
@@ -48,27 +49,10 @@ namespace Messenger
                     Log.Error(task.Exception);
                 });
             }
-            else if (src == uiStopButton)
+            else if (tag == "stop")
             {
                 ShareModule.Close();
             }
-        }
-
-        private void ButtonItem_Click(object sender, RoutedEventArgs e)
-        {
-            var btn = sender as Button;
-            if (btn == null)
-                return;
-            var con = btn.DataContext as ShareReceiver;
-            var tag = btn.Tag as string;
-            if (con == null || tag == null)
-                return;
-
-            if (tag.Equals("Play"))
-                con.Start();
-            else if (tag.Equals("Stop"))
-                con.Dispose();
-            return;
         }
     }
 }

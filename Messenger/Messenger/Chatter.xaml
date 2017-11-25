@@ -5,13 +5,13 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Messenger"
+      xmlns:module="clr-namespace:Messenger.Modules"
       xmlns:tool="clr-namespace:Messenger.Tools"
-      xmlns:mods="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
       KeepAlive="False" FontSize="14">
     <Page.Resources>
-        <tool:LengthConverter x:Key="LengthConverter"/>
+        <tool:LengthUnitConverter x:Key="LengthUnitConverter"/>
 
         <!--文件共享-->
         <ControlTemplate x:Key="ShareTemplate">
@@ -25,7 +25,7 @@
                     <TextBlock FontSize="14" Foreground="#FF808080" Name="SharePrefix"/>
                     <TextBlock FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Name}" Margin="4,0"/>
                 </StackPanel>
-                <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthConverter}}"/>
+                <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
                 <TextBlock Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
             </Grid>
             <ControlTemplate.Triggers>
@@ -103,7 +103,7 @@
                 </Grid>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static mods:LinkModule.ID}">
+                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static module:LinkModule.ID}">
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>
@@ -191,9 +191,9 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Background="SteelBlue" Height="1" SnapsToDevicePixels="True"/>
-            <TextBox x:Name="textboxInput" Grid.Column="0" Grid.Row="2" Margin="5" Background="Transparent" Foreground="#C0C0C0" CaretBrush="#808080" BorderThickness="0"
+            <TextBox x:Name="uiInputBox" Grid.Column="0" Grid.Row="2" Margin="5" Background="Transparent" Foreground="#C0C0C0" CaretBrush="#808080" BorderThickness="0"
                      MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字"
-                     AllowDrop="True" PreviewDragOver="TextBox_PreviewDragOver" PreviewDrop="TextBox_PreviewDrop" SelectionBrush="LightGreen">
+                     AllowDrop="True" PreviewDragOver="_TextBoxPreviewDragOver" PreviewDrop="_TextBoxPreviewDrop" SelectionBrush="LightGreen">
                 <TextBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem Command="ApplicationCommands.Copy" Header="复制"/>
@@ -202,16 +202,12 @@
                     </ContextMenu>
                 </TextBox.ContextMenu>
             </TextBox>
-            <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <Button x:Name="buttonFile" VerticalAlignment="Center" Content="{DynamicResource PathDirectory}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="发送文件"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="buttonClean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="清空消息列表"/>
-                    <Button x:Name="buttonSymbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="表情面板"/>
-                    <Button x:Name="buttonImage" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="发送图片"/>
-                    <Button x:Name="buttonText" Margin="10,0,0,0" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButton}" Click="Button_Click" ToolTip="发送"/>
-                </StackPanel>
+            <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center" Button.Click="_Click">
+                <Button Tag="file" VerticalAlignment="Center" Content="{DynamicResource PathDirectory}" Style="{DynamicResource GeometryButton}" ToolTip="发送文件"/>
+                <Button Tag="clean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButton}" ToolTip="清空消息列表"/>
+                <Button Tag="symbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButton}" ToolTip="表情面板"/>
+                <Button Tag="image" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButton}" ToolTip="发送图片"/>
+                <Button Tag="text" Margin="10,0,0,0" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButton}" ToolTip="发送"/>
             </StackPanel>
         </Grid>
         <Grid x:Name="uiSymbolGrid" Grid.RowSpan="2"
@@ -231,7 +227,7 @@
                 <TextBlock Margin="5" Grid.Row="0" HorizontalAlignment="Left" Foreground="#C0C0C0" FontSize="16">表情</TextBlock>
                 <ListBox x:Name="listboxSymbol" Grid.Row="1" Margin="5,0,5,5" Width="342" Height="172" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          Style="{DynamicResource ThinListBox}" 
-                         ItemsSource="{x:Static mods:SymbolModule.List}">
+                         ItemsSource="{x:Static module:SymbolModule.List}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel IsItemsHost="True"/>
@@ -243,7 +239,7 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
-                                        <Button FontSize="24" Style="{DynamicResource GeometryButton}" Content="{Binding}" Click="Symbol_Click" Width="34" Height="34"/>
+                                        <Button FontSize="24" Style="{DynamicResource GeometryButton}" Content="{Binding}" Click="_SymbolClick" Width="34" Height="34"/>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>

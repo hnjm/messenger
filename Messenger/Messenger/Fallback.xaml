@@ -14,9 +14,9 @@
             <RowDefinition></RowDefinition>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="textblockHeader" Grid.Row="0" Margin="10" Foreground="#FF000000" FontSize="24"/>
+        <TextBlock x:Name="uiHeadText" Grid.Row="0" Margin="10" Foreground="#FF000000" FontSize="24"/>
         <TextBlock Grid.Row="1" Margin="10,0" Foreground="#FF808080">异常信息</TextBlock>
-        <TextBox x:Name="textboxContent" Grid.Row="3" Margin="5,0" FontSize="12" Foreground="#FFA0A0A0" Background="Transparent" BorderThickness="0" IsReadOnly="True"/>
-        <Button x:Name="buttonConfirm" Grid.Row="4" Margin="10" Width="80" HorizontalAlignment="Right" Click="Button_Click">确定</Button>
+        <TextBox x:Name="uiContentText" Grid.Row="3" Margin="5,0" FontSize="12" Foreground="#FFA0A0A0" Background="Transparent" BorderThickness="0" IsReadOnly="True"/>
+        <Button Grid.Row="4" Margin="10" Width="80" HorizontalAlignment="Right" Click="_Click">确定</Button>
     </Grid>
 </Window>

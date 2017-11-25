@@ -3,16 +3,12 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:tool="clr-namespace:Messenger.Tools"
-      xmlns:mods="clr-namespace:Messenger.Modules"
       xmlns:local="clr-namespace:Messenger"
+      xmlns:module="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
-      Background="#FF000000"
       KeepAlive="False" FontSize="12">
     <Page.Resources>
-        <tool:LengthConverter x:Key="lengthConverter"/>
-
         <DataTemplate x:Key="ShareTemplate">
             <Border Name="uiBorder" Background="Transparent">
                 <local:ControlShare Margin="10,5"/>
@@ -35,109 +31,57 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
-        <!--<DataTemplate x:Key="transItem">
-            <Grid SnapsToDevicePixels="True">
-                <Border x:Name="border" Background="Transparent"/>
-                <Grid Margin="10,5" SnapsToDevicePixels="True">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Grid.Row="0" FontSize="14" Foreground="#FFA0A0A0" Text="{Binding Path=Port.Name, Mode=OneWay}"/>
-                    <TextBlock Grid.Column="0" Grid.Row="1" Foreground="#808080">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="用户昵称: {0}, 文件状态: {1} / {2}, {3:F2}%, {4}/s, {5}, 剩余时间: {6:hh\:mm\:ss}">
-                                <Binding Path="Profile.Name"/>
-                                <Binding Path="Port.Position" Mode="OneWay" Converter="{StaticResource lengthConverter}"/>
-                                <Binding Path="Port.Length" Mode="OneTime" Converter="{StaticResource lengthConverter}"/>
-                                <Binding Path="Progress" Mode="OneWay"/>
-                                <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource lengthConverter}"/>
-                                <Binding Path="Port.Status" Mode="OneWay"/>
-                                <Binding Path="Remain" Mode="OneWay"/>
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
-                    <ProgressBar x:Name="progressBar" Grid.ColumnSpan="2" Grid.Row="2" Margin="0,5" Height="2" Minimum="0" Maximum="100" SnapsToDevicePixels="True" Value="{Binding Path=Progress, Mode=OneWay}"/>
-                    <StackPanel Grid.Column="1" Grid.RowSpan="3" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="buttonPlay" Margin="8,4" Tag="Play" Click="ButtonItem_Click" ToolTip="启动传输"
-                            Content="{DynamicResource PathLitePlay}"
-                            Style="{DynamicResource GeometryButton}"
-                            Visibility="Collapsed"/>
-                        <Button x:Name="buttonStop" Margin="0,4" Tag="Stop" Click="ButtonItem_Click" ToolTip="关闭传输"
-                            Content="{DynamicResource PathLiteStop}"
-                            Style="{DynamicResource GeometryButton}"/>
+        <ControlTemplate x:Key="ControlTemplate">
+            <Grid Background="{TemplateBinding Background}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Margin="10" FontSize="28"
+                           Foreground="#FFC0C0C0" FontWeight="Light" Text="传输列表">
+                </TextBlock>
+                <ScrollViewer Grid.Row="1" Template="{DynamicResource ThinScrollViewer}">
+                    <StackPanel>
+                        <TextBlock Name="uiShareText" Margin="10,5"
+                                   HorizontalAlignment="Left"
+                                   FontSize="18" Foreground="#FFA0A0A0" Text="发送的文件">
+                        </TextBlock>
+                        <ItemsControl ItemTemplate="{DynamicResource ShareTemplate}"
+                                      ItemsSource="{x:Static module:ShareModule.ShareList}"/>
+                        <TextBlock Name="uiReceiveText" Margin="10,5"
+                                   HorizontalAlignment="Left"
+                                   FontSize="18" Foreground="#FFA0A0A0" Text="接收的文件">
+                        </TextBlock>
+                        <ItemsControl ItemTemplate="{DynamicResource ReceiverTemplate}"
+                                      ItemsSource="{x:Static module:ShareModule.ReceiverList}"/>
                     </StackPanel>
-                </Grid>
+                </ScrollViewer>
+                <Border Grid.Row="2" Background="#FF202020" Height="1"/>
+                <StackPanel Grid.Row="3" Margin="10" Orientation="Horizontal" HorizontalAlignment="Left" SnapsToDevicePixels="True" Button.Click="_Click">
+                    <Button Tag="stop" Content="{DynamicResource PathStop}" Style="{DynamicResource GeometryButton}" ToolTip="全部停止"/>
+                    <Button Tag="clean" Margin="10,0" Content="{DynamicResource PathDelete}" Style="{DynamicResource GeometryButton}" ToolTip="清理列表"/>
+                    <Button Tag="open" Content="{DynamicResource PathView}" Style="{DynamicResource GeometryButton}" ToolTip="打开保存文件夹"/>
+                    <Button Tag="change" Margin="10,0" Content="{DynamicResource PathBrowser}" Style="{DynamicResource GeometryButton}" ToolTip="更改保存文件夹"/>
+                </StackPanel>
             </Grid>
-            <DataTemplate.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="border" Property="Background" Value="#FF202020"/>
-                </Trigger>
-                <DataTrigger Binding="{Binding Path=Port.CanStart}" Value="True">
-                    <Setter TargetName="buttonPlay" Property="Visibility" Value="Visible"/>
+            <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding Source={x:Static module:ShareModule.Instance}, Path=HasShare}" Value="False">
+                    <Setter TargetName="uiShareText" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Port.IsDisposed}" Value="True">
-                    <Setter TargetName="buttonStop" Property="Visibility" Value="Collapsed"/>
+                <DataTrigger Binding="{Binding Source={x:Static module:ShareModule.Instance}, Path=HasReceiver}" Value="False">
+                    <Setter TargetName="uiReceiveText" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Port.Status}" Value="中断">
-                    <Setter TargetName="progressBar" Property="Foreground" Value="Crimson"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Port.Status}" Value="成功">
-                    <Setter TargetName="progressBar" Property="Foreground" Value="#FF20C000"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Port.Status}" Value="取消">
-                    <Setter TargetName="progressBar" Property="Foreground" Value="#FFC0C000"/>
-                </DataTrigger>
-            </DataTemplate.Triggers>
-        </DataTemplate>-->
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
     </Page.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Margin="10" FontSize="24" Foreground="#FFC0C0C0" FontWeight="Light">传输列表</TextBlock>
-        <ScrollViewer Grid.Row="1" Template="{DynamicResource ThinScrollViewer}">
-            <StackPanel>
-                <TextBlock Margin="10,5" HorizontalAlignment="Left" FontSize="16" Foreground="#FFA0A0A0" Text="发送的文件" DataContext="{x:Static mods:ShareModule.Instance}">
-                    <!--<TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Path=HasMakers}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>-->
-                </TextBlock>
-                <ItemsControl ItemTemplate="{DynamicResource ShareTemplate}" ItemsSource="{x:Static mods:ShareModule.ShareList}"/>
-                <TextBlock Margin="10,5" HorizontalAlignment="Left" FontSize="16" Foreground="#FFA0A0A0" Text="接收的文件" DataContext="{x:Static mods:ShareModule.Instance}">
-                    <!--<TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Path=HasTakers}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>-->
-                </TextBlock>
-                <ItemsControl ItemTemplate="{DynamicResource ReceiverTemplate}" ItemsSource="{x:Static mods:ShareModule.ReceiverList}"/>
-            </StackPanel>
-        </ScrollViewer>
-        <Border Grid.Row="2" Background="#FF202020" Height="1"/>
-        <StackPanel Grid.Row="3" Margin="10" Orientation="Horizontal" HorizontalAlignment="Left" SnapsToDevicePixels="True" Button.Click="Button_Click">
-            <Button x:Name="uiStopButton" Content="{DynamicResource PathStop}" Style="{DynamicResource GeometryButton}" ToolTip="全部停止"/>
-            <Button x:Name="uiCleanButton" Margin="10,0" Content="{DynamicResource PathDelete}" Style="{DynamicResource GeometryButton}" ToolTip="清理列表"/>
-            <Button x:Name="uiOpenButton" Content="{DynamicResource PathView}" Style="{DynamicResource GeometryButton}" ToolTip="打开保存文件夹"/>
-            <Button x:Name="uiChangeButton" Margin="10,0" Content="{DynamicResource PathBrowser}" Style="{DynamicResource GeometryButton}" ToolTip="更改保存文件夹"/>
-        </StackPanel>
-    </Grid>
+    <Page.Style>
+        <Style TargetType="Page">
+            <Style.Setters>
+                <Setter Property="Background" Value="#FF000000"/>
+                <Setter Property="Template" Value="{StaticResource ControlTemplate}"/>
+            </Style.Setters>
+        </Style>
+    </Page.Style>
 </Page>

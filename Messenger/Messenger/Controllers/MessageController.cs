@@ -7,13 +7,13 @@ namespace Messenger.Controllers
     /// <summary>
     /// 消息处理
     /// </summary>
-    [Handle("msg")]
+    [Route("msg")]
     public class MessageController : LinkPacket
     {
         /// <summary>
         /// 文本消息
         /// </summary>
-        [Handle("text")]
+        [Route("text")]
         public void Text()
         {
             var txt = Data.Pull<string>();
@@ -23,7 +23,7 @@ namespace Messenger.Controllers
         /// <summary>
         /// 图片消息
         /// </summary>
-        [Handle("image")]
+        [Route("image")]
         public void Image()
         {
             var buf = Data.PullList();

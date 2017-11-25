@@ -17,18 +17,18 @@ namespace Messenger
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            var src = e.OriginalSource as Button;
-            if (src == null)
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+            if (tag == null)
                 return;
-            if (src == buttonApply)
+            if (tag == "apply")
             {
-                ProfileModule.Current.Name = textboxName.Text;
-                ProfileModule.Current.Text = textboxText.Text;
+                ProfileModule.Current.Name = uiNameBox.Text;
+                ProfileModule.Current.Text = uiSignBox.Text;
                 PostModule.UserProfile(Links.ID);
             }
-            else if (src == buttonImage)
+            else if (tag == "image")
             {
                 var ofd = new System.Windows.Forms.OpenFileDialog() { Filter = "位图文件|*.bmp;*.png;*.jpg" };
                 if (ofd.ShowDialog() != System.Windows.Forms.DialogResult.OK)

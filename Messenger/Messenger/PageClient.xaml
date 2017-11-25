@@ -3,11 +3,10 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:mods="clr-namespace:Messenger.Modules"
+      xmlns:module="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       KeepAlive="False"
-      d:DesignHeight="300" d:DesignWidth="300"
-      Loaded="Page_Loaded">
+      d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -23,9 +22,9 @@
             <TextBlock Grid.Row="0" Margin="0,5" FontSize="16" FontWeight="Bold" Foreground="#C0C0C0">用户</TextBlock>
             <TextBlock Grid.Row="1" Margin="0,5" FontSize="12" Foreground="#C0C0C0">所有在线的用户</TextBlock>
         </Grid>
-        <ListBox x:Name="listbox" Grid.Row="1"
+        <ListBox x:Name="uiListbox" Grid.Row="1"
                  Style="{DynamicResource ThinListBox}"
-                 ItemsSource="{x:Static mods:ProfileModule.ClientList}"
+                 ItemsSource="{x:Static module:ProfileModule.ClientList}"
                  ItemContainerStyle="{DynamicResource ProfileItem}">
         </ListBox>
         <Border Grid.Row="2" Background="#404040" Height="1" SnapsToDevicePixels="True"/>

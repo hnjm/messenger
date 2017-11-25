@@ -9,7 +9,7 @@ namespace Messenger
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
@@ -18,8 +18,8 @@ namespace Messenger
         {
             var msw = new Fallback();
             msw.Owner = owner;
-            msw.textblockHeader.Text = title;
-            msw.textboxContent.Text = content?.ToString();
+            msw.uiHeadText.Text = title;
+            msw.uiContentText.Text = content?.ToString();
             msw.WindowStartupLocation = (owner is null) ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner;
             msw.ShowDialog();
         }

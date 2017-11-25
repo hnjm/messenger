@@ -7,7 +7,7 @@ namespace Messenger
 {
     internal static class PageManager
     {
-        public static void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        public static void _ListBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var lst = e.AddedItems;
             if (lst.Count < 1)
@@ -34,12 +34,12 @@ namespace Messenger
             });
 
             list.ListChanged += hdr;
-            listbox.SelectionChanged += ListBox_SelectionChanged;
+            listbox.SelectionChanged += _ListBoxSelectionChanged;
 
             page.Unloaded += delegate
             {
                 list.ListChanged -= hdr;
-                listbox.SelectionChanged -= ListBox_SelectionChanged;
+                listbox.SelectionChanged -= _ListBoxSelectionChanged;
             };
         }
     }

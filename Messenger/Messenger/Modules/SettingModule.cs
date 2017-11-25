@@ -11,7 +11,7 @@ namespace Messenger.Modules
 
         private bool _ctrlenter = false;
 
-        private static SettingModule s_ins = new SettingModule();
+        private static readonly SettingModule s_ins = new SettingModule();
 
         /// <summary>
         /// 使用 ctrl + enter 发送消息还是 enter

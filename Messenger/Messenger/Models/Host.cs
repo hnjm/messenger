@@ -3,7 +3,7 @@
 namespace Messenger.Models
 {
     /// <summary>
-    ///服务器信息
+    /// 服务器信息
     /// </summary>
     public class Host
     {
@@ -33,7 +33,7 @@ namespace Messenger.Models
         public int CountLimit { get; set; }
 
         /// <summary>
-        /// 访问延迟
+        /// 访问延迟 (单次往返耗时 误差较大)
         /// </summary>
         public long Delay { get; set; } = 0;
 
@@ -66,8 +66,9 @@ namespace Messenger.Models
         /// </summary>
         public override int GetHashCode()
         {
-            return Address != null
-                ? new IPEndPoint(Address, Port).GetHashCode()
+            var add = Address;
+            return add != null
+                ? new IPEndPoint(add, Port).GetHashCode()
                 : 0;
         }
     }

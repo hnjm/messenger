@@ -21,82 +21,84 @@ namespace Messenger
         public PageFrame()
         {
             InitializeComponent();
+            Loaded += _Loaded;
+            Unloaded += _Unloaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
             _profPage = new PageProfile();
-            _profPage.frameLeft.Navigate(new PageClient());
-            frame.Navigate(_profPage);
+            _profPage.uiLeftFrame.Navigate(new PageClient());
+            uiFrame.Navigate(_profPage);
             var act = (Action)delegate
-                {
-                    radiobuttonSwitch.IsChecked = false;
-                    borderFull.Visibility = Visibility.Collapsed;
-                };
-            borderFull.MouseDown += (s, arg) => act.Invoke();
-            borderFull.TouchDown += (s, arg) => act.Invoke();
-            HistoryModule.Receiving += ModulePacket_Receiving;
+            {
+                uiSwitchRadio.IsChecked = false;
+                uiMainBorder.Visibility = Visibility.Collapsed;
+            };
+            uiMainBorder.MouseDown += (s, arg) => act.Invoke();
+            uiMainBorder.TouchDown += (s, arg) => act.Invoke();
+            HistoryModule.Receiving += _HistoryReceiving;
         }
 
-        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        private void _Unloaded(object sender, RoutedEventArgs e)
         {
-            HistoryModule.Receiving -= ModulePacket_Receiving;
+            HistoryModule.Receiving -= _HistoryReceiving;
         }
 
         /// <summary>
         /// 如果顶层 Frame 有内容 说明下层 Frame 不可见 因此消息提示也应存在
         /// </summary>
-        private void ModulePacket_Receiving(object sender, LinkEventArgs<Packet> e)
+        private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
             if (_vis == false)
                 return;
             e.Cancel = true;
         }
 
-        private void RadioButton_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            var btn = e.OriginalSource as RadioButton;
-            if (btn == null)
+            var tag = (e.OriginalSource as RadioButton)?.Tag as string;
+            if (tag == null)
                 return;
-
             _vis = true;
-            if (btn == radiobuttonMyself)
-                Navigate<Shower>(frameFull);
-            else if (btn == radiobuttonTransf)
-                Navigate<PageShare>(frameFull);
-            else if (btn == radiobuttonOption)
-                Navigate<PageOption>(frameFull);
-            else if (btn != radiobuttonSwitch)
+
+            if (tag == "self")
+                Navigate<Shower>(uiMainFrame);
+            else if (tag == "share")
+                Navigate<PageShare>(uiMainFrame);
+            else if (tag == "setting")
+                Navigate<PageOption>(uiMainFrame);
+            else if (tag != "switch")
                 _vis = false;
             // 隐藏上层 Frame, 同时将下层 Frame 中当前聊天未读计数置 0
             if (_vis == false)
             {
-                frameFull.Content = null;
+                uiMainFrame.Content = null;
                 var sco = ProfileModule.Inscope;
                 if (sco != null)
                     sco.Hint = 0;
             }
 
-            if (btn == radiobuttonSingle)
-                Navigate<PageClient>(_profPage.frameLeft);
-            else if (btn == radiobuttonGroups)
-                Navigate<PageGroups>(_profPage.frameLeft);
-            else if (btn == radiobuttonRecent)
-                Navigate<PageRecent>(_profPage.frameLeft);
+            if (tag == "user")
+                Navigate<PageClient>(_profPage.uiLeftFrame);
+            else if (tag == "group")
+                Navigate<PageGroups>(_profPage.uiLeftFrame);
+            else if (tag == "recent")
+                Navigate<PageRecent>(_profPage.uiLeftFrame);
 
             if (uiNavigateGrid.Width > uiNavigateGrid.MinWidth)
-                radiobuttonSwitch.IsChecked = false;
-            if (btn != radiobuttonSwitch)
-                _profPage.textbox.Text = null;
+                uiSwitchRadio.IsChecked = false;
+            if (tag != "switch")
+                _profPage.uiSearchBox.Text = null;
 
-            borderFull.Visibility = radiobuttonSwitch.IsChecked == true ? Visibility.Visible : Visibility.Hidden;
+            uiMainBorder.Visibility = uiSwitchRadio.IsChecked == true ? Visibility.Visible : Visibility.Hidden;
         }
 
-        private void Navigate<T>(Frame frame) where T : Page, new()
+        private void Navigate<Target>(Frame frame) where Target : Page, new()
         {
-            if (frame.Content is T == true)
+            if (frame.Content is Target == true)
                 return;
-            frame.Navigate(new T());
+            frame.Navigate(new Target());
         }
     }
 }

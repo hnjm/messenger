@@ -3,16 +3,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:mods="clr-namespace:Messenger.Modules"
+        xmlns:module="clr-namespace:Messenger.Modules"
         mc:Ignorable="d" FontSize="14"
-        Width="960" Height="540" MinWidth="960" MinHeight="540" Background="#FF101010" WindowStartupLocation="CenterScreen"
-        Loaded="Window_Loaded" Closing="Window_Closing">
+        Width="960" Height="540" MinWidth="960" MinHeight="540"
+        Background="#FF101010" WindowStartupLocation="CenterScreen">
     <Window.Title>
-        <Binding Source="{x:Static mods:ProfileModule.Current}" Path="ID" StringFormat="Messenger - [{0}]"/>
+        <Binding Source="{x:Static module:ProfileModule.Current}" Path="ID" StringFormat="Messenger - [{0}]"/>
     </Window.Title>
     <Grid>
         <Frame x:Name="frame" NavigationUIVisibility="Hidden" Source="Connection.xaml"/>
-        <Grid x:Name="gridMessage" Visibility="Collapsed">
+        <Grid x:Name="uiMessagePanel" Visibility="Collapsed">
             <Border Background="#80000000"/>
             <Grid MaxWidth="720" MaxHeight="480" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid.RowDefinitions>
@@ -27,10 +27,10 @@
                         <DropShadowEffect Color="#FFFFFFFF" ShadowDepth="0"/>
                     </Border.Effect>
                 </Border>
-                <TextBlock x:Name="textblockHeader" Grid.Row="0" Margin="10" Foreground="#FFA0A0A0" FontSize="24"/>
-                <TextBlock Grid.Row="1" Margin="10,0" Foreground="#FF808080">异常信息</TextBlock>
-                <TextBox x:Name="textboxContent" Grid.Row="3" Margin="5,0" FontSize="12" Foreground="#FF808080" Background="Transparent" BorderThickness="0" IsReadOnly="True"/>
-                <Button x:Name="buttonConfirm" Grid.Row="4" Margin="10" Width="80" HorizontalAlignment="Right" Click="Button_Click">确定</Button>
+                <TextBlock x:Name="uiHeadText" Grid.Row="0" Margin="10" Foreground="#FFA0A0A0" FontSize="24"/>
+                <TextBlock Grid.Row="1" Margin="10,0" Foreground="#FF808080" Text="异常信息"/>
+                <TextBox x:Name="uiContentText" Grid.Row="3" Margin="5,0" FontSize="12" Foreground="#FF808080" Background="Transparent" BorderThickness="0" IsReadOnly="True"/>
+                <Button x:Name="uiConfirmButton" Grid.Row="4" Margin="10" Width="80" HorizontalAlignment="Right" Click="_Click" Content="确定"/>
             </Grid>
         </Grid>
     </Grid>

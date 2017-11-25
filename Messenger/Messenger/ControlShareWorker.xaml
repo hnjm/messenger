@@ -3,14 +3,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:tool="clr-namespace:Messenger.Tools"
              xmlns:model="clr-namespace:Messenger.Models"
+             xmlns:tool="clr-namespace:Messenger.Tools"
              mc:Ignorable="d" 
-             Foreground="#FF808080"
              d:DesignHeight="300" d:DesignWidth="300">
-
     <UserControl.Resources>
-        <tool:LengthConverter x:Key="LengthConverter"/>
+        <tool:LengthUnitConverter x:Key="LengthUnitConverter"/>
         <tool:ObjectTypeConverter x:Key="ObjectTypeConverter"/>
         <tool:StringEmptyConverter x:Key="StringEmptyConverter"/>
 
@@ -37,7 +35,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock FontSize="14" Grid.Row="0" Grid.Column="0" Name="uiPrefixText" Foreground="#FFC0C0C0"/>
+                    <TextBlock FontSize="14" Grid.Row="0" Grid.Column="0" Name="uiPrefixText" Foreground="#FFA0A0A0"/>
                     <TextBlock FontSize="14" Grid.Row="0" Grid.Column="2" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
                     <TextBlock Name="PathText" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Path=Path}"/>
                 </Grid>
@@ -58,7 +56,8 @@
 
                 <ProgressBar Name="uiProgress" Height="2"
                              Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
-                             Value="{Binding Path=Progress, Mode=OneWay}">
+                             Value="{Binding Path=Progress, Mode=OneWay}"
+                             SnapsToDevicePixels="True">
                 </ProgressBar>
             </Grid>
             <ControlTemplate.Triggers>
@@ -69,12 +68,12 @@
                     <Setter TargetName="uiPrefixText" Property="Text" Value="[文件]"/>
                     <Setter TargetName="uiInfoText" Property="Text">
                         <Setter.Value>
-                            <MultiBinding StringFormat="用户昵称: {0}, 进度: {1} / {2}, {3}%, 速率: {4}/s, 状态: {5}, 剩余时间: {6:hh\:mm\:ss}">
+                            <MultiBinding StringFormat="用户昵称: {0}, 进度: {1} / {2}, {3:0.00}%, 速率: {4}/s, 状态: {5}, 剩余时间: {6:c}">
                                 <Binding Path="Profile.Name" Mode="OneWay"/>
-                                <Binding Path="Position" Mode="OneWay" Converter="{StaticResource LengthConverter}"/>
-                                <Binding Path="Length" Mode="OneWay" Converter="{StaticResource LengthConverter}"/>
+                                <Binding Path="Position" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
+                                <Binding Path="Length" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
                                 <Binding Path="Progress" Mode="OneWay"/>
-                                <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource LengthConverter}"/>
+                                <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
                                 <Binding Path="Status" Mode="OneWay"/>
                                 <Binding Path="Remain" Mode="OneWay"/>
                             </MultiBinding>
@@ -83,18 +82,26 @@
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=IsBatch}" Value="True">
                     <Setter TargetName="uiPrefixText" Property="Text" Value="[文件夹]"/>
-                    <Setter TargetName="uiProgress" Property="IsIndeterminate" Value="True"/>
                     <Setter TargetName="uiInfoText" Property="Text">
                         <Setter.Value>
                             <MultiBinding StringFormat="用户昵称: {0}, 已传输: {1}, 速率: {2}/s, 状态: {3}">
                                 <Binding Path="Profile.Name" Mode="OneWay"/>
-                                <Binding Path="Position" Mode="OneWay" Converter="{StaticResource LengthConverter}"/>
-                                <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource LengthConverter}"/>
+                                <Binding Path="Position" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
+                                <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
                                 <Binding Path="Status" Mode="OneWay"/>
                             </MultiBinding>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=IsBatch}" Value="True"/>
+                        <Condition Binding="{Binding Path=Status}" Value="运行"/>
+                    </MultiDataTrigger.Conditions>
+                    <MultiDataTrigger.Setters>
+                        <Setter TargetName="uiProgress" Property="IsIndeterminate" Value="True"/>
+                    </MultiDataTrigger.Setters>
+                </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:ShareReceiver}"/>
@@ -105,12 +112,23 @@
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=IsDisposed}" Value="True">
-                    <Setter TargetName="uiProgress" Property="IsIndeterminate" Value="False"/>
                     <Setter TargetName="uiTogglePanel" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type  model:ShareWorker}">
                     <Setter TargetName="uiTitlePanel" Property="Visibility" Value="Collapsed"/>
                     <Setter TargetName="PlayButton" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Status}" Value="连接">
+                    <Setter TargetName="uiProgress" Property="IsIndeterminate" Value="True"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Status}" Value="中断">
+                    <Setter TargetName="uiProgress" Property="Foreground" Value="#FFDC143C"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Status}" Value="成功">
+                    <Setter TargetName="uiProgress" Property="Foreground" Value="#FF20C000"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=Status}" Value="取消">
+                    <Setter TargetName="uiProgress" Property="Foreground" Value="#FFC0C000"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -119,6 +137,8 @@
     <UserControl.Style>
         <Style TargetType="UserControl">
             <Style.Setters>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Foreground" Value="#FF808080"/>
                 <Setter Property="Template" Value="{StaticResource WorkerTemplate}"/>
             </Style.Setters>
         </Style>

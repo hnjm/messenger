@@ -6,15 +6,15 @@ using System.Linq;
 namespace Messenger.Controllers
 {
     /// <summary>
-    /// 用户信息处理
+    /// 处理用户信息
     /// </summary>
-    [Handle("user")]
+    [Route("user")]
     public class ProfileController : LinkPacket
     {
         /// <summary>
         /// 向发送者返回本机的用户信息
         /// </summary>
-        [Handle("request")]
+        [Route("request")]
         public void Request()
         {
             PostModule.UserProfile(Source);
@@ -23,7 +23,7 @@ namespace Messenger.Controllers
         /// <summary>
         /// 处理传入的用户信息
         /// </summary>
-        [Handle("profile")]
+        [Route("profile")]
         public void Profile()
         {
             var pro = new Profile()
@@ -42,7 +42,7 @@ namespace Messenger.Controllers
         /// <summary>
         /// 处理服务器返回的用户 ID 列表
         /// </summary>
-        [Handle("list")]
+        [Route("list")]
         public void List()
         {
             var lst = Data.PullList<int>().ToList();

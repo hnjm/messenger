@@ -78,7 +78,8 @@ namespace Messenger.Models
                 if (_started || _disposed)
                     throw new InvalidOperationException();
                 _started = true;
-                _status = ShareStatus.运行;
+                _status = ShareStatus.连接;
+                Register();
                 OnPropertyChanged(nameof(IsStarted));
             }
 
@@ -125,6 +126,7 @@ namespace Messenger.Models
             {
                 if (t.Exception == null)
                 {
+                    _status = ShareStatus.运行;
                     _Receive().ContinueWith(_Finish);
                     return;
                 }
@@ -143,27 +145,25 @@ namespace Messenger.Models
 
         private Task _Receive()
         {
-            // 接收目录
-            if (_batch)
-                return _ReceiveDir().ContinueWith(task => Log.Error(task.Exception));
-            // 接收单个文件
-            var inf = ShareModule.AvailableFile(_name);
+            var inf = _batch
+                ? ShareModule.AvailableDirectory(_name)
+                : (FileSystemInfo)ShareModule.AvailableFile(_name);
+
             _name = inf.Name;
             _path = inf.FullName;
             OnPropertyChanged(nameof(Name));
             OnPropertyChanged(nameof(Path));
-            return _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
+            // 接收目录
+            if (_batch)
+                return _ReceiveDir(_path).ContinueWith(task => Log.Error(task.Exception));
+            // 接收单个文件
+            return _socket.ReceiveFileEx(_path, _length, r => _position += r, _cancel.Token);
         }
 
-        internal async Task _ReceiveDir()
+        internal async Task _ReceiveDir(string top)
         {
-            // 文件接收根目录
-            var inf = ShareModule.AvailableDirectory(_name);
-            var top = inf.FullName;
-            inf.Create();
-            _name = inf.Name;
             // 当前目录
-            var cur = inf;
+            var cur = top;
 
             while (true)
             {
@@ -180,14 +180,14 @@ namespace Messenger.Models
                         var lst = new List<string>() { top };
                         var dir = rea["path"].PullList<string>();
                         lst.AddRange(dir);
-                        cur = new DirectoryInfo(System.IO.Path.Combine(lst.ToArray()));
-                        cur.Create();
+                        cur = System.IO.Path.Combine(lst.ToArray());
+                        Directory.CreateDirectory(cur);
                         break;
 
                     case "file":
                         var key = rea["path"].Pull<string>();
                         var len = rea["length"].Pull<long>();
-                        var pth = System.IO.Path.Combine(cur.FullName, key);
+                        var pth = System.IO.Path.Combine(cur, key);
                         await _socket.ReceiveFileEx(pth, len, r => _position += r, _cancel.Token);
                         break;
 
@@ -219,14 +219,13 @@ namespace Messenger.Models
                     return;
                 if ((_status & ShareStatus.终止) == 0)
                     _status = ShareStatus.取消;
+
+                _cancel.Cancel();
+                _socket?.Dispose();
+                _socket = null;
+                _disposed = true;
+                OnPropertyChanged(nameof(IsDisposed));
             }
-
-            _cancel.Cancel();
-            _socket?.Dispose();
-            _socket = null;
-
-            _disposed = true;
-            OnPropertyChanged(nameof(IsDisposed));
         }
     }
 }

@@ -91,7 +91,7 @@
                     <TextBox.Text>
                         <Binding Path="I" UpdateSourceTrigger="PropertyChanged" Delay="200">
                             <Binding.ValidationRules>
-                                <tool:CodeValidation/>
+                                <tool:ProfileCodeValidation/>
                             </Binding.ValidationRules>
                         </Binding>
                     </TextBox.Text>

@@ -3,19 +3,18 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:local="clr-namespace:Messenger"
-      xmlns:mods="clr-namespace:Messenger.Modules"
+      xmlns:module="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="420" d:DesignWidth="640"
       KeepAlive="False" FontSize="14"
       Background="#000000">
-    <Grid DataContext="{x:Static mods:ProfileModule.Instance}">
+    <Grid DataContext="{x:Static module:ProfileModule.Current}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Control Grid.Column="0" Margin="45,10" Width="168" Height="168" VerticalAlignment="Top" SnapsToDevicePixels="True" Template="{DynamicResource ClientImageTemplate}"/>
-        <Grid Grid.Column="1" Width="275" HorizontalAlignment="Left" Button.Click="Button_Click">
+        <Grid Grid.Column="1" Width="275" HorizontalAlignment="Left" Button.Click="_Click">
             <Grid.RowDefinitions>
                 <RowDefinition Height="70"/>
                 <RowDefinition Height="Auto"/>
@@ -33,12 +32,12 @@
             <TextBlock Grid.Row="1" Foreground="#C0C0C0" FontSize="24" FontWeight="Light" Text="{Binding Path=Name}"/>
             <TextBlock Grid.Row="2" Foreground="#808080" FontSize="12" FontStyle="Italic" Text="{Binding Path=Text}" HorizontalAlignment="Left" ToolTip="{Binding Path=Text}"/>
             <TextBlock Grid.Row="4" Margin="0,4" Foreground="#808080">昵称</TextBlock>
-            <TextBox x:Name="textboxName" Grid.Row="5" Text="{Binding Path=Name, Mode=OneTime}" Tag="请输入昵称"/>
+            <TextBox x:Name="uiNameBox" Grid.Row="5" Text="{Binding Path=Name, Mode=OneTime}" Tag="请输入昵称"/>
             <TextBlock Grid.Row="7" Margin="0,4" Foreground="#808080">个人签名</TextBlock>
-            <TextBox x:Name="textboxText" Grid.Row="8" Text="{Binding Path=Text, Mode=OneTime}" Tag="请输入个人签名"/>
+            <TextBox x:Name="uiSignBox" Grid.Row="8" Text="{Binding Path=Text, Mode=OneTime}" Tag="请输入个人签名"/>
             <StackPanel Grid.Row="10" Orientation="Horizontal" FlowDirection="RightToLeft">
-                <Button x:Name="buttonApply" HorizontalAlignment="Right" Width="80">应用更改</Button>
-                <Button x:Name="buttonImage" Margin="10,0" HorizontalAlignment="Right" Width="80">更改头像</Button>
+                <Button Tag="apply" HorizontalAlignment="Right" Width="80">应用更改</Button>
+                <Button Tag="image" Margin="10,0" HorizontalAlignment="Right" Width="80">更改头像</Button>
             </StackPanel>
         </Grid>
     </Grid>

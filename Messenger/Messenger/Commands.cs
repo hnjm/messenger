@@ -104,6 +104,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
+                Log.Error(ex);
                 Entrance.ShowError("复制消息出错", ex);
             }
             e.Handled = true;

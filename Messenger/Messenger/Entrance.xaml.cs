@@ -13,7 +13,7 @@ namespace Messenger
     /// </summary>
     public partial class Entrance : Window
     {
-        private class _Info
+        private class AutoLoadInfo
         {
             internal MethodInfo info;
             internal AutoLoadAttribute attribute;
@@ -22,11 +22,13 @@ namespace Messenger
         public Entrance()
         {
             InitializeComponent();
+            Loaded += _Loaded;
+            Closing += _Closing;
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
-            IEnumerable<_Info> find()
+            IEnumerable<AutoLoadInfo> find()
             {
                 var ass = typeof(Entrance).Assembly;
                 foreach (var t in ass.GetTypes())
@@ -38,7 +40,7 @@ namespace Messenger
                         if (att == null)
                             continue;
 
-                        yield return new _Info() { info = i, attribute = (AutoLoadAttribute)att };
+                        yield return new AutoLoadInfo() { info = i, attribute = (AutoLoadAttribute)att };
                     }
                 }
             }
@@ -52,7 +54,7 @@ namespace Messenger
             Closed += (s, arg) => sav.ForEach(m => m.info.Invoke(null, null));
         }
 
-        private void Window_Closing(object sender, CancelEventArgs e)
+        private void _Closing(object sender, CancelEventArgs e)
         {
             if (LinkModule.IsRunning == false)
                 return;
@@ -61,12 +63,11 @@ namespace Messenger
             e.Cancel = true;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            if (sender == buttonConfirm)
+            if (sender == uiConfirmButton)
             {
-                gridMessage.Visibility = Visibility.Collapsed;
-                return;
+                uiMessagePanel.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -80,14 +81,14 @@ namespace Messenger
             var app = Application.Current;
             var dis = app.Dispatcher;
             dis.Invoke(() =>
-                {
-                    var win = app.MainWindow as Entrance;
-                    if (win == null)
-                        return;
-                    win.textblockHeader.Text = title;
-                    win.textboxContent.Text = content?.ToString() ?? "未提供信息";
-                    win.gridMessage.Visibility = Visibility.Visible;
-                });
+            {
+                var win = app.MainWindow as Entrance;
+                if (win == null)
+                    return;
+                win.uiHeadText.Text = title;
+                win.uiContentText.Text = content?.ToString() ?? "未提供信息";
+                win.uiMessagePanel.Visibility = Visibility.Visible;
+            });
         }
     }
 }

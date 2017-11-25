@@ -22,9 +22,12 @@ namespace Messenger.Modules
 
         private LinkClient _clt = null;
 
+        /// <summary>
+        /// 监听反向连接 (用于文件传输)
+        /// </summary>
         private Socket _soc = null;
 
-        private static LinkModule s_ins = new LinkModule();
+        private static readonly LinkModule s_ins = new LinkModule();
 
         public static int ID => s_ins._clt?.ID ?? ProfileModule.Current.ID;
 
@@ -61,7 +64,7 @@ namespace Messenger.Modules
 
             _Listen(soc).ContinueWith(tsk => Log.Error(tsk.Exception));
 
-            HistoryModule.OnHandled += _Packets_OnHandled;
+            HistoryModule.OnHandled += _OnHistoryHandled;
             ShareModule.PendingList.ListChanged += _PendingListChanged;
             ProfileModule.Current.ID = id;
 
@@ -115,7 +118,7 @@ namespace Messenger.Modules
 
             ShareModule.Close();
             ProfileModule.Clear();
-            HistoryModule.OnHandled -= _Packets_OnHandled;
+            HistoryModule.OnHandled -= _OnHistoryHandled;
             ShareModule.PendingList.ListChanged -= _PendingListChanged;
         }
 
@@ -132,11 +135,11 @@ namespace Messenger.Modules
                 lst.Add(iep);
             if (clt?.OuterEndPoint is IPEndPoint rep)
                 lst.Add(rep);
-            var res = lst._Distinct((a, b) => a.Equals(b));
+            var res = lst.DistinctEx((a, b) => a.Equals(b));
             return res;
         }
 
-        private static void _Packets_OnHandled(object sender, LinkEventArgs<Packet> e)
+        private static void _OnHistoryHandled(object sender, LinkEventArgs<Packet> e)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {

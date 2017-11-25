@@ -125,11 +125,11 @@ namespace Messenger.Modules
                 if (pot != null)
                     s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
                 var str = OptionModule.GetOption(_KeyLast);
-                Converts._GetHost(str, out s_ins._host, out s_ins._port);
+                Converts.TryGetHostEx(str, out s_ins._host, out s_ins._port);
                 var sts = OptionModule.GetOption(_KeyList) ?? string.Empty;
                 var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in arr)
-                    lst.Add(s._ToEndPoint());
+                    lst.Add(s.ToEndPointEx());
             }
             catch (Exception ex)
             {

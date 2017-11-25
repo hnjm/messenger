@@ -12,11 +12,12 @@ namespace Messenger
         public PageClient()
         {
             InitializeComponent();
+            Loaded += _Loaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, ProfileModule.ClientList);
+            PageManager.SetProfilePage(this, uiListbox, ProfileModule.ClientList);
         }
     }
 }

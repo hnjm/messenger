@@ -16,51 +16,53 @@ namespace Messenger
         public PageProfile()
         {
             InitializeComponent();
+            Loaded += _Loaded;
+            Unloaded += _Unloaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
             ProfileModule.InscopeChanged += ModuleProfile_InscopeChanged;
-            listbox.SelectionChanged += PageManager.ListBox_SelectionChanged;
+            uiProfileList.SelectionChanged += PageManager._ListBoxSelectionChanged;
         }
 
-        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        private void _Unloaded(object sender, RoutedEventArgs e)
         {
             ProfileModule.InscopeChanged -= ModuleProfile_InscopeChanged;
-            listbox.SelectionChanged -= PageManager.ListBox_SelectionChanged;
+            uiProfileList.SelectionChanged -= PageManager._ListBoxSelectionChanged;
         }
 
         private void ModuleProfile_InscopeChanged(object sender, EventArgs e)
         {
-            var pag = frameRight.Content as Chatter;
+            var pag = uiRightFrame.Content as Chatter;
             if (pag == null || pag.Profile.ID != ProfileModule.Inscope.ID)
-                frameRight.Navigate(new Chatter());
+                uiRightFrame.Navigate(new Chatter());
         }
 
         /// <summary>
         /// 根据用户昵称和签名提供搜索功能
         /// </summary>
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void _TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (e.OriginalSource != textbox)
+            if (e.OriginalSource != uiSearchBox)
                 return;
-            var lst = listbox.ItemsSource as ICollection<Profile>;
+            var lst = uiProfileList.ItemsSource as ICollection<Profile>;
             lst?.Clear();
-            if (string.IsNullOrWhiteSpace(textbox.Text) == true)
+            if (string.IsNullOrWhiteSpace(uiSearchBox.Text) == true)
             {
-                listbox.ItemsSource = null;
-                grid.Visibility = Visibility.Collapsed;
+                uiProfileList.ItemsSource = null;
+                uiPanel.Visibility = Visibility.Collapsed;
             }
             else
             {
-                var txt = textbox.Text.ToLower();
+                var txt = uiSearchBox.Text.ToLower();
                 var val = (from i in ProfileModule.ClientList.Union(ProfileModule.GroupsList).Union(ProfileModule.RecentList)
                            where i.Name?.ToLower().Contains(txt) == true || i.Text?.ToLower().Contains(txt) == true
                            select i).ToList();
                 var idx = val.IndexOf(ProfileModule.Inscope);
-                listbox.ItemsSource = val;
-                listbox.SelectedIndex = idx;
-                grid.Visibility = Visibility.Visible;
+                uiProfileList.ItemsSource = val;
+                uiProfileList.SelectedIndex = idx;
+                uiPanel.Visibility = Visibility.Visible;
             }
         }
     }

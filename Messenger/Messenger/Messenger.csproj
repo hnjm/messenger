@@ -110,7 +110,7 @@
     </Compile>
     <Compile Include="Models\AutoLoadAttribute.cs" />
     <Compile Include="Models\AutoLoadFlags.cs" />
-    <Compile Include="Models\HandlerAttribute.cs" />
+    <Compile Include="Models\RouteAttribute.cs" />
     <Compile Include="Models\IDisposed.cs" />
     <Compile Include="Models\ShareStatus.cs" />
     <Compile Include="Models\Share.cs" />
@@ -146,13 +146,13 @@
     <Compile Include="Models\Host.cs" />
     <Compile Include="Modules\HostModule.cs" />
     <Compile Include="Modules\CacheModule.cs" />
-    <Compile Include="Tools\CodeValidation.cs" />
-    <Compile Include="Tools\ImageConverter.cs" />
+    <Compile Include="Tools\ProfileCodeValidation.cs" />
+    <Compile Include="Tools\ProfileLogoConverter.cs" />
     <Compile Include="Tools\ObjectTypeConverter.cs" />
     <Compile Include="Tools\SocketPortValidation.cs" />
     <Compile Include="Tools\StringEmptyConverter.cs" />
-    <Compile Include="Tools\LengthConverter.cs" />
-    <Compile Include="Tools\PromptConverter.cs" />
+    <Compile Include="Tools\LengthUnitConverter.cs" />
+    <Compile Include="Tools\ProfileHintConverter.cs" />
     <Compile Include="PageShare.xaml.cs">
       <DependentUpon>PageShare.xaml</DependentUpon>
     </Compile>

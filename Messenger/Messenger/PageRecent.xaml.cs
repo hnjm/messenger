@@ -12,19 +12,20 @@ namespace Messenger
         public PageRecent()
         {
             InitializeComponent();
+            Loaded += _Loaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, listbox, ProfileModule.RecentList);
+            PageManager.SetProfilePage(this, uiListbox, ProfileModule.RecentList);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            var btn = e.OriginalSource as Button;
-            if (btn == null)
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+            if (tag == null)
                 return;
-            if (btn == buttonClear)
+            if (tag == "clear")
             {
                 ProfileModule.RecentList.Clear();
                 return;

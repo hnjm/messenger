@@ -1,6 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:tools="clr-namespace:Messenger.Tools">
+                    xmlns:tool="clr-namespace:Messenger.Tools">
     <ControlTemplate x:Key="DefaultImageTemplate">
         <Grid Width="32" Height="32">
             <Ellipse Fill="Gray"/>
@@ -8,7 +8,7 @@
                 <TextBlock.Text>
                     <Binding Path="Name">
                         <Binding.Converter>
-                            <tools:ImageConverter/>
+                            <tool:ProfileLogoConverter/>
                         </Binding.Converter>
                     </Binding>
                 </TextBlock.Text>
@@ -29,7 +29,7 @@
                                 <DataTrigger.Binding>
                                     <Binding Path="Image">
                                         <Binding.Converter>
-                                            <tools:StringEmptyConverter/>
+                                            <tool:StringEmptyConverter/>
                                         </Binding.Converter>
                                     </Binding>
                                 </DataTrigger.Binding>
@@ -68,7 +68,7 @@
                     <TextBlock.Text>
                         <Binding Path="Name">
                             <Binding.Converter>
-                                <tools:ImageConverter/>
+                                <tool:ProfileLogoConverter/>
                             </Binding.Converter>
                         </Binding>
                     </TextBlock.Text>
@@ -101,7 +101,7 @@
                                     <TextBlock.Text>
                                         <Binding Path="Hint">
                                             <Binding.Converter>
-                                                <tools:PromptConverter/>
+                                                <tool:ProfileHintConverter/>
                                             </Binding.Converter>
                                         </Binding>
                                     </TextBlock.Text>

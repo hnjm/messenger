@@ -14,37 +14,40 @@ namespace Messenger.Modules
     /// </summary>
     internal class RouteModule
     {
-        private class _Record
+        private class Controller
         {
             public Func<LinkPacket> Construct = null;
             public dynamic Function = null;
         }
 
-        private static RouteModule s_ins = null;
+        private static readonly RouteModule s_ins = new RouteModule();
 
-        private Dictionary<string, _Record> _dic = new Dictionary<string, _Record>();
+        private readonly Dictionary<string, Controller> _dic = new Dictionary<string, Controller>();
 
         private RouteModule() { }
 
         private void _Load()
         {
+            /* 利用反射识别所有控制器
+             * 同时构建表达式以便提升运行速度 */
             var ass = typeof(RouteModule).Assembly;
             foreach (var t in ass.GetTypes())
             {
                 if (t.IsSubclassOf(typeof(LinkPacket)) == false)
                     continue;
-                var att = t.GetCustomAttributes(typeof(HandleAttribute)).FirstOrDefault() as HandleAttribute;
+                var att = t.GetCustomAttributes(typeof(RouteAttribute)).FirstOrDefault() as RouteAttribute;
                 if (att == null)
                     continue;
                 var met = t.GetMethods(BindingFlags.Instance | BindingFlags.Public);
                 foreach (var i in met)
                 {
-                    var atr = i.GetCustomAttributes(typeof(HandleAttribute)).FirstOrDefault() as HandleAttribute;
+                    var atr = i.GetCustomAttributes(typeof(RouteAttribute)).FirstOrDefault() as RouteAttribute;
                     if (atr == null)
                         continue;
+                    // 构建表达式
                     var act = Delegate.CreateDelegate(typeof(Action<>).MakeGenericType(t), i) as dynamic;
                     var con = (Func<LinkPacket>)Expression.Lambda(Expression.New(t)).Compile();
-                    _dic.Add($"{att.Path}.{atr.Path}", new _Record() { Construct = con, Function = act });
+                    _dic.Add($"{att.Path}.{atr.Path}", new Controller() { Construct = con, Function = act });
                 }
             }
         }
@@ -66,9 +69,6 @@ namespace Messenger.Modules
         [AutoLoad(1, AutoLoadFlags.OnLoad)]
         public static void Load()
         {
-            if (s_ins != null)
-                return;
-            s_ins = new RouteModule();
             s_ins._Load();
         }
     }

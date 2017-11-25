@@ -257,7 +257,7 @@
         </Setter>
     </Style>
 
-    <!-- -->
+    <!-- 进度条样式 -->
     <SolidColorBrush x:Key="ProgressBar.Progress" Color="#FF0BADF0"/>
     <SolidColorBrush x:Key="ProgressBar.Background" Color="#20FFFFFF"/>
     <SolidColorBrush x:Key="ProgressBar.Border" Color="#40FFFFFF"/>

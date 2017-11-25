@@ -15,7 +15,7 @@ namespace Messenger.Modules
     /// </summary>
     internal class CacheModule
     {
-        private const string _CacheFolder = nameof(CacheModule);
+        private const string _CacheFolder = "Temp";
         private const string _CacheExtension = ".jpg";
 
         private const int _Limit = 384;
@@ -47,9 +47,12 @@ namespace Messenger.Modules
             }
         }
 
+        /// <summary>
+        /// 计算缓存的 SHA256 值
+        /// </summary>
         public static string GetCode(byte[] buffer)
         {
-            using (var sha = new SHA1Managed())
+            using (var sha = new SHA256Managed())
             {
                 var buf = sha.ComputeHash(buffer);
                 var str = buf.Aggregate(new StringBuilder(), (l, r) => l.AppendFormat("{0:x2}", r));
@@ -58,7 +61,7 @@ namespace Messenger.Modules
         }
 
         /// <summary>
-        /// 从本地缓存查找指定 Hash 值的图像
+        /// 从本地缓存查找指定 SHA256 值的图像
         /// </summary>
         public static string GetPath(string code)
         {
@@ -68,9 +71,9 @@ namespace Messenger.Modules
         }
 
         /// <summary>
-        /// 写入本地缓存, 将 Hash 值作为文件名
+        /// 写入本地缓存, 并将 SHA256 值作为文件名
         /// </summary>
-        /// <param name="returnPath">返回完整路径(真), 返回 Hash 值 (假)</param>
+        /// <param name="returnPath">返回完整路径(真), 返回 SHA256 值 (假)</param>
         public static string SetBuffer(byte[] buffer, bool returnPath, bool nothrow = true)
         {
             var fst = default(FileStream);

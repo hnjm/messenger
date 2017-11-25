@@ -11,7 +11,7 @@ namespace Messenger.Modules
     {
         private readonly BindingList<string> _list = null;
 
-        private static SymbolModule s_ins = new SymbolModule();
+        private static readonly SymbolModule s_ins = new SymbolModule();
 
         public static BindingList<string> List => s_ins._list;
 

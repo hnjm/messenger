@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -17,15 +18,18 @@ namespace Messenger.Models
             public double Speed = 0;
         }
 
+        /// <summary>
+        /// 历史记录上限
+        /// </summary>
         private const int _tickLimit = 10;
 
-        private const int _delay = 500;
+        private const int _delay = 300;
 
         private static Action s_action = null;
 
-        private static Stopwatch s_watch = new Stopwatch();
+        private static readonly Stopwatch s_watch = new Stopwatch();
 
-        private static Task s_task = new Task(async () =>
+        private static readonly Task s_task = new Task(async () =>
         {
             while (true)
             {
@@ -90,7 +94,11 @@ namespace Messenger.Models
 
             if (IsBatch == false)
             {
-                _remain = (avg > 0 && Position > 0) ? TimeSpan.FromMilliseconds((Length - Position) / avg) : TimeSpan.Zero;
+                var spa = (avg > 0 && Position > 0)
+                    ? TimeSpan.FromMilliseconds((Length - Position) / avg)
+                    : TimeSpan.Zero;
+                // 移除毫秒部分
+                _remain = new TimeSpan(spa.Days, spa.Hours, spa.Minutes, spa.Seconds);
                 OnPropertyChanged(nameof(Remain));
             }
 
@@ -118,12 +126,10 @@ namespace Messenger.Models
                 cur.Speed = 1.0 * pos / sub;
             }
             _ticks.Add(cur);
+            // 计算最近几条记录的平均速度
             if (_ticks.Count > _tickLimit)
                 _ticks.RemoveRange(0, _ticks.Count - _tickLimit);
-            var sum = 0.0;
-            foreach (var i in _ticks)
-                sum += i.Speed;
-            return sum / _ticks.Count;
+            return _ticks.Average(r => r.Speed);
         }
 
         [AutoLoad(16, AutoLoadFlags.OnLoad)]

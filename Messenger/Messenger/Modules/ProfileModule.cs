@@ -165,7 +165,7 @@ namespace Messenger.Modules
                 return pro;
             if (create == false)
                 return null;
-            pro = new Profile() { ID = id, Name = $"未知 [{id}]" };
+            pro = new Profile() { ID = id, Name = $"佚名 [{id}]" };
             spa.Add(new WeakReference(pro));
             return pro;
         }
@@ -180,7 +180,7 @@ namespace Messenger.Modules
             var lst = default(List<Profile>);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                lst = clt._Remove(r => ids.Contains(r.ID) == false);
+                lst = clt.RemoveEx(r => ids.Contains(r.ID) == false);
                 foreach (var r in lst)
                     if (r.Hint > 0)
                         SetRecent(r);
@@ -195,7 +195,7 @@ namespace Messenger.Modules
         {
             var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
-            var kvs = tmp._Distinct((a, b) => a.Hash == b.Hash);
+            var kvs = tmp.DistinctEx((a, b) => a.Hash == b.Hash);
             if (kvs.Count > Links.GroupLabelLimit)
                 return false;
             var ids = from i in kvs select i.Hash;
@@ -205,7 +205,7 @@ namespace Messenger.Modules
             PostModule.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var lst = gro._Remove(r => ids.Contains(r.ID) == false);
+                var lst = gro.RemoveEx(r => ids.Contains(r.ID) == false);
                 foreach (var r in lst)
                     if (r.Hint > 0)
                         SetRecent(r);

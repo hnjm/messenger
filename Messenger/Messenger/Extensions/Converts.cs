@@ -11,7 +11,7 @@ namespace Messenger.Extensions
         /// <summary>
         /// 分离主机字符串 (如 "some-host:7500" 分离成 "some-host" 和 7500)
         /// </summary>
-        internal static bool _GetHost(string str, out string host, out int port)
+        internal static bool TryGetHostEx(string str, out string host, out int port)
         {
             if (string.IsNullOrWhiteSpace(str))
                 goto fail;
@@ -34,9 +34,9 @@ namespace Messenger.Extensions
         /// <summary>
         /// 数据大小换算 (保留 2 位小数)
         /// </summary>
-        internal static string _GetLength(long length)
+        internal static string ToUnitEx(long length)
         {
-            if (_GetLength(length, out var len, out var pos))
+            if (ToUnitEx(length, out var len, out var pos))
                 return $"{len:0.00} {pos}B";
             else return string.Empty;
         }
@@ -47,7 +47,7 @@ namespace Messenger.Extensions
         /// <param name="length">数据大小</param>
         /// <param name="len">长度</param>
         /// <param name="pos">单位</param>
-        internal static bool _GetLength(long length, out double len, out string pos)
+        internal static bool ToUnitEx(long length, out double len, out string pos)
         {
             len = 0;
             pos = string.Empty;
@@ -74,7 +74,7 @@ namespace Messenger.Extensions
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="FormatException"/>
         /// <exception cref="OverflowException"/>
-        internal static IPEndPoint _ToEndPoint(this string str)
+        internal static IPEndPoint ToEndPointEx(this string str)
         {
             if (str == null)
                 throw new ArgumentNullException();

@@ -17,7 +17,7 @@ namespace Messenger.Models
 
         public event PropertyChangingEventHandler PropertyChanging;
 
-        private void _EmitChange<T>(ref T source, T target, [CallerMemberName] string name = null)
+        private void OnPropertyChange<T>(ref T source, T target, [CallerMemberName] string name = null)
         {
             var eva = new PropertyChangingEventArgs(name);
             PropertyChanging?.Invoke(this, eva);
@@ -45,7 +45,7 @@ namespace Messenger.Models
         public int ID
         {
             get => _id;
-            set => _EmitChange(ref _id, value);
+            set => OnPropertyChange(ref _id, value);
         }
 
         /// <summary>
@@ -54,25 +54,25 @@ namespace Messenger.Models
         public int Hint
         {
             get => _hint;
-            set => _EmitChange(ref _hint, value);
+            set => OnPropertyChange(ref _hint, value);
         }
 
         public string Name
         {
             get => _name;
-            set => _EmitChange(ref _name, value);
+            set => OnPropertyChange(ref _name, value);
         }
 
         public string Text
         {
             get => _text;
-            set => _EmitChange(ref _text, value);
+            set => OnPropertyChange(ref _text, value);
         }
 
         public string Image
         {
             get => _imag;
-            set => _EmitChange(ref _imag, value);
+            set => OnPropertyChange(ref _imag, value);
         }
 
         public Profile CopyFrom(Profile profile, bool ignoreid = true)

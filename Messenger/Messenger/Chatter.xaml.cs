@@ -7,6 +7,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Forms = System.Windows.Forms;
 
 namespace Messenger
 {
@@ -23,22 +24,18 @@ namespace Messenger
         public Chatter()
         {
             InitializeComponent();
-
             Loaded += _Loaded;
             Unloaded += _Unloaded;
         }
 
         private void _Loaded(object sender, RoutedEventArgs e)
         {
-            HistoryModule.Receiving += ModuleMessage_Receiving;
-            (Application.Current as App).TextBoxKeyDown += TextBox_KeyDown;
+            HistoryModule.Receiving += _HistoryReceiving;
+            (Application.Current as App).TextBoxKeyDown += _TextBoxKeyDown;
 
             _profile = ProfileModule.Inscope;
-            //if (_profile.ID <= Links.ID)
-            //    buttonFile.Visibility = Visibility.Collapsed;
-            uiProfileGrid.DataContext = _profile;
-
             _messages = HistoryModule.Query(_profile.ID);
+            uiProfileGrid.DataContext = _profile;
             uiMessageBox.ItemsSource = _messages;
             _messages.ListChanged += Messages_ListChanged;
             _ScrollToEnd();
@@ -47,8 +44,8 @@ namespace Messenger
         private void _Unloaded(object sender, RoutedEventArgs e)
         {
             uiMessageBox.ItemsSource = null;
-            HistoryModule.Receiving -= ModuleMessage_Receiving;
-            (Application.Current as App).TextBoxKeyDown -= TextBox_KeyDown;
+            HistoryModule.Receiving -= _HistoryReceiving;
+            (Application.Current as App).TextBoxKeyDown -= _TextBoxKeyDown;
             _messages.ListChanged -= Messages_ListChanged;
         }
 
@@ -62,16 +59,16 @@ namespace Messenger
         /// <summary>
         /// 拦截消息通知
         /// </summary>
-        private void ModuleMessage_Receiving(object sender, LinkEventArgs<Packet> e)
+        private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
             if (e.Record.Groups != _profile.ID)
                 return;
             e.Finish = true;
         }
 
-        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        private void _TextBoxKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender != textboxInput || e.Key != Key.Enter)
+            if (sender != uiInputBox || e.Key != Key.Enter)
                 return;
             var val = SettingModule.UseCtrlEnter;
             var mod = e.KeyboardDevice.Modifiers;
@@ -81,38 +78,39 @@ namespace Messenger
                 return;
             if ((mod & ModifierKeys.Control) != ModifierKeys.Control && val == true)
                 return;
-            _InsertText();
+            _PushText();
             e.Handled = true;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
-            if (sender == buttonSymbol && uiSymbolGrid.Visibility != Visibility.Visible)
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+            if (tag == "symbol" && uiSymbolGrid.Visibility != Visibility.Visible)
                 uiSymbolGrid.Visibility = Visibility.Visible;
             else
                 uiSymbolGrid.Visibility = Visibility.Collapsed;
 
-            if (sender == buttonFile)
+            if (tag == "file")
             {
-                var dia = new System.Windows.Forms.OpenFileDialog();
+                var dia = new Forms.OpenFileDialog();
                 if (dia.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     _Share(dia.FileName);
             }
 
-            if (sender == buttonText)
-                _InsertText();
-            else if (sender == buttonImage)
-                _InsertImage();
-            else if (sender == buttonClean)
+            if (tag == "text")
+                _PushText();
+            else if (tag == "image")
+                _PushImage();
+            else if (tag == "clean")
                 HistoryModule.Clear(_profile.ID);
-            textboxInput.Focus();
+            uiInputBox.Focus();
         }
 
-        private void Symbol_Click(object sender, RoutedEventArgs e)
+        private void _SymbolClick(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.DataContext is string con)
-                _InsertText(textboxInput, con);
-            textboxInput.Focus();
+                _InsertText(uiInputBox, con);
+            uiInputBox.Focus();
         }
 
         private void _ScrollToEnd()
@@ -136,20 +134,20 @@ namespace Messenger
             textbox.SelectionLength = 0;
         }
 
-        private void _InsertText()
+        private void _PushText()
         {
-            var str = textboxInput.Text.TrimEnd(new char[] { '\0', '\r', '\n', '\t', ' ' });
+            var str = uiInputBox.Text.TrimEnd(new char[] { '\0', '\r', '\n', '\t', ' ' });
             if (str.Length < 1)
                 return;
-            textboxInput.Text = string.Empty;
+            uiInputBox.Text = string.Empty;
             PostModule.Message(_profile.ID, str);
             ProfileModule.SetRecent(_profile);
         }
 
-        private void _InsertImage()
+        private void _PushImage()
         {
-            var ofd = new System.Windows.Forms.OpenFileDialog() { Filter = "位图文件|*.bmp;*.png;*.jpg" };
-            if (ofd.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            var ofd = new Forms.OpenFileDialog() { Filter = "位图文件|*.bmp;*.png;*.jpg" };
+            if (ofd.ShowDialog() != Forms.DialogResult.OK)
                 return;
             try
             {
@@ -162,7 +160,7 @@ namespace Messenger
                 Entrance.ShowError("发送图片失败", ex);
             }
         }
-        
+
         private void _Share(string path)
         {
             var sha = default(Share);
@@ -176,23 +174,23 @@ namespace Messenger
             _messages.Add(pkt);
         }
 
-        private void TextBox_PreviewDragOver(object sender, DragEventArgs e)
+        private void _TextBoxPreviewDragOver(object sender, DragEventArgs e)
         {
-            if (/*_profile.ID <= Links.ID || */e.Data.GetDataPresent(DataFormats.FileDrop) == false)
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) == false)
                 e.Effects = DragDropEffects.None;
             else
                 e.Effects = DragDropEffects.Copy;
             e.Handled = true;
         }
 
-        private void TextBox_PreviewDrop(object sender, DragEventArgs e)
+        private void _TextBoxPreviewDrop(object sender, DragEventArgs e)
         {
-            if (/*_profile.ID <= Links.ID ||*/ e.Data.GetDataPresent(DataFormats.FileDrop) == false)
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) == false)
                 return;
-            var fil = e.Data.GetData(DataFormats.FileDrop) as string[];
-            if (fil == null || fil.Length < 1)
+            var arr = e.Data.GetData(DataFormats.FileDrop) as string[];
+            if (arr == null || arr.Length < 1)
                 return;
-            var val = fil[0];
+            var val = arr[0];
             _Share(val);
         }
     }

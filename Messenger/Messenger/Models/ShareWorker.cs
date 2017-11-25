@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Messenger.Models
 {
@@ -131,11 +130,10 @@ namespace Messenger.Models
             {
                 if (_disposed)
                     return;
+                _cancel.Cancel();
                 _disposed = true;
+                OnPropertyChanged(nameof(IsDisposed));
             }
-
-            Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(IsDisposed)));
-            _cancel.Cancel();
         }
     }
 }

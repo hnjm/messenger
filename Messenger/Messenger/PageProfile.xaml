@@ -6,9 +6,7 @@
       mc:Ignorable="d" 
       FontSize="14"
       KeepAlive="False"
-      d:DesignWidth="960" d:DesignHeight="540"
-      Loaded="Page_Loaded" Unloaded="Page_Unloaded">
-
+      d:DesignWidth="960" d:DesignHeight="540">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
@@ -20,7 +18,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
-                <TextBox x:Name="textbox" Margin="10" MaxLength="24" Tag="搜索" TextChanged="TextBox_TextChanged"/>
+                <TextBox x:Name="uiSearchBox" Margin="10" MaxLength="24" Tag="搜索" TextChanged="_TextChanged"/>
                 <Path Margin="15" HorizontalAlignment="Right" Stroke="#FFC0C0C0" StrokeThickness="1" Width="18" Height="18">
                     <Path.Data>
                         <GeometryGroup>
@@ -30,8 +28,8 @@
                     </Path.Data>
                 </Path>
             </Grid>
-            <Frame x:Name="frameLeft" Grid.Row="1" NavigationUIVisibility="Hidden"/>
-            <Grid x:Name="grid" Grid.Row="1" Background="#FF202020" Visibility="Hidden">
+            <Frame x:Name="uiLeftFrame" Grid.Row="1" NavigationUIVisibility="Hidden"/>
+            <Grid x:Name="uiPanel" Grid.Row="1" Background="#FF202020" Visibility="Hidden">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition/>
@@ -46,7 +44,7 @@
                     <TextBlock Grid.Row="0" Margin="0,5" FontSize="16" FontWeight="Bold" Foreground="#C0C0C0">搜索</TextBlock>
                     <TextBlock Grid.Row="1" Margin="0,5" FontSize="12" Foreground="#C0C0C0" Text="{Binding ElementName=textbox, Path=Text, StringFormat={}{0} 的搜索结果}"/>
                 </Grid>
-                <ListBox x:Name="listbox" Grid.Row="1" 
+                <ListBox x:Name="uiProfileList" Grid.Row="1" 
                          Style="{DynamicResource ThinListBox}"
                          ItemContainerStyle="{DynamicResource ProfileItem}">
                 </ListBox>
@@ -54,6 +52,6 @@
                 <Grid Grid.Row="3" Height="48"/>
             </Grid>
         </Grid>
-        <Frame x:Name="frameRight" Grid.Column="1" NavigationUIVisibility="Hidden" Background="#FF000000"/>
+        <Frame x:Name="uiRightFrame" Grid.Column="1" NavigationUIVisibility="Hidden" Background="#FF000000"/>
     </Grid>
 </Page>

@@ -9,7 +9,7 @@ namespace Messenger.Extensions
         /// <summary>
         /// 返回集合中所有唯一的项目
         /// </summary>
-        public static List<T> _Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> equals)
+        public static List<T> DistinctEx<T>(this IEnumerable<T> source, Func<T, T, bool> equals)
         {
             var lst = new List<T>();
             foreach (var val in source)
@@ -24,7 +24,7 @@ namespace Messenger.Extensions
         /// <summary>
         /// 移除源列表中所有符合条件的项目, 返回被移除的项目
         /// </summary>
-        public static List<T> _Remove<T>(this IList<T> lst, Func<T, bool> fun)
+        public static List<T> RemoveEx<T>(this IList<T> lst, Func<T, bool> fun)
         {
             var idx = 0;
             var res = new List<T>();

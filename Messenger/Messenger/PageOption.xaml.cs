@@ -12,28 +12,29 @@ namespace Messenger
         public PageOption()
         {
             InitializeComponent();
+            Loaded += _Loaded;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
+        private void _Loaded(object sender, RoutedEventArgs e)
         {
             var val = SettingModule.UseCtrlEnter;
             if (val == false)
-                radioEnter.IsChecked = true;
+                uiEnterRadio.IsChecked = true;
             else
-                radioCtrlEnter.IsChecked = true;
+                uiCtrlEnterRadio.IsChecked = true;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void _ButtonClick(object sender, RoutedEventArgs e)
         {
-            var btn = e.OriginalSource as Button;
-            if (btn == null)
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+            if (tag == null)
                 return;
-            if (btn == buttonExit)
+            if (tag == "exit")
             {
                 LinkModule.Shutdown();
                 Application.Current.MainWindow.Close();
             }
-            else if (btn == buttonOut)
+            else if (tag == "out")
             {
                 var mai = Application.Current.MainWindow as Entrance;
                 if (mai == null)
@@ -44,12 +45,12 @@ namespace Messenger
             }
         }
 
-        private void RadioButton_Click(object sender, RoutedEventArgs e)
+        private void _RadioClick(object sender, RoutedEventArgs e)
         {
             var src = e.OriginalSource;
-            if (src == radioEnter)
+            if (src == uiEnterRadio)
                 SettingModule.UseCtrlEnter = false;
-            else if (src == radioCtrlEnter)
+            else if (src == uiCtrlEnterRadio)
                 SettingModule.UseCtrlEnter = true;
         }
     }
