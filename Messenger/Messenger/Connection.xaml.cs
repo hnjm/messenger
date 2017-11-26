@@ -1,5 +1,6 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Logger;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -117,6 +118,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
+                Log.Error(ex);
                 Entrance.ShowError("连接失败", ex);
             }
 

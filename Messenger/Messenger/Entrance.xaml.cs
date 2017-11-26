@@ -5,6 +5,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Interop;
+using static Messenger.Extensions.NativeMethods;
+using static System.Windows.ResizeMode;
+using static System.Windows.WindowState;
 
 namespace Messenger
 {
@@ -15,8 +21,8 @@ namespace Messenger
     {
         private class AutoLoadInfo
         {
-            internal MethodInfo info;
-            internal AutoLoadAttribute attribute;
+            public MethodInfo Method;
+            public AutoLoadAttribute Attribute;
         }
 
         public Entrance()
@@ -28,7 +34,14 @@ namespace Messenger
 
         private void _Loaded(object sender, RoutedEventArgs e)
         {
-            IEnumerable<AutoLoadInfo> find()
+            #region Flat window style
+            var han = new WindowInteropHelper(this).Handle;
+            var now = GetWindowLong(han, GWL_STYLE);
+            var res = SetWindowLong(han, GWL_STYLE, now & ~WS_SYSMENU);
+            #endregion
+
+            // 利用反射识别所有标识有 AutoLoad 函数
+            IEnumerable<AutoLoadInfo> _Find()
             {
                 var ass = typeof(Entrance).Assembly;
                 foreach (var t in ass.GetTypes())
@@ -39,36 +52,27 @@ namespace Messenger
                         var att = i.GetCustomAttributes(typeof(AutoLoadAttribute)).FirstOrDefault();
                         if (att == null)
                             continue;
-
-                        yield return new AutoLoadInfo() { info = i, attribute = (AutoLoadAttribute)att };
+                        yield return new AutoLoadInfo() { Method = i, Attribute = (AutoLoadAttribute)att };
                     }
                 }
             }
 
-            var loa = find().Where(r => r.attribute.Flag == AutoLoadFlags.OnLoad).ToList();
-            loa.Sort((a, b) => a.attribute.Level - b.attribute.Level);
-            var sav = find().Where(r => r.attribute.Flag == AutoLoadFlags.OnExit).ToList();
-            sav.Sort((a, b) => a.attribute.Level - b.attribute.Level);
+            var loa = _Find().Where(r => r.Attribute.Flag == AutoLoadFlags.OnLoad).ToList();
+            loa.Sort((a, b) => a.Attribute.Level - b.Attribute.Level);
+            var sav = _Find().Where(r => r.Attribute.Flag == AutoLoadFlags.OnExit).ToList();
+            sav.Sort((a, b) => a.Attribute.Level - b.Attribute.Level);
 
-            loa.ForEach(m => m.info.Invoke(null, null));
-            Closed += (s, arg) => sav.ForEach(m => m.info.Invoke(null, null));
+            loa.ForEach(m => m.Method.Invoke(null, null));
+            Closed += (s, arg) => sav.ForEach(m => m.Method.Invoke(null, null));
         }
 
         private void _Closing(object sender, CancelEventArgs e)
         {
             if (LinkModule.IsRunning == false)
                 return;
-            if (WindowState != WindowState.Minimized)
-                WindowState = WindowState.Minimized;
+            if (WindowState != Minimized)
+                WindowState = Minimized;
             e.Cancel = true;
-        }
-
-        private void _Click(object sender, RoutedEventArgs e)
-        {
-            if (sender == uiConfirmButton)
-            {
-                uiMessagePanel.Visibility = Visibility.Collapsed;
-            }
         }
 
         /// <summary>
@@ -90,5 +94,40 @@ namespace Messenger
                 win.uiMessagePanel.Visibility = Visibility.Visible;
             });
         }
+
+        private void _Click(object sender, RoutedEventArgs e)
+        {
+            var tag = (e.OriginalSource as Button)?.Tag as string;
+
+            if (tag == "confirm")
+                uiMessagePanel.Visibility = Visibility.Collapsed;
+            #region Flat window style
+            else if (tag == "min")
+                WindowState = Minimized;
+            else if (tag == "max")
+                _Toggle();
+            else if (tag == "exit")
+                Close();
+            #endregion
+            return;
+        }
+
+        #region Flat window style
+        private void _Toggle()
+        {
+            if (ResizeMode != CanResize && ResizeMode != CanResizeWithGrip)
+                return;
+            WindowState = (WindowState == Maximized) ? Normal : Maximized;
+        }
+
+        private void _MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+                _Toggle();
+            else
+                DragMove();
+            return;
+        }
+        #endregion
     }
 }

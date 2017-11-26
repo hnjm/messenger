@@ -1,5 +1,6 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.ComponentModel;
@@ -90,13 +91,6 @@ namespace Messenger
             else
                 uiSymbolGrid.Visibility = Visibility.Collapsed;
 
-            if (tag == "file")
-            {
-                var dia = new Forms.OpenFileDialog();
-                if (dia.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    _Share(dia.FileName);
-            }
-
             if (tag == "text")
                 _PushText();
             else if (tag == "image")
@@ -157,6 +151,7 @@ namespace Messenger
             }
             catch (Exception ex)
             {
+                Log.Error(ex);
                 Entrance.ShowError("发送图片失败", ex);
             }
         }

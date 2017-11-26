@@ -21,9 +21,9 @@ namespace Messenger.Models
         /// <summary>
         /// 历史记录上限
         /// </summary>
-        private const int _tickLimit = 10;
+        private const int _tickLimit = 16;
 
-        private const int _delay = 300;
+        private const int _delay = 200;
 
         private static Action s_action = null;
 

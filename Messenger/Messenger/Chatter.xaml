@@ -15,7 +15,7 @@
 
         <!--文件共享-->
         <ControlTemplate x:Key="ShareTemplate">
-            <Grid Margin="8,4" DataContext="{Binding Path=Value}">
+            <Grid Margin="8,4" DataContext="{Binding Path=Value}" Background="Transparent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto" Name="MiddleRow"/>
@@ -27,6 +27,11 @@
                 </StackPanel>
                 <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
                 <TextBlock Name="PathText" Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
+                <Grid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                    </ContextMenu>
+                </Grid.ContextMenu>
             </Grid>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="False">
@@ -195,7 +200,7 @@
             </Grid.RowDefinitions>
             <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Background="SteelBlue" Height="1" SnapsToDevicePixels="True"/>
             <TextBox x:Name="uiInputBox" Grid.Column="0" Grid.Row="2" Margin="5" Background="Transparent" Foreground="#C0C0C0" CaretBrush="#808080" BorderThickness="0"
-                     MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字"
+                     MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字 (或拖动 文件/文件夹 到此处)"
                      AllowDrop="True" PreviewDragOver="_TextBoxPreviewDragOver" PreviewDrop="_TextBoxPreviewDrop" SelectionBrush="LightGreen">
                 <TextBox.ContextMenu>
                     <ContextMenu>
@@ -206,7 +211,6 @@
                 </TextBox.ContextMenu>
             </TextBox>
             <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center" Button.Click="_Click">
-                <Button Tag="file" VerticalAlignment="Center" Content="{DynamicResource PathDirectory}" Style="{DynamicResource GeometryButton}" ToolTip="发送文件"/>
                 <Button Tag="clean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButton}" ToolTip="清空消息列表"/>
                 <Button Tag="symbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButton}" ToolTip="表情面板"/>
                 <Button Tag="image" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButton}" ToolTip="发送图片"/>

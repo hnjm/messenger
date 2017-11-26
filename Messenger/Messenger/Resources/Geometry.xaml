@@ -37,52 +37,49 @@
         </Style.Triggers>
     </Style>
 
+    <!--表情-->
     <Path x:Key="PathSymbol" x:Shared="False"  Stroke="White" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
                 <EllipseGeometry Center="10.5,10.5" RadiusX="1" RadiusY="1" />
-                <EllipseGeometry Center="20.5,10.5" RadiusX="1" RadiusY="1"/>
-                <PathGeometry Figures="M 8.5,17.5 A 7.5,7.5 0 0 0 22.5,17.5"/>
+                <EllipseGeometry Center="21.5,10.5" RadiusX="1" RadiusY="1"/>
+                <PathGeometry Figures="M 8.5,17.5 A 8,8 0 0 0 23.5,17.5"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
+    <!--发送-->
     <Path x:Key="PathArrow" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1.5" StrokeLineJoin="Round" Width="40" Height="40">
         <Path.Data>
             <GeometryGroup>
-                <EllipseGeometry Center="19.5,19.5" RadiusX="18" RadiusY="18"/>
-                <PathGeometry Figures="M 9.5,9.5 31.5,19.5 9.5,29.5 15.5,19.5 Z"/>
+                <EllipseGeometry Center="20,20" RadiusX="18" RadiusY="18"/>
+                <PathGeometry Figures="M 9.5,9.5 32,20 9.5,30.5 15.5,20 Z"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathDirectory" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
-        <Path.Data>
-            <GeometryGroup>
-                <PathGeometry Figures="M 6.5,10.5 L 6.5,22.5 24.5,22.5 24.5,11.5 6.5,11.5 6.5,7.5 15.5,7.5 15.5,11.5"/>
-            </GeometryGroup>
-        </Path.Data>
-    </Path>
-
+    <!--选择图片-->
     <Path x:Key="PathImage" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
-                <PathGeometry Figures="M 5.5,8.5 L 5.5,22.5 25.5,22.5 25.5,8.5 5.5,8.5"/>
+                <PathGeometry Figures="M 5.5,8.5 L 5.5,23.5 26.5,23.5 26.5,8.5 Z"/>
                 <PathGeometry Figures="M 5.5,17.5 L 9.5,13.5 17.5,17.5 21.5,13.5 25.5,15.5"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathDownload" x:Shared="False" Stroke="Gray" StrokeThickness="2" StrokeLineJoin="Round">
+    <!--清空消息-->
+    <Path x:Key="PathRemove" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
         <Path.Data>
             <GeometryGroup>
-                <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15"/>
-                <PathGeometry Figures="M 16,6 16,26 8,18 M 24,18 16,26"/>
+                <LineGeometry StartPoint="12,6.5" EndPoint="20,6.5"/>
+                <LineGeometry StartPoint="8,9.5" EndPoint="24,9.5"/>
+                <PathGeometry Figures="M 10.5,12 L 10.5,23.5 21.5,23.5 21.5,12"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathStop" x:Shared="False" Stroke="Gray" StrokeThickness="2">
+    <Path x:Key="PathStop" x:Shared="False" Stroke="Gray" StrokeThickness="2" Height="32" Width="32">
         <Path.Data>
             <GeometryGroup>
                 <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15"/>
@@ -92,7 +89,7 @@
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathDelete" x:Shared="False" Stroke="#808080" StrokeThickness="2">
+    <Path x:Key="PathDelete" x:Shared="False" Stroke="#808080" StrokeThickness="2" Height="32" Width="32">
         <Path.Data>
             <GeometryGroup>
                 <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15"/>
@@ -103,31 +100,21 @@
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathRemove" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1" Width="32" Height="32">
+    <Path x:Key="PathView" x:Shared="False" Stroke="Gray" StrokeThickness="2" StrokeLineJoin="Miter" Height="32" Width="32">
         <Path.Data>
             <GeometryGroup>
-                <LineGeometry StartPoint="11.5,6.5" EndPoint="19.5,6.5"/>
-                <LineGeometry StartPoint="7.5,9.5" EndPoint="23.5,9.5"/>
-                <PathGeometry Figures="M 10.5,11.5 L 10.5,23.5 20.5,23.5 20.5,11.5"/>
+                <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15"/>
+                <EllipseGeometry Center="12,12" RadiusX="6" RadiusY="6"/>
+                <LineGeometry StartPoint="16,16" EndPoint="24,24"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
 
-    <Path x:Key="PathView" x:Shared="False" Stroke="Gray" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path x:Key="PathBrowser" x:Shared="False" Stroke="Gray" StrokeThickness="2" Height="32" Width="32">
         <Path.Data>
             <GeometryGroup>
                 <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15"/>
-                <PathGeometry Figures="M 16,12 16,9 7,9 7,23 25,23 27,12 9,12 7,23"/>
-            </GeometryGroup>
-        </Path.Data>
-    </Path>
-
-    <Path x:Key="PathBrowser" x:Shared="False" Stroke="Gray" StrokeThickness="2">
-        <Path.Data>
-            <GeometryGroup>
-                <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15"/>
-                <PathGeometry Figures="M 7,12 16,12 16,8 7,8 7,23 25,23 25,20"/>
-                <PathGeometry Figures="M 25,18 25,12 19,12"/>
+                <PathGeometry Figures="M 7,12 25,12 25,23 7,23 7,8 16,8 16,12 "/>
             </GeometryGroup>
         </Path.Data>
     </Path>
@@ -135,9 +122,9 @@
     <Path x:Key="PathLiteStop" x:Shared="False" Stroke="#80FFFFFF" StrokeThickness="1.5" Width="20" Height="20" StrokeLineJoin="Bevel">
         <Path.Data>
             <GeometryGroup>
-                <EllipseGeometry Center="9.5,9.5" RadiusX="9" RadiusY="9"/>
-                <LineGeometry StartPoint="5.5,5.5" EndPoint="13.5,13.5"/>
-                <LineGeometry StartPoint="5.5,13.5" EndPoint="13.5,5.5"/>
+                <EllipseGeometry Center="10,10" RadiusX="9" RadiusY="9"/>
+                <LineGeometry StartPoint="6,6" EndPoint="14,14"/>
+                <LineGeometry StartPoint="6,14" EndPoint="14,6"/>
             </GeometryGroup>
         </Path.Data>
     </Path>
@@ -145,8 +132,8 @@
     <Path x:Key="PathLitePlay" x:Shared="False" Stroke="#80FFFFFF" StrokeThickness="1.5" Width="20" Height="20" StrokeLineJoin="Miter">
         <Path.Data>
             <GeometryGroup>
-                <EllipseGeometry Center="9.5,9.5" RadiusX="9" RadiusY="9"/>
-                <PathGeometry Figures="M 6.5,5.5 14,9.5 6.5,13.5 Z"/>
+                <EllipseGeometry Center="10,10" RadiusX="9" RadiusY="9"/>
+                <PathGeometry Figures="M 6.5,5.5 15,10 6.5,14.5 Z"/>
             </GeometryGroup>
         </Path.Data>
     </Path>

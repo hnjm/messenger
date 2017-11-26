@@ -124,9 +124,9 @@
                         <Path Grid.Column="0" Stroke="White" Width="24" Height="24">
                             <Path.Data>
                                 <GeometryGroup>
-                                    <LineGeometry StartPoint="1.5,3.5" EndPoint="21.5,3.5"/>
-                                    <LineGeometry StartPoint="1.5,10.5" EndPoint="21.5,10.5"/>
-                                    <LineGeometry StartPoint="1.5,18.5" EndPoint="21.5,18.5"/>
+                                    <LineGeometry StartPoint="2,3.5" EndPoint="22,3.5"/>
+                                    <LineGeometry StartPoint="2,10.5" EndPoint="22,10.5"/>
+                                    <LineGeometry StartPoint="2,18.5" EndPoint="22,18.5"/>
                                 </GeometryGroup>
                             </Path.Data>
                         </Path>
@@ -168,14 +168,14 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="{Binding ElementName=uiNavigateGrid, Path=MinWidth}"/>
-                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Stroke="#F0F0F0" Width="24" Height="24">
                         <Path.Data>
                             <GeometryGroup>
-                                <EllipseGeometry Center="11.5,11.5" RadiusX="11" RadiusY="11"/>
-                                <LineGeometry StartPoint="11.5,11.5" EndPoint="17.5,11.5"/>
-                                <LineGeometry StartPoint="11.5,11.5" EndPoint="11.5,2.5"/>
+                                <EllipseGeometry Center="12,12" RadiusX="11" RadiusY="11"/>
+                                <LineGeometry StartPoint="11,11.5" EndPoint="18,11.5"/>
+                                <LineGeometry StartPoint="11.5,12" EndPoint="11.5,3"/>
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
@@ -210,8 +210,8 @@
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24">
                         <Path.Data>
                             <GeometryGroup>
-                                <EllipseGeometry Center="10.5,6.5" RadiusX="5" RadiusY="5"/>
-                                <PathGeometry Figures="M 1.5,21.5 A 9,9 0 0 1 20.5,21.5"/>
+                                <EllipseGeometry Center="12,6.5" RadiusX="5" RadiusY="5"/>
+                                <PathGeometry Figures="M 2,22 A 9,9 0 0 1 22,22"/>
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
@@ -246,10 +246,10 @@
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24">
                         <Path.Data>
                             <GeometryGroup>
-                                <EllipseGeometry Center="13.5,6.5" RadiusX="4" RadiusY="4"/>
-                                <EllipseGeometry Center="4.5,8.5" RadiusX="3" RadiusY="3"/>
-                                <PathGeometry Figures="M 4.5,20.5 A 8,8 0 0 1 22.5,20.5"/>
-                                <PathGeometry Figures="M 0.5,17.5 A 5,5 0 0 1 8.5,13.5"/>
+                                <EllipseGeometry Center="14,7" RadiusX="4" RadiusY="4"/>
+                                <EllipseGeometry Center="5,9" RadiusX="3" RadiusY="3"/>
+                                <PathGeometry Figures="M 5,21 A 8,8 0 0 1 23,21"/>
+                                <PathGeometry Figures="M 0.5,18 A 5,5 0 0 1 8.5,14"/>
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
@@ -285,10 +285,10 @@
                     <Path Grid.Column="0" Stroke="#FFFFFF" Width="24" Height="24" StrokeLineJoin="Round">
                         <Path.Data>
                             <GeometryGroup>
-                                <PathGeometry Figures="M19.5,1.5 19.5,21.5 3.5,21.5 3.5,1.5 Z"/>
-                                <LineGeometry StartPoint="5.5,7.5" EndPoint="17.5,7.5"/>
-                                <LineGeometry StartPoint="5.5,11.5" EndPoint="17.5,11.5"/>
-                                <LineGeometry StartPoint="5.5,15.5" EndPoint="17.5,15.5"/>
+                                <PathGeometry Figures="M20.5,1.5 20.5,22.5 3.5,22.5 3.5,1.5 Z"/>
+                                <LineGeometry StartPoint="6,7.5" EndPoint="18,7.5"/>
+                                <LineGeometry StartPoint="6,11.5" EndPoint="18,11.5"/>
+                                <LineGeometry StartPoint="6,15.5" EndPoint="18,15.5"/>
                             </GeometryGroup>
                         </Path.Data>
                     </Path>
