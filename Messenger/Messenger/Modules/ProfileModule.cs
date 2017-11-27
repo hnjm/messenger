@@ -259,7 +259,7 @@ namespace Messenger.Modules
             rec.Add(profile);
         }
 
-        [AutoLoad(16, AutoLoadFlags.OnLoad)]
+        [Loader(16, LoaderFlags.OnLoad)]
         public static void Load()
         {
             try
@@ -285,7 +285,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoLoad(8, AutoLoadFlags.OnExit)]
+        [Loader(8, LoaderFlags.OnExit)]
         public static void Save()
         {
             OptionModule.SetOption(_KeyCode, s_ins._local.ID.ToString());

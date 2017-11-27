@@ -5,13 +5,12 @@ using System.Windows;
 
 namespace Messenger.Controllers
 {
-    [Route("share")]
+    /// <summary>
+    /// 处理共享信息
+    /// </summary>
     public class ShareController : LinkPacket
     {
-        /// <summary>
-        /// 处理共享信息
-        /// </summary>
-        [Route("info")]
+        [Route("share.info")]
         public void Take()
         {
             var rec = new ShareReceiver(Source, Data);

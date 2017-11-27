@@ -24,7 +24,7 @@ namespace Messenger.Modules
 
         private OptionModule() { }
 
-        [AutoLoad(0, AutoLoadFlags.OnLoad)]
+        [Loader(0, LoaderFlags.OnLoad)]
         public static void Load()
         {
             if (s_ins._doc != null)
@@ -50,7 +50,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoLoad(int.MaxValue, AutoLoadFlags.OnExit)]
+        [Loader(int.MaxValue, LoaderFlags.OnExit)]
         public static void Save()
         {
             var str = default(FileStream);

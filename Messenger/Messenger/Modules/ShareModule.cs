@@ -188,7 +188,7 @@ namespace Messenger.Modules
             return inf;
         }
 
-        [AutoLoad(32, AutoLoadFlags.OnLoad)]
+        [Loader(32, LoaderFlags.OnLoad)]
         public static void Load()
         {
             var pth = OptionModule.GetOption(_KeyPath);
@@ -197,7 +197,7 @@ namespace Messenger.Modules
             s_ins._savepath = pth;
         }
 
-        [AutoLoad(4, AutoLoadFlags.OnExit)]
+        [Loader(4, LoaderFlags.OnExit)]
         public static void Save()
         {
             OptionModule.SetOption(_KeyPath, s_ins._savepath);

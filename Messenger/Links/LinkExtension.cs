@@ -51,17 +51,17 @@ namespace Mikodev.Network
         {
             if (length < 1 || length > Links.BufferLengthLimit)
                 throw new LinkException(LinkError.Overflow, "Buffer length out of range!");
-            var buf = new byte[length];
-            var idx = 0;
-            while (idx < length)
+            var offset = 0;
+            var buffer = new byte[length];
+            while (length > 0)
             {
-                var sub = length - idx;
-                var len = await Task.Factory.FromAsync((a, s) => socket.BeginReceive(buf, idx, sub, SocketFlags.None, a, s), socket.EndReceive, null);
-                if (len < 1)
+                var res = await Task.Factory.FromAsync((a, s) => socket.BeginReceive(buffer, offset, length, SocketFlags.None, a, s), socket.EndReceive, null);
+                if (res < 1)
                     throw new SocketException((int)SocketError.ConnectionReset);
-                idx += len;
+                offset += res;
+                length -= res;
             }
-            return buf;
+            return buffer;
         }
 
         public static async Task SendAsyncExt(this Socket socket, byte[] buffer)
@@ -77,8 +77,11 @@ namespace Mikodev.Network
         {
             while (length > 0)
             {
-                var len = await Task.Factory.FromAsync((a, o) => socket.BeginSend(buffer, offset, length, SocketFlags.None, a, o), socket.EndSend, null);
-                length -= len;
+                var res = await Task.Factory.FromAsync((a, o) => socket.BeginSend(buffer, offset, length, SocketFlags.None, a, o), socket.EndSend, null);
+                if (res < 1)
+                    throw new SocketException((int)SocketError.ConnectionReset);
+                offset += res;
+                length -= res;
             }
         }
 

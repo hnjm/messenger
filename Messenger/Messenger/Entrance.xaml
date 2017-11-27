@@ -4,12 +4,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:module="clr-namespace:Messenger.Modules"
+        xmlns:tool="clr-namespace:Messenger.Tools"
         mc:Ignorable="d" FontSize="14"
         Width="960" Height="540" MinWidth="960" MinHeight="540"
         WindowStartupLocation="CenterScreen"
         Style="{DynamicResource FlatWindowStyle}">
     <Window.Resources>
         <!--#region Flat window style-->
+        <tool:LogicToPixelConverter x:Key="LogicToPixelConverter"/>
+
         <Style x:Key="MenuPathStyle" TargetType="Path">
             <Setter Property="StrokeThickness" Value="1"/>
             <Setter Property="Stroke" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}"/>
@@ -75,8 +78,10 @@
 
         <SolidColorBrush x:Key="Border.Active.Background" Color="#FF383838"/>
         <ControlTemplate x:Key="FlatWindowTemplate" TargetType="Window">
-            <Border Name="BasicBorder" SnapsToDevicePixels="True">
-                <Grid Name="BasicGrid" Margin="1" Background="{TemplateBinding Background}">
+            <Border Name="BasicBorder" Loaded="_BorderLoaded" SnapsToDevicePixels="True">
+                <Grid Name="BasicGrid"
+                      Margin="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource LogicToPixelConverter}}"
+                      Background="{TemplateBinding Background}">
                     <Grid.RowDefinitions>
                         <RowDefinition Name="TitleRow" Height="30"/>
                         <RowDefinition Height="*"/>
@@ -87,7 +92,7 @@
                           SnapsToDevicePixels="True">
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"
                                    Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=Title}"/>
-                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Button.Click="_Click" SnapsToDevicePixels="True">
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Button.Click="_PanelClick" SnapsToDevicePixels="True">
                             <Button Name="MenuMin" Tag="min" Content="{StaticResource MenuIconMin}" Style="{StaticResource MenuButtonStyle}"/>
                             <Button Name="MenuMax" Tag="max" Content="{StaticResource MenuIconMax}" Style="{StaticResource MenuButtonStyle}"/>
                             <Button Name="MenuExit" Tag="exit" Content="{StaticResource MenuIconExit}" Style="{StaticResource MenuButtonStyle}"/>
@@ -105,6 +110,7 @@
             <ControlTemplate.Triggers>
                 <Trigger Property="IsActive" Value="True">
                     <Setter TargetName="TitleGrid" Property="Background" Value="{StaticResource Border.Active.Background}"/>
+                    <Setter TargetName="BasicBorder" Property="BorderBrush" Value="#FF202020"/>
                 </Trigger>
                 <Trigger Property="WindowState" Value="Maximized">
                     <Setter TargetName="MenuMax" Property="Content" Value="{StaticResource MenuIconNormal}"/>

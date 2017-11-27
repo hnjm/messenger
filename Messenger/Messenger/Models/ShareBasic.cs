@@ -132,7 +132,7 @@ namespace Messenger.Models
             return _ticks.Average(r => r.Speed);
         }
 
-        [AutoLoad(16, AutoLoadFlags.OnLoad)]
+        [Loader(16, LoaderFlags.OnLoad)]
         public static void Load()
         {
             s_task.Start();

@@ -115,7 +115,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 读取服务器搜索列表
         /// </summary>
-        [AutoLoad(4, AutoLoadFlags.OnLoad)]
+        [Loader(4, LoaderFlags.OnLoad)]
         public static void Load()
         {
             var lst = new List<IPEndPoint>();
@@ -125,7 +125,7 @@ namespace Messenger.Modules
                 if (pot != null)
                     s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
                 var str = OptionModule.GetOption(_KeyLast);
-                Converts.TryGetHostEx(str, out s_ins._host, out s_ins._port);
+                Extension.ToHostEx(str, out s_ins._host, out s_ins._port);
                 var sts = OptionModule.GetOption(_KeyList) ?? string.Empty;
                 var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var s in arr)
@@ -143,7 +143,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 保存列表到文件
         /// </summary>
-        [AutoLoad(32, AutoLoadFlags.OnExit)]
+        [Loader(32, LoaderFlags.OnExit)]
         public static void Save()
         {
             var stb = new StringBuilder();

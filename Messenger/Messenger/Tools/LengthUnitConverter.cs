@@ -10,7 +10,7 @@ namespace Messenger.Tools
     /// </summary>
     internal class LengthUnitConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => Converts.ToUnitEx(System.Convert.ToInt64(value));
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => Extension.ToUnitEx(System.Convert.ToInt64(value));
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new InvalidOperationException();
     }

@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Messenger.Models
 {
-    public class Share : IDisposed
+    public class Share : IDisposed, INotifyPropertyChanged
     {
         internal static Func<int, Guid, Socket, Task> _backlog;
 
@@ -45,6 +45,14 @@ namespace Messenger.Models
         internal readonly long _length;
         internal readonly BindingList<ShareWorker> _list = new BindingList<ShareWorker>();
         internal int _closed = 0;
+
+        #region PropertyChange
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string str = null) =>
+            Application.Current.Dispatcher.Invoke(() =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty)));
+        #endregion
 
         /// <summary>
         /// 是否为批量操作 (目录: 真, 文件: 假)
@@ -103,6 +111,7 @@ namespace Messenger.Models
                 return;
             _backlog -= _Accept;
 
+            OnPropertyChanged(nameof(IsDisposed));
             var lst = default(List<ShareWorker>);
             Application.Current.Dispatcher.Invoke(() => lst = _list.ToList());
             lst.ForEach(r => r.Dispose());

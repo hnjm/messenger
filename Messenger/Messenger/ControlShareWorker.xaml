@@ -46,10 +46,10 @@
                             Orientation="Horizontal" VerticalAlignment="Center"
                             Button.Click ="_Click">
                     <!--控制按钮-->
-                    <Button x:Name="PlayButton" Margin="8,0" Tag="play" ToolTip="启动传输"
+                    <Button Name="PlayButton" Margin="8,0" Tag="play" ToolTip="启动传输"
                             Content="{DynamicResource PathLitePlay}"
                             Style="{DynamicResource GeometryButton}"/>
-                    <Button x:Name="StopButton" Tag="stop" ToolTip="关闭传输"
+                    <Button Name="StopButton" Tag="stop" ToolTip="关闭传输"
                             Content="{DynamicResource PathLiteStop}"
                             Style="{DynamicResource GeometryButton}"/>
                 </StackPanel>

@@ -30,6 +30,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -100,16 +101,15 @@
       <DependentUpon>ControlShareWorker.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\Collections.cs" />
-    <Compile Include="Extensions\Converts.cs" />
-    <Compile Include="Extensions\Streams.cs" />
+    <Compile Include="Extensions\Extension.cs" />
     <Compile Include="Controllers\MessageController.cs" />
     <Compile Include="Controllers\ProfileController.cs" />
     <Compile Include="Controllers\ShareController.cs" />
     <Compile Include="Fallback.xaml.cs">
       <DependentUpon>Fallback.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\AutoLoadAttribute.cs" />
-    <Compile Include="Models\AutoLoadFlags.cs" />
+    <Compile Include="Models\LoaderAttribute.cs" />
+    <Compile Include="Models\LoaderFlags.cs" />
     <Compile Include="Models\RouteAttribute.cs" />
     <Compile Include="Models\IDisposed.cs" />
     <Compile Include="Models\ShareStatus.cs" />
@@ -146,6 +146,7 @@
     <Compile Include="Models\Host.cs" />
     <Compile Include="Modules\HostModule.cs" />
     <Compile Include="Modules\CacheModule.cs" />
+    <Compile Include="Tools\LogicToPixelConverter.cs" />
     <Compile Include="Tools\ProfileCodeValidation.cs" />
     <Compile Include="Tools\ProfileLogoConverter.cs" />
     <Compile Include="Tools\ObjectTypeConverter.cs" />

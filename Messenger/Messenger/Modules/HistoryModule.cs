@@ -175,7 +175,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 初始化数据库 (非线程安全)
         /// </summary>
-        [AutoLoad(1, AutoLoadFlags.OnLoad)]
+        [Loader(1, LoaderFlags.OnLoad)]
         public static void Load()
         {
             var con = default(SQLiteConnection);
@@ -267,7 +267,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 关闭数据库
         /// </summary>
-        [AutoLoad(2, AutoLoadFlags.OnExit)]
+        [Loader(2, LoaderFlags.OnExit)]
         public static void Save()
         {
             s_ins._con?.Dispose();

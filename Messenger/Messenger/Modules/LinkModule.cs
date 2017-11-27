@@ -105,7 +105,7 @@ namespace Messenger.Modules
             }
         }
 
-        [AutoLoad(0, AutoLoadFlags.OnExit)]
+        [Loader(0, LoaderFlags.OnExit)]
         public static void Shutdown()
         {
             lock (s_ins._loc)

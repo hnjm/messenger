@@ -6,17 +6,17 @@ namespace Messenger.Models
     /// 标注有此属性的静态函数将根据指定条件自动执行
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
-    public class AutoLoadAttribute : Attribute
+    public class LoaderAttribute : Attribute
     {
         private int _lev = 0;
 
-        private AutoLoadFlags _flag = AutoLoadFlags.None;
+        private LoaderFlags _flag = LoaderFlags.None;
 
         public int Level => _lev;
 
-        public AutoLoadFlags Flag => _flag;
+        public LoaderFlags Flag => _flag;
 
-        public AutoLoadAttribute(int level, AutoLoadFlags flag)
+        public LoaderAttribute(int level, LoaderFlags flag)
         {
             _lev = level;
             _flag = flag;

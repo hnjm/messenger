@@ -32,7 +32,7 @@ namespace Messenger.Modules
 
         private CacheModule() { }
 
-        [AutoLoad(16, AutoLoadFlags.OnLoad)]
+        [Loader(16, LoaderFlags.OnLoad)]
         public static void Load()
         {
             try

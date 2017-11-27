@@ -31,7 +31,7 @@ namespace Messenger.Models
         internal ShareStatus _status;
 
         private Socket _socket = null;
-        private List<IPEndPoint> _endpoints = null;
+        private readonly List<IPEndPoint> _endpoints = null;
 
         public bool IsStarted => _started;
 
@@ -83,55 +83,41 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(IsStarted));
             }
 
-            var soc = default(Socket);
-            // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
-            async Task _Emit()
+            async Task _Request()
             {
-                for (int i = 0; i < _endpoints.Count && soc == null; i++)
+                // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
+                var soc = _ConnectAny();
+                lock (_locker)
                 {
-                    try
-                    {
-                        soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        soc.ConnectAsyncEx(_endpoints[i]).WaitTimeout("Port receiver timeout.");
-                        soc.SetKeepAlive();
-                        break;
-                    }
-                    catch (Exception ex) when (ex is SocketException || ex is TimeoutException)
+                    if (_disposed)
                     {
                         soc.Dispose();
-                        soc = null;
-                        Log.Error(ex);
+                        throw new InvalidOperationException();
                     }
+                    _socket = soc;
                 }
 
-                if (soc == null)
-                    throw new ApplicationException("Network unreachable.");
                 var buf = PacketWriter.Serialize(new
                 {
                     data = _key,
                     source = LinkModule.ID,
                 });
                 await soc.SendAsyncExt(buf.GetBytes());
-
-                lock (_locker)
-                {
-                    if (_disposed)
-                        throw new InvalidOperationException();
-                    _socket = soc;
-                }
             }
 
             // 在接收函数退出时设置状态并释放资源
-            return _Emit().ContinueWith(t =>
+            return _Request().ContinueWith(t =>
             {
-                if (t.Exception == null)
+                var exc = t.Exception;
+                if (exc == null)
                 {
                     _status = ShareStatus.运行;
                     _Receive().ContinueWith(_Finish);
                     return;
                 }
 
-                soc?.Dispose();
+                _socket?.Dispose();
+                Log.Error(exc);
 
                 lock (_locker)
                 {
@@ -143,7 +129,28 @@ namespace Messenger.Models
             });
         }
 
-        private Task _Receive()
+        internal Socket _ConnectAny()
+        {
+            foreach (var i in _endpoints)
+            {
+                var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                try
+                {
+                    soc.ConnectAsyncEx(i).WaitTimeout("Port receiver timeout.");
+                    soc.SetKeepAlive();
+                    return soc;
+                }
+                catch (Exception ex) when (ex is SocketException || ex is TimeoutException)
+                {
+                    soc.Dispose();
+                    Log.Error(ex);
+                    continue;
+                }
+            }
+            throw new ApplicationException("Network unreachable.");
+        }
+
+        internal Task _Receive()
         {
             var inf = _batch
                 ? ShareModule.AvailableDirectory(_name)
@@ -197,7 +204,7 @@ namespace Messenger.Models
             }
         }
 
-        private void _Finish(Task task)
+        internal void _Finish(Task task)
         {
             lock (_locker)
             {
@@ -217,12 +224,13 @@ namespace Messenger.Models
             {
                 if (_disposed)
                     return;
-                if ((_status & ShareStatus.终止) == 0)
+
+                var val = _status & ShareStatus.终止;
+                if (val == 0)
                     _status = ShareStatus.取消;
 
                 _cancel.Cancel();
                 _socket?.Dispose();
-                _socket = null;
                 _disposed = true;
                 OnPropertyChanged(nameof(IsDisposed));
             }

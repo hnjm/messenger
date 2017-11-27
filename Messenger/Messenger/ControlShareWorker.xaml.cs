@@ -1,18 +1,7 @@
 ﻿using Messenger.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Messenger
 {
@@ -31,14 +20,14 @@ namespace Messenger
             var btn = e.OriginalSource as Button;
             if (btn == null)
                 return;
-            var con = btn.DataContext as ShareReceiver;
+            var dat = btn.DataContext;
             var tag = btn.Tag as string;
-            if (con == null || tag == null)
+            if (dat == null || tag == null)
                 return;
-            if (tag == "play")
-                con.Start();
-            else if (tag == "stop")
-                con.Dispose();
+            if (tag == "play" && dat is ShareReceiver rec)
+                rec.Start();
+            else if (tag == "stop" && dat is IDisposable dis)
+                dis.Dispose();
             return;
         }
     }

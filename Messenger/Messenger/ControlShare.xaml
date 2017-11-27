@@ -27,17 +27,31 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto" Name="uiLengthRow"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
                         <TextBlock FontSize="14" Name="uiPrefixText"/>
                         <TextBlock FontSize="14" Margin="4,0" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
                     </StackPanel>
-                    <TextBlock Grid.Row="1" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
-                    <TextBlock Grid.Row="2" Text="{Binding Path=Path}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
+
+                    <StackPanel Name="uiTogglePanel" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                            Orientation="Horizontal" VerticalAlignment="Center"
+                            Button.Click ="_Click">
+                        <!--控制按钮-->
+                        <Button Tag="stop" ToolTip="关闭传输"
+                            Content="{DynamicResource PathLiteStop}"
+                            Style="{DynamicResource GeometryButton}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Path=Path}"/>
                 </Grid>
                 <ItemsControl Grid.Row="1" MaxHeight="100"
                               ItemsSource="{Binding Path=WorkerList}"
@@ -45,6 +59,9 @@
                 </ItemsControl>
             </Grid>
             <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding Path=IsDisposed}" Value="True">
+                    <Setter TargetName="uiTogglePanel" Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
                 <DataTrigger Binding="{Binding Path=IsBatch}" Value="True">
                     <Setter TargetName="uiPrefixText" Property="Text" Value="[文件夹]"/>
                     <Setter TargetName="uiLengthRow" Property="Height" Value="0"/>

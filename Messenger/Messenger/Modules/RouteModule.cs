@@ -1,11 +1,11 @@
-﻿using Messenger.Models;
+﻿using Messenger.Extensions;
+using Messenger.Models;
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace Messenger.Modules
 {
@@ -14,15 +14,9 @@ namespace Messenger.Modules
     /// </summary>
     internal class RouteModule
     {
-        private class Controller
-        {
-            public Func<LinkPacket> Construct = null;
-            public dynamic Function = null;
-        }
-
         private static readonly RouteModule s_ins = new RouteModule();
 
-        private readonly Dictionary<string, Controller> _dic = new Dictionary<string, Controller>();
+        private readonly Dictionary<string, Action<byte[]>> _dic = new Dictionary<string, Action<byte[]>>();
 
         private RouteModule() { }
 
@@ -30,43 +24,37 @@ namespace Messenger.Modules
         {
             /* 利用反射识别所有控制器
              * 同时构建表达式以便提升运行速度 */
-            var ass = typeof(RouteModule).Assembly;
-            foreach (var t in ass.GetTypes())
+            var fun = typeof(LinkExtension).GetMethods().First(r => r.Name == nameof(LinkExtension.LoadValue));
+            var lst = Extension.FindAttribute(
+                typeof(RouteAttribute).Assembly, typeof(RouteAttribute),
+                typeof(LinkPacket),
+                (a, m, t) => new { Attribute = (RouteAttribute)a, MethodInfo = m, Type = t }
+            ).ToList();
+
+            var res = lst.Select(i =>
             {
-                if (t.IsSubclassOf(typeof(LinkPacket)) == false)
-                    continue;
-                var att = t.GetCustomAttributes(typeof(RouteAttribute)).FirstOrDefault() as RouteAttribute;
-                if (att == null)
-                    continue;
-                var met = t.GetMethods(BindingFlags.Instance | BindingFlags.Public);
-                foreach (var i in met)
-                {
-                    var atr = i.GetCustomAttributes(typeof(RouteAttribute)).FirstOrDefault() as RouteAttribute;
-                    if (atr == null)
-                        continue;
-                    // 构建表达式
-                    var act = Delegate.CreateDelegate(typeof(Action<>).MakeGenericType(t), i) as dynamic;
-                    var con = (Func<LinkPacket>)Expression.Lambda(Expression.New(t)).Compile();
-                    _dic.Add($"{att.Path}.{atr.Path}", new Controller() { Construct = con, Function = act });
-                }
-            }
+                var buf = Expression.Parameter(typeof(byte[]), "buffer");
+                var val = Expression.Call(fun, Expression.New(i.Type), buf);
+                var cvt = Expression.Convert(val, i.Type);
+                var act = Expression.Lambda<Action<byte[]>>(Expression.Call(cvt, i.MethodInfo), buf);
+                return new { Path = i.Attribute.Path, Action = act.Compile() };
+            });
+
+            foreach (var i in res)
+                _dic.Add(i.Path, i.Action);
+            return;
         }
 
         public static void Handle(LinkPacket arg)
         {
-            if (s_ins._dic.TryGetValue(arg.Path, out var rcd))
-            {
-                var obj = rcd.Construct.Invoke();
-                obj.LoadValue(arg.Buffer);
-                rcd.Function.Invoke((dynamic)obj);
-            }
+            var dic = s_ins._dic;
+            if (dic.TryGetValue(arg.Path, out var act))
+                act.Invoke(arg.Buffer);
             else
-            {
                 Log.Notice($"Path \"{arg.Path}\" not supported.");
-            }
         }
 
-        [AutoLoad(1, AutoLoadFlags.OnLoad)]
+        [Loader(1, LoaderFlags.OnLoad)]
         public static void Load()
         {
             s_ins._Load();
