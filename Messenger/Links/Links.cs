@@ -22,7 +22,7 @@
 
         public const int BufferLengthLimit = 1024 * 1024;
 
-        public const int MessageQueueLimit = 4 * 1024 * 1024;
+        public const int BufferQueueLimit = 16 * 1024 * 1024;
 
         public const int Delay = 4;
 

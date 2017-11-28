@@ -51,9 +51,8 @@
         <ControlTemplate x:Key="TextTemplate">
             <TextBox Padding="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
                      Text="{Binding Path=MessageText, Mode=OneWay}"
-                     Background="Transparent"
-                     SelectionBrush="LightGreen"
-                     Foreground="#C0C0C0">
+                     Background="Transparent" SelectionBrush="LightGreen"
+                     Foreground="#C0C0C0" Focusable="False">
                 <TextBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem Command="ApplicationCommands.Copy" Header="复制选定内容"/>
@@ -66,7 +65,8 @@
 
         <!--图片消息-->
         <ControlTemplate x:Key="ImageTemplate">
-            <Image HorizontalAlignment="Left" Source="{Binding Path=MessageImage}" Stretch="None">
+            <Image HorizontalAlignment="Left"
+                   Source="{Binding Path=MessageImage}" Stretch="None">
                 <Image.ContextMenu>
                     <ContextMenu>
                         <MenuItem Command="{x:Static local:Commands.Remove}"/>
@@ -84,9 +84,8 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="32"/>
                 </Grid.ColumnDefinitions>
-                <Control x:Name="control" Grid.ColumnSpan="3" Height="32" Width="32"
+                <local:ControlProfileImage x:Name="control" Grid.ColumnSpan="3" Height="32" Width="32"
                          DataContext="{Binding Path=Profile}"
-                         Template="{DynamicResource ClientImageTemplate}"
                          HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                          VerticalAlignment="Top"/>
                 <Grid Grid.Column="1" Margin="10,0">
@@ -106,7 +105,7 @@
                     </Grid>
                     <Grid Grid.Row="1">
                         <Border x:Name="ViewBorder" Grid.Row="1" CornerRadius="2" Background="{TemplateBinding Background}"/>
-                        <Control x:Name="ViewControl"/>
+                        <Control x:Name="ViewControl" Focusable="False"/>
                     </Grid>
                 </Grid>
             </Grid>
@@ -144,21 +143,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Control Grid.Column="0" Margin="10" Width="64" Height="64">
-                    <Control.Template>
-                        <ControlTemplate>
-                            <Control x:Name="control"/>
-                            <ControlTemplate.Triggers>
-                                <DataTrigger Binding="{Binding Path=IsClient}" Value="True">
-                                    <Setter TargetName="control" Property="Template" Value="{DynamicResource ClientImageTemplate}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Path=IsGroups}" Value="True">
-                                    <Setter TargetName="control" Property="Template" Value="{DynamicResource GroupsImageTemplate}"/>
-                                </DataTrigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Control.Template>
-                </Control>
+                <local:ControlProfileImage Grid.Column="0" Margin="10" Width="64" Height="64"/>
                 <StackPanel Grid.Column="1" Margin="0,10" VerticalAlignment="Bottom">
                     <TextBlock FontSize="24" Foreground="#C0C0C0" FontWeight="Light" Text="{Binding Path=Name}"/>
                     <TextBlock FontSize="12" Foreground="#808080" FontStyle="Italic" Text="{Binding Path=Text}"/>
@@ -176,6 +161,7 @@
             <ListBox x:Name="uiMessageBox" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
+                        <Setter Property="Focusable" Value="False"/>
                         <Setter Property="Background" Value="#303030"/>
                         <Setter Property="HorizontalAlignment" Value="Left"/>
                         <Setter Property="Template" Value="{StaticResource ResourceKey=MessageTemplate}"/>
@@ -200,21 +186,14 @@
             </Grid.RowDefinitions>
             <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Background="SteelBlue" Height="1" SnapsToDevicePixels="True"/>
             <TextBox x:Name="uiInputBox" Grid.Column="0" Grid.Row="2" Margin="5" Background="Transparent" Foreground="#C0C0C0" CaretBrush="#808080" BorderThickness="0"
-                     MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字 (或拖动 文件/文件夹 到此处)"
+                     MinHeight="34" MaxHeight="100" AcceptsReturn="True" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="请输入文字或拖动文件到此处"
                      AllowDrop="True" PreviewDragOver="_TextBoxPreviewDragOver" PreviewDrop="_TextBoxPreviewDrop" SelectionBrush="LightGreen">
-                <TextBox.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Command="ApplicationCommands.Copy" Header="复制"/>
-                        <MenuItem Command="ApplicationCommands.Cut" Header="剪切"/>
-                        <MenuItem Command="ApplicationCommands.Paste" Header="粘贴"/>
-                    </ContextMenu>
-                </TextBox.ContextMenu>
             </TextBox>
             <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center" Button.Click="_Click">
-                <Button Tag="clean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButton}" ToolTip="清空消息列表"/>
-                <Button Tag="symbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButton}" ToolTip="表情面板"/>
-                <Button Tag="image" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButton}" ToolTip="发送图片"/>
-                <Button Tag="text" Margin="10,0,0,0" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButton}" ToolTip="发送"/>
+                <Button Tag="clean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="清空消息列表"/>
+                <Button Tag="symbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="表情面板"/>
+                <Button Tag="image" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送图片"/>
+                <Button Tag="text" Margin="10,0,0,0" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送"/>
             </StackPanel>
         </Grid>
         <Grid x:Name="uiSymbolGrid" Grid.RowSpan="2"
@@ -246,7 +225,7 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
-                                        <Button FontSize="24" Style="{DynamicResource GeometryButton}" Content="{Binding}" Click="_SymbolClick" Width="34" Height="34"/>
+                                        <Button FontSize="24" Style="{DynamicResource GeometryButtonStyle}" Content="{Binding}" Click="_SymbolClick" Width="34" Height="34"/>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>

@@ -42,7 +42,7 @@
                 <TextBlock Grid.Row="0" Margin="10" FontSize="28"
                            Foreground="#FFC0C0C0" FontWeight="Light" Text="传输列表">
                 </TextBlock>
-                <ScrollViewer Grid.Row="1" Template="{DynamicResource ThinScrollViewer}">
+                <ScrollViewer Grid.Row="1" Template="{DynamicResource ThinScrollViewer}" Focusable="False">
                     <StackPanel>
                         <TextBlock Name="uiShareText" Margin="10,5"
                                    HorizontalAlignment="Left"
@@ -60,10 +60,10 @@
                 </ScrollViewer>
                 <Border Grid.Row="2" Background="#FF202020" Height="1"/>
                 <StackPanel Grid.Row="3" Margin="10" Orientation="Horizontal" HorizontalAlignment="Left" SnapsToDevicePixels="True" Button.Click="_Click">
-                    <Button Tag="stop" Content="{DynamicResource PathStop}" Style="{DynamicResource GeometryButton}" ToolTip="全部停止"/>
-                    <Button Tag="clean" Margin="10,0" Content="{DynamicResource PathDelete}" Style="{DynamicResource GeometryButton}" ToolTip="清理列表"/>
-                    <Button Tag="open" Content="{DynamicResource PathView}" Style="{DynamicResource GeometryButton}" ToolTip="打开保存文件夹"/>
-                    <Button Tag="change" Margin="10,0" Content="{DynamicResource PathBrowser}" Style="{DynamicResource GeometryButton}" ToolTip="更改保存文件夹"/>
+                    <Button Tag="stop" Content="{DynamicResource PathStop}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="全部停止"/>
+                    <Button Tag="clean" Margin="10,0" Content="{DynamicResource PathDelete}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="清理列表"/>
+                    <Button Tag="open" Content="{DynamicResource PathView}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="打开保存文件夹"/>
+                    <Button Tag="change" Margin="10,0" Content="{DynamicResource PathBrowser}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="更改保存文件夹"/>
                 </StackPanel>
             </Grid>
             <ControlTemplate.Triggers>

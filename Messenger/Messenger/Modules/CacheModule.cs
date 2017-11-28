@@ -16,7 +16,7 @@ namespace Messenger.Modules
     internal class CacheModule
     {
         private const string _CacheFolder = "Temp";
-        private const string _CacheExtension = ".jpg";
+        private const string _CacheExtension = ".png";
 
         private const int _Limit = 384;
         private const float _Density = 96;
@@ -77,15 +77,14 @@ namespace Messenger.Modules
         public static string SetBuffer(byte[] buffer, bool returnPath, bool nothrow = true)
         {
             var fst = default(FileStream);
-            var dir = default(DirectoryInfo);
             var cod = GetCode(buffer);
-            var pth = default(string);
+
             try
             {
-                dir = new DirectoryInfo(s_ins._dir);
+                var dir = new DirectoryInfo(s_ins._dir);
                 if (dir.Exists == false)
                     dir.Create();
-                pth = Path.Combine(dir.FullName, cod + _CacheExtension);
+                var pth = Path.Combine(dir.FullName, cod + _CacheExtension);
                 if (File.Exists(pth) == false)
                 {
                     fst = new FileStream(pth, FileMode.CreateNew, FileAccess.Write);
@@ -122,7 +121,7 @@ namespace Messenger.Modules
             var div = 1;
             for (div = 1; len / div > s_ins._imgLimit; div++) ;
             var dst = new Rectangle(0, 0, len / div, len / div);
-            return _LoadImage(bmp, src, dst, ImageFormat.Jpeg);
+            return _LoadImage(bmp, src, dst, ImageFormat.Png);
         }
 
         /// <summary>
@@ -138,7 +137,7 @@ namespace Messenger.Modules
             var src = new Rectangle(0, 0, bmp.Width, bmp.Height);
             var dst = new Rectangle(0, 0, len.Width / div, len.Height / div);
 
-            return _LoadImage(bmp, src, dst, ImageFormat.Jpeg);
+            return _LoadImage(bmp, src, dst, ImageFormat.Png);
         }
 
         private static byte[] _LoadImage(Bitmap bmp, Rectangle src, Rectangle dst, ImageFormat format)

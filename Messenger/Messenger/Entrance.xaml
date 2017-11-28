@@ -13,11 +13,14 @@
         <!--#region Flat window style-->
         <tool:LogicToPixelConverter x:Key="LogicToPixelConverter"/>
 
+        <Thickness x:Key="WindowBorderMargin">1</Thickness>
+
         <Style x:Key="MenuPathStyle" TargetType="Path">
             <Setter Property="StrokeThickness" Value="1"/>
             <Setter Property="Stroke" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Foreground}"/>
         </Style>
 
+        <!--#region Menu icons-->
         <Path x:Key="MenuIconMin" x:Shared="False" Style="{StaticResource MenuPathStyle}">
             <Path.Data>
                 <LineGeometry StartPoint="0,0.5" EndPoint="10,0.5"/>
@@ -44,6 +47,7 @@
                 </GeometryGroup>
             </Path.Data>
         </Path>
+        <!--#endregion-->
 
         <SolidColorBrush x:Key="Button.Static.Background" Color="#00000000"/>
         <SolidColorBrush x:Key="Button.Static.Foreground" Color="#FFC0C0C0"/>
@@ -52,6 +56,7 @@
         <Style x:Key="MenuButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Background" Value="{StaticResource Button.Static.Background}"/>
             <Setter Property="Foreground" Value="{StaticResource Button.Static.Foreground}"/>
+            <Setter Property="Focusable" Value="False"/>
             <Setter Property="Width" Value="46"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -80,7 +85,7 @@
         <ControlTemplate x:Key="FlatWindowTemplate" TargetType="Window">
             <Border Name="BasicBorder" Loaded="_BorderLoaded" SnapsToDevicePixels="True">
                 <Grid Name="BasicGrid"
-                      Margin="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource LogicToPixelConverter}}"
+                      Margin="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource LogicToPixelConverter}, ConverterParameter={StaticResource WindowBorderMargin}}"
                       Background="{TemplateBinding Background}">
                     <Grid.RowDefinitions>
                         <RowDefinition Name="TitleRow" Height="30"/>
@@ -150,7 +155,7 @@
         <Binding Source="{x:Static module:ProfileModule.Current}" Path="Name"/>
     </Window.Title>
     <Grid>
-        <Frame x:Name="frame" NavigationUIVisibility="Hidden" Source="Connection.xaml"/>
+        <Frame x:Name="frame" Source="Connection.xaml"/>
         <Grid x:Name="uiMessagePanel" Visibility="Collapsed">
             <Border Background="#80000000"/>
             <Grid MaxWidth="720" MaxHeight="480" HorizontalAlignment="Center" VerticalAlignment="Center">

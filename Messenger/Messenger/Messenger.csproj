@@ -94,6 +94,9 @@
       <DependentUpon>Chatter.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands.cs" />
+    <Compile Include="ControlProfileImage.xaml.cs">
+      <DependentUpon>ControlProfileImage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ControlShare.xaml.cs">
       <DependentUpon>ControlShare.xaml</DependentUpon>
     </Compile>
@@ -163,6 +166,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Connection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ControlProfileImage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -15,8 +15,8 @@ namespace Messenger
         /// <summary>
         /// 顶层 Frame 是否有内容
         /// </summary>
-        private bool _vis = false;
-        private PageProfile _profPage = null;
+        private bool _visible = false;
+        private readonly PageProfile _profPage = new PageProfile();
 
         public PageFrame()
         {
@@ -27,9 +27,9 @@ namespace Messenger
 
         private void _Loaded(object sender, RoutedEventArgs e)
         {
-            _profPage = new PageProfile();
-            _profPage.uiLeftFrame.Navigate(new PageClient());
-            uiFrame.Navigate(_profPage);
+            _profPage.uiLeftFrame.Content = new PageClient();
+            uiFrame.Content = _profPage;
+
             var act = (Action)delegate
             {
                 uiSwitchRadio.IsChecked = false;
@@ -50,7 +50,7 @@ namespace Messenger
         /// </summary>
         private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
-            if (_vis == false)
+            if (_visible == false)
                 return;
             e.Cancel = true;
         }
@@ -60,45 +60,47 @@ namespace Messenger
             var tag = (e.OriginalSource as RadioButton)?.Tag as string;
             if (tag == null)
                 return;
-            _vis = true;
+            _visible = true;
 
+            var cur = uiMainFrame;
             if (tag == "self")
-                Navigate<Shower>(uiMainFrame);
+                cur.Content = new Shower();
             else if (tag == "share")
-                Navigate<PageShare>(uiMainFrame);
+                cur.Content = new PageShare();
             else if (tag == "setting")
-                Navigate<PageOption>(uiMainFrame);
+                cur.Content = new PageOption();
             else if (tag != "switch")
-                _vis = false;
-            // 隐藏上层 Frame, 同时将下层 Frame 中当前聊天未读计数置 0
-            if (_vis == false)
+                _visible = false;
+
+            if (_visible)
             {
+                // 隐藏下层 Frame
+                if (tag != "switch")
+                    uiFrame.Content = null;
+            }
+            else
+            {
+                // 隐藏上层 Frame, 同时将下层 Frame 中当前聊天未读计数置 0
+                uiFrame.Content = _profPage;
                 uiMainFrame.Content = null;
                 var sco = ProfileModule.Inscope;
                 if (sco != null)
                     sco.Hint = 0;
+                _profPage.uiSearchBox.Text = null;
             }
 
+            var lef = _profPage.uiLeftFrame;
             if (tag == "user")
-                Navigate<PageClient>(_profPage.uiLeftFrame);
+                lef.Content = new PageClient();
             else if (tag == "group")
-                Navigate<PageGroups>(_profPage.uiLeftFrame);
+                lef.Content = new PageGroups();
             else if (tag == "recent")
-                Navigate<PageRecent>(_profPage.uiLeftFrame);
+                lef.Content = new PageRecent();
 
             if (uiNavigateGrid.Width > uiNavigateGrid.MinWidth)
                 uiSwitchRadio.IsChecked = false;
-            if (tag != "switch")
-                _profPage.uiSearchBox.Text = null;
 
             uiMainBorder.Visibility = uiSwitchRadio.IsChecked == true ? Visibility.Visible : Visibility.Hidden;
-        }
-
-        private void Navigate<Target>(Frame frame) where Target : Page, new()
-        {
-            if (frame.Content is Target == true)
-                return;
-            frame.Navigate(new Target());
         }
     }
 }

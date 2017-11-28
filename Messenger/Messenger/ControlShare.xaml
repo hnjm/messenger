@@ -48,7 +48,7 @@
                         <!--控制按钮-->
                         <Button Tag="stop" ToolTip="关闭传输"
                             Content="{DynamicResource PathLiteStop}"
-                            Style="{DynamicResource GeometryButton}"/>
+                            Style="{DynamicResource GeometryButtonStyle}"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Path=Path}"/>

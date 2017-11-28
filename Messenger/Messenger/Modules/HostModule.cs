@@ -41,7 +41,7 @@ namespace Messenger.Modules
         {
             var lst = new List<Host>();
             var stw = new Stopwatch();
-            var soc = new Socket(SocketType.Dgram, ProtocolType.Udp);
+            var soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var txt = new PacketWriter().Push("protocol", Links.Protocol).GetBytes();
 
             Host gethost(byte[] buffer, int offset, int length)

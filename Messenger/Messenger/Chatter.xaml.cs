@@ -1,5 +1,6 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Microsoft.Win32;
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
@@ -8,7 +9,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Forms = System.Windows.Forms;
 
 namespace Messenger
 {
@@ -140,8 +140,8 @@ namespace Messenger
 
         private void _PushImage()
         {
-            var ofd = new Forms.OpenFileDialog() { Filter = "位图文件|*.bmp;*.png;*.jpg" };
-            if (ofd.ShowDialog() != Forms.DialogResult.OK)
+            var ofd = new OpenFileDialog() { Filter = "位图文件|*.bmp;*.png;*.jpg" };
+            if (ofd.ShowDialog() != true)
                 return;
             try
             {

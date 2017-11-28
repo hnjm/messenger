@@ -48,6 +48,15 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="ContextMenu">
+            <Setter.Value>
+                <ContextMenu>
+                    <MenuItem Command="ApplicationCommands.Copy" Header="复制"/>
+                    <MenuItem Command="ApplicationCommands.Cut" Header="剪切"/>
+                    <MenuItem Command="ApplicationCommands.Paste" Header="粘贴"/>
+                </ContextMenu>
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
             <MultiTrigger>
                 <MultiTrigger.Conditions>

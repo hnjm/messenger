@@ -13,6 +13,7 @@ namespace Messenger
             if (lst.Count < 1)
                 return;
             var itm = lst[0] as Profile;
+            var src = e.OriginalSource as ListBox;
             ProfileModule.SetInscope(itm);
         }
 

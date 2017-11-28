@@ -112,7 +112,7 @@ namespace Mikodev.Network
                 throw new ArgumentOutOfRangeException(nameof(buffer));
             lock (_loc)
             {
-                if (_disposed || _msglen > Links.MessageQueueLimit)
+                if (_disposed || _msglen > Links.BufferQueueLimit)
                     return;
                 _msglen += len;
                 _msgs.Enqueue(buffer);
@@ -125,7 +125,7 @@ namespace Mikodev.Network
             {
                 lock (_loc)
                 {
-                    if (_msglen > Links.MessageQueueLimit)
+                    if (_msglen > Links.BufferQueueLimit)
                         throw new LinkException(LinkError.QueueLimited, "Message queue length out of range!");
                     if (_msglen > 0)
                     {
