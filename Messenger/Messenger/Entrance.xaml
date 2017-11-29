@@ -61,8 +61,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
-                        <Border x:Name="Border" Background="{TemplateBinding Background}" Focusable="False" SnapsToDevicePixels="true">
-                            <ContentPresenter x:Name="ContentPresenter" Focusable="False"
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" Focusable="{TemplateBinding Focusable}" SnapsToDevicePixels="true">
+                            <ContentPresenter x:Name="ContentPresenter" Focusable="{TemplateBinding Focusable}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
                                               RecognizesAccessKey="True"

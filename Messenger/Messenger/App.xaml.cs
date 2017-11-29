@@ -1,7 +1,6 @@
 ﻿using Messenger.Modules;
 using Mikodev.Logger;
 using System;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -26,10 +25,7 @@ namespace Messenger
                 Shutdown(1);
             };
 
-            SessionEnding += (s, arg) =>
-            {
-                LinkModule.Shutdown();
-            };
+            SessionEnding += (s, arg) => LinkModule.Shutdown();
         }
     }
 }

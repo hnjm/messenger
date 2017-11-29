@@ -19,23 +19,23 @@ namespace Messenger
         static Commands()
         {
             var cpy = new CommandBinding { Command = CopyText };
-            cpy.CanExecute += Copy_CanExecute;
-            cpy.Executed += Copy_Executed;
+            cpy.CanExecute += _CopyCanExecute;
+            cpy.Executed += _CopyExecuted;
 
             var rmv = new CommandBinding { Command = Remove };
-            rmv.CanExecute += Remove_CanExecute;
-            rmv.Executed += Remove_Executed;
+            rmv.CanExecute += _RemoveCanExecute;
+            rmv.Executed += _RemoveExecuted;
 
             var vie = new CommandBinding { Command = ViewImage };
-            vie.CanExecute += LargeImage_CanExecute;
-            vie.Executed += LargeImage_Executed;
+            vie.CanExecute += _LargeImageCanExecute;
+            vie.Executed += _LargeImageExecuted;
 
             Application.Current.MainWindow.CommandBindings.Add(cpy);
             Application.Current.MainWindow.CommandBindings.Add(rmv);
             Application.Current.MainWindow.CommandBindings.Add(vie);
         }
 
-        private static void LargeImage_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private static void _LargeImageCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null || msg.Path != "image")
@@ -45,7 +45,7 @@ namespace Messenger
             e.Handled = true;
         }
 
-        private static void LargeImage_Executed(object sender, ExecutedRoutedEventArgs e)
+        private static void _LargeImageExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
@@ -64,7 +64,7 @@ namespace Messenger
             }
         }
 
-        private static void Remove_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private static void _RemoveCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
@@ -74,7 +74,7 @@ namespace Messenger
             e.Handled = true;
         }
 
-        private static void Remove_Executed(object sender, ExecutedRoutedEventArgs e)
+        private static void _RemoveExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
@@ -83,7 +83,7 @@ namespace Messenger
             e.Handled = true;
         }
 
-        private static void Copy_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private static void _CopyCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var val = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (val == null || val.Path != "text")
@@ -93,7 +93,7 @@ namespace Messenger
             e.Handled = true;
         }
 
-        private static void Copy_Executed(object sender, ExecutedRoutedEventArgs e)
+        private static void _CopyExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg?.MessageText is null)

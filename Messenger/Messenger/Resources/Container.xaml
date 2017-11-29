@@ -5,7 +5,7 @@
 
     <Style x:Key="ProfileItemStyle" TargetType="ListBoxItem">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="FocusVisualStyle" Value="{DynamicResource FocusVisual}"/>
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource GenericFocusVisualStyle}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">

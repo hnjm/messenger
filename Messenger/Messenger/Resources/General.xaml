@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--通用焦点样式-->
     <SolidColorBrush x:Key="Generic.Focus.Brush" Color="#FF606060"/>
-    <Style x:Key="FocusVisual">
+    <Style x:Key="GenericFocusVisualStyle">
         <Setter Property="Control.Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -18,11 +18,17 @@
         <Setter Property="NavigationUIVisibility" Value="Hidden"/>
     </Style>
 
+    <!--控件列表样式-->
+    <Style TargetType="ItemsControl">
+        <Setter Property="Focusable" Value="False"/>
+    </Style>
+
     <!-- 菜单样式 (没有二级菜单样式) -->
     <Style TargetType="ContextMenu">
         <Setter Property="Background" Value="#FF202020"/>
         <Setter Property="BorderBrush" Value="#FF808080"/>
         <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GenericFocusVisualStyle}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
@@ -43,6 +49,7 @@
         <Setter Property="Background" Value="#FF202020"/>
         <Setter Property="Foreground" Value="#FFA0A0A0"/>
         <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GenericFocusVisualStyle}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type MenuItem}">
@@ -86,10 +93,14 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TextBox}">
                     <Grid>
-                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="4" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="4" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
                         </Border>
-                        <TextBlock x:Name="textblock" Focusable="False" Margin="8,0" Foreground="#FF808080" FontStyle="Italic" Visibility="Hidden" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Tag}"/>
+                        <TextBlock x:Name="textblock" Focusable="False" Margin="8,0"
+                                   Foreground="#FF808080" FontStyle="Italic" Visibility="Hidden"
+                                   HorizontalAlignment="Left" VerticalAlignment="Center" Text="{TemplateBinding Tag}"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
@@ -139,7 +150,7 @@
     <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FF505050"/>
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF808080"/>
     <Style TargetType="{x:Type Button}">
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GenericFocusVisualStyle}"/>
         <Setter Property="Background" Value="{StaticResource Button.Static.Background}"/>
         <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}"/>
         <Setter Property="Foreground" Value="#FFC0C0C0"/>

@@ -47,35 +47,6 @@
             </ControlTemplate.Triggers>
         </ControlTemplate>
 
-        <!--文本消息-->
-        <ControlTemplate x:Key="TextTemplate">
-            <TextBox Padding="4" BorderThickness="0" TextWrapping="Wrap" IsReadOnly="True"
-                     Text="{Binding Path=MessageText, Mode=OneWay}"
-                     Background="Transparent" SelectionBrush="LightGreen"
-                     Foreground="#C0C0C0" Focusable="False">
-                <TextBox.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Command="ApplicationCommands.Copy" Header="复制选定内容"/>
-                        <MenuItem Command="{x:Static local:Commands.CopyText}"/>
-                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
-                    </ContextMenu>
-                </TextBox.ContextMenu>
-            </TextBox>
-        </ControlTemplate>
-
-        <!--图片消息-->
-        <ControlTemplate x:Key="ImageTemplate">
-            <Image HorizontalAlignment="Left"
-                   Source="{Binding Path=MessageImage}" Stretch="None">
-                <Image.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
-                        <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
-                    </ContextMenu>
-                </Image.ContextMenu>
-            </Image>
-        </ControlTemplate>
-
         <!--消息模板-->
         <ControlTemplate x:Key="MessageTemplate">
             <Grid Margin="5" Width="{Binding ElementName=uiMessageGrid, Path=ActualWidth}">
@@ -85,9 +56,9 @@
                     <ColumnDefinition Width="32"/>
                 </Grid.ColumnDefinitions>
                 <local:ControlProfileImage x:Name="control" Grid.ColumnSpan="3" Height="32" Width="32"
-                         DataContext="{Binding Path=Profile}"
-                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                         VerticalAlignment="Top"/>
+                                           DataContext="{Binding Path=Profile}"
+                                           HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                                           VerticalAlignment="Top"/>
                 <Grid Grid.Column="1" Margin="10,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -103,9 +74,35 @@
                             </TextBlock.Text>
                         </TextBlock>
                     </Grid>
-                    <Grid Grid.Row="1">
-                        <Border x:Name="ViewBorder" Grid.Row="1" CornerRadius="2" Background="{TemplateBinding Background}"/>
-                        <Control x:Name="ViewControl" Focusable="False"/>
+                    <Grid Grid.Row="1" Background="{TemplateBinding Background}">
+                        <TextBox Name="ViewTextBox" Padding="4" BorderThickness="0"
+                                 FocusVisualStyle="{DynamicResource GenericFocusVisualStyle}"
+                                 TextWrapping="Wrap" IsReadOnly="True"
+                                 Background="Transparent" SelectionBrush="LightGreen"
+                                 Foreground="#C0C0C0" Visibility="Collapsed">
+                            <TextBox.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Command="ApplicationCommands.Copy" Header="复制选定内容"/>
+                                    <MenuItem Command="{x:Static local:Commands.CopyText}"/>
+                                    <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                                </ContextMenu>
+                            </TextBox.ContextMenu>
+                        </TextBox>
+                        <Image Name="ViewImage" HorizontalAlignment="Left"
+                               Stretch="None" Visibility="Collapsed">
+                            <Image.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Command="{x:Static local:Commands.ViewImage}"/>
+                                    <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                                </ContextMenu>
+                            </Image.ContextMenu>
+                        </Image>
+                        <Control Name="ViewControl" Focusable="False" Visibility="Collapsed"/>
+                        <Grid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="{x:Static local:Commands.Remove}"/>
+                            </ContextMenu>
+                        </Grid.ContextMenu>
                     </Grid>
                 </Grid>
             </Grid>
@@ -115,12 +112,15 @@
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="text">
-                    <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource TextTemplate}"/>
+                    <Setter TargetName="ViewTextBox" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="ViewTextBox" Property="Text" Value="{Binding Path=MessageText, Mode=OneWay}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="image">
-                    <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ImageTemplate}"/>
+                    <Setter TargetName="ViewImage" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="ViewImage" Property="Source" Value="{Binding Path=MessageImage}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="share">
+                    <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
                     <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ShareTemplate}"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
@@ -161,7 +161,7 @@
             <ListBox x:Name="uiMessageBox" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Focusable" Value="False"/>
+                        <Setter Property="FocusVisualStyle" Value="{DynamicResource GenericFocusVisualStyle}"/>
                         <Setter Property="Background" Value="#303030"/>
                         <Setter Property="HorizontalAlignment" Value="Left"/>
                         <Setter Property="Template" Value="{StaticResource ResourceKey=MessageTemplate}"/>

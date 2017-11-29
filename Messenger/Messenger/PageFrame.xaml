@@ -27,7 +27,7 @@
         <SolidColorBrush x:Key="RadioButton.Pressed.Glyph" Color="#FF386890"/>
         <SolidColorBrush x:Key="RadioButton.Static.Glyph" Color="#FF4682B4"/>
         <Style TargetType="{x:Type RadioButton}">
-            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource GenericFocusVisualStyle}"/>
             <Setter Property="Background" Value="{StaticResource RadioButton.Static.Background}"/>
             <Setter Property="BorderBrush" Value="{StaticResource RadioButton.Static.Border}"/>
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
