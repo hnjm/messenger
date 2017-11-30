@@ -15,7 +15,7 @@ namespace Messenger.Modules
     /// </summary>
     internal class CacheModule
     {
-        private const string _CacheFolder = "Temp";
+        private const string _CacheFolder = "Cache";
         private const string _CacheExtension = ".png";
 
         private const int _Limit = 384;

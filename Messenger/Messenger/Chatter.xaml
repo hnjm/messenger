@@ -6,16 +6,18 @@
       xmlns:local="clr-namespace:Messenger"
       xmlns:module="clr-namespace:Messenger.Modules"
       xmlns:tool="clr-namespace:Messenger.Tools"
+      xmlns:model="clr-namespace:Messenger.Models"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
       KeepAlive="False" FontSize="14">
     <Page.Resources>
         <tool:LengthUnitConverter x:Key="LengthUnitConverter"/>
         <tool:StringEmptyConverter x:Key="StringEmptyConverter"/>
+        <tool:ObjectTypeConverter x:Key="ObjectTypeConverter"/>
 
         <!--文件共享-->
         <ControlTemplate x:Key="ShareTemplate">
-            <Grid Margin="8,4" DataContext="{Binding Path=Value}" Background="Transparent">
+            <Grid Background="Transparent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto" Name="MiddleRow"/>
@@ -34,14 +36,14 @@
                 </Grid.ContextMenu>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="False">
+                <DataTrigger Binding="{Binding Path=IsBatch}" Value="False">
                     <Setter TargetName="SharePrefix" Property="Text" Value="[文件]"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Value.IsBatch}" Value="True">
+                <DataTrigger Binding="{Binding Path=IsBatch}" Value="True">
                     <Setter TargetName="SharePrefix" Property="Text" Value="[文件夹]"/>
                     <Setter TargetName="MiddleRow" Property="Height" Value="0"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Value.Path, Converter={StaticResource StringEmptyConverter}}" Value="True">
+                <DataTrigger Binding="{Binding Path=Path, Converter={StaticResource StringEmptyConverter}}" Value="True">
                     <Setter TargetName="PathText" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
             </ControlTemplate.Triggers>
@@ -97,7 +99,7 @@
                                 </ContextMenu>
                             </Image.ContextMenu>
                         </Image>
-                        <Control Name="ViewControl" Focusable="False" Visibility="Collapsed"/>
+                        <Control Name="ViewControl" Margin="4" Focusable="False" Visibility="Collapsed" DataContext="{Binding Path=Value}"/>
                         <Grid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Command="{x:Static local:Commands.Remove}"/>
@@ -119,10 +121,47 @@
                     <Setter TargetName="ViewImage" Property="Visibility" Value="Visible"/>
                     <Setter TargetName="ViewImage" Property="Source" Value="{Binding Path=MessageImage}"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Path}" Value="share">
+
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=Path}" Value="share"/>
+                        <Condition Binding="{Binding Path=Value, Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:ShareReceiver}"/>
+                    </MultiDataTrigger.Conditions>
+                    <MultiDataTrigger.Setters>
+                        <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
+                        <Setter TargetName="ViewControl" Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <local:ControlShareWorker/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </MultiDataTrigger.Setters>
+                </MultiDataTrigger>
+
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=Path}" Value="share"/>
+                        <Condition Binding="{Binding Path=Value, Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:Share}"/>
+                    </MultiDataTrigger.Conditions>
+                    <MultiDataTrigger.Setters>
+                        <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
+                        <Setter TargetName="ViewControl" Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <local:ControlShare/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </MultiDataTrigger.Setters>
+                </MultiDataTrigger>
+                <!--<DataTrigger Binding="{Binding Path=Path}" Value="share">
                     <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
-                    <Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ShareTemplate}"/>
-                </DataTrigger>
+                    -->
+                <!--<Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ShareTemplate}"/>-->
+                <!--
+                    
+                </DataTrigger>-->
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Page.Resources>

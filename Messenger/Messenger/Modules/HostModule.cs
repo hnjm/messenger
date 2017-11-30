@@ -33,6 +33,28 @@ namespace Messenger.Modules
         public static string Name { get => s_ins._host; set => s_ins._host = value; }
         public static int Port { get => s_ins._port; set => s_ins._port = value; }
 
+        internal static Host _GetHostInfo(byte[] buffer, int offset, int length)
+        {
+            try
+            {
+                var rea = new PacketReader(buffer, offset, length);
+                var inf = new Host()
+                {
+                    Protocol = rea["protocol"].Pull<string>(),
+                    Port = rea["port"].Pull<int>(),
+                    Name = rea["name"].Pull<string>(),
+                    Count = rea["count"].Pull<int>(),
+                    CountLimit = rea["limit"].Pull<int>(),
+                };
+                return inf;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return null;
+            }
+        }
+
         /// <summary>
         /// 通过 UDP 广播从搜索列表搜索服务器
         /// </summary>
@@ -43,51 +65,25 @@ namespace Messenger.Modules
             var stw = new Stopwatch();
             var soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var txt = new PacketWriter().Push("protocol", Links.Protocol).GetBytes();
+            var mis = new List<Task>();
 
-            Host gethost(byte[] buffer, int offset, int length)
+            void _Refresh()
             {
-                try
+                var buf = new byte[Links.BufferLength];
+                while (true)
                 {
-                    var rea = new PacketReader(buffer, offset, length);
-                    var inf = new Host()
-                    {
-                        Protocol = rea["protocol"].Pull<string>(),
-                        Port = rea["port"].Pull<int>(),
-                        Name = rea["name"].Pull<string>(),
-                        Count = rea["count"].Pull<int>(),
-                        CountLimit = rea["limit"].Pull<int>(),
-                    };
-                    return inf;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                    return null;
-                }
-            }
-
-            async Task _Refresh()
-            {
-                while (soc != null)
-                {
-                    var ava = soc.Available;
-                    if (ava < 1)
-                    {
-                        await Task.Delay(Links.Delay);
-                        continue;
-                    }
-
-                    var buf = new byte[Math.Min(ava, Links.BufferLength)];
                     var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
                     var len = soc.ReceiveFrom(buf, ref iep);
-                    var inf = gethost(buf, 0, len);
+                    var inf = _GetHostInfo(buf, 0, len);
 
                     if (inf == null || inf.Protocol.Equals(Links.Protocol) == false)
                         continue;
                     inf.Address = ((IPEndPoint)iep).Address;
                     inf.Delay = stw.ElapsedMilliseconds;
 
-                    if (lst.Find((r) => r.Equals(inf)) == null) lst.Add(inf);
+                    if (lst.Find(r => r.Equals(inf)) != null)
+                        continue;
+                    lst.Add(inf);
                 }
             }
 
@@ -97,17 +93,17 @@ namespace Messenger.Modules
                 soc.Bind(new IPEndPoint(IPAddress.Any, 0));
                 stw.Start();
 
+                var tsk = Task.Run(new Action(_Refresh));
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                _Refresh().Wait(_Timeout);
+                tsk.Wait(_Timeout);
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
                 Log.Error(ex);
             }
 
-            soc?.Dispose();
-            soc = null;
+            soc.Dispose();
             stw.Stop();
             return lst;
         }

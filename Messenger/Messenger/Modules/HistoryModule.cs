@@ -41,7 +41,7 @@ namespace Messenger.Modules
         /// </summary>
         public static event EventHandler<LinkEventArgs<Packet>> OnHandled { add => s_ins._han += value; remove => s_ins._han -= value; }
 
-        private static Packet SetPacket(Packet pkt, object value)
+        private static Packet _SetPath(Packet pkt, object value)
         {
             if (value is string str)
             {
@@ -53,6 +53,11 @@ namespace Messenger.Modules
                 pkt.Value = CacheModule.SetBuffer(buf, false);
                 pkt.Path = "image";
             }
+            else if (value is ShareReceiver sha)
+            {
+                pkt.Value = sha;
+                pkt.Path = "share";
+            }
             else throw new InvalidOperationException();
             return pkt;
         }
@@ -60,8 +65,8 @@ namespace Messenger.Modules
         public static Packet Insert(int gid, object obj)
         {
             var pkt = new Packet() { Source = LinkModule.ID, Target = gid, Groups = gid };
-            SetPacket(pkt, obj);
-            Insert(pkt);
+            _SetPath(pkt, obj);
+            _Insert(pkt);
             return pkt;
         }
 
@@ -69,8 +74,8 @@ namespace Messenger.Modules
         {
             var gid = target == LinkModule.ID ? source : target;
             var pkt = new Packet() { Source = source, Target = target, Groups = gid };
-            SetPacket(pkt, value);
-            Insert(pkt);
+            _SetPath(pkt, value);
+            _Insert(pkt);
             OnReceived(pkt);
             return pkt;
         }
@@ -88,7 +93,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 向数据库写入消息记录
         /// </summary>
-        private static void Insert(Packet pkt)
+        private static void _Insert(Packet pkt)
         {
             if (s_ins._msg.TryGetValue(pkt.Groups, out var lst))
                 Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
@@ -107,7 +112,7 @@ namespace Messenger.Modules
                     cmd.Parameters.Add(new SQLiteParameter("@sid", pkt.Source));
                     cmd.Parameters.Add(new SQLiteParameter("@tid", pkt.Target));
                     cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Groups));
-                    cmd.Parameters.Add(new SQLiteParameter("@tim", pkt.Timestamp.ToBinary()));
+                    cmd.Parameters.Add(new SQLiteParameter("@tim", pkt.Timestamp));
                     cmd.Parameters.Add(new SQLiteParameter("@typ", pkt.Path));
                     cmd.Parameters.Add(new SQLiteParameter("@msg", str));
                     cmd.ExecuteNonQuery();
@@ -150,7 +155,7 @@ namespace Messenger.Modules
                     rcd.Source = rdr.GetInt32(0);
                     rcd.Target = rdr.GetInt32(1);
                     rcd.Groups = rdr.GetInt32(2);
-                    rcd.Timestamp = DateTime.FromBinary(rdr.GetInt64(3));
+                    rcd.Timestamp = rdr.GetDateTime(3);
                     rcd.Path = rdr.GetString(4);
                     rcd.Value = rdr.GetString(5);
                     lis.Add(rcd);
@@ -185,10 +190,9 @@ namespace Messenger.Modules
                 con = new SQLiteConnection($"data source = {_Path}");
                 con.Open();
                 cmd = new SQLiteCommand(con);
-                // 消息类型(枚举), 消息时间(时间戳) 均转换成整形存储
                 cmd.CommandText = "create table if not exists messages(" +
                     "source integer not null, target integer not null, groups integer not null, " +
-                    "time integer not null, path varchar not null, text varchar not null)";
+                    "time timestamp not null, path varchar not null, text varchar not null)";
                 cmd.ExecuteNonQuery();
                 // 确保连接有效
                 s_ins._con = con;
@@ -219,7 +223,7 @@ namespace Messenger.Modules
                     cmd = new SQLiteCommand(s_ins._con);
                     cmd.CommandText = "delete from messages where groups == @gid and time == @mrt";
                     cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
-                    cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp.ToBinary()));
+                    cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp));
                     cmd.ExecuteNonQuery();
                 }
                 catch (Exception ex)

@@ -6,7 +6,7 @@
              xmlns:model="clr-namespace:Messenger.Models"
              xmlns:tool="clr-namespace:Messenger.Tools"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="100" d:DesignWidth="300">
     <UserControl.Resources>
         <tool:LengthUnitConverter x:Key="LengthUnitConverter"/>
         <tool:ObjectTypeConverter x:Key="ObjectTypeConverter"/>
@@ -14,61 +14,53 @@
 
         <ControlTemplate x:Key="WorkerTemplate">
             <Grid DataContext="{Binding}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="4"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-
-                <Grid Name="uiTitlePanel" Grid.Row="0" Grid.Column="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="4"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock FontSize="14" Grid.Row="0" Grid.Column="0" Name="uiPrefixText"/>
-                    <TextBlock FontSize="14" Grid.Row="0" Grid.Column="2" Foreground="#FFC0C0C0" Text="{Binding Path=Name}"/>
-                    <TextBlock Name="PathText" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Path=Path}"/>
-                </Grid>
-
-                <TextBlock Name="uiInfoText" Grid.Row="1" Grid.Column="0"/>
-
-                <StackPanel Name="uiTogglePanel" Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
-                            Orientation="Horizontal" VerticalAlignment="Center"
-                            Button.Click ="_Click">
-                    <!--控制按钮-->
-                    <Button Name="PlayButton" Margin="8,0" Tag="play" ToolTip="启动传输"
-                            Content="{DynamicResource PathLitePlay}"
-                            Style="{DynamicResource GeometryButtonStyle}"/>
-                    <Button Name="StopButton" Tag="stop" ToolTip="关闭传输"
-                            Content="{DynamicResource PathLiteStop}"
-                            Style="{DynamicResource GeometryButtonStyle}"/>
-                </StackPanel>
-
-                <ProgressBar Name="uiProgress" Height="2"
-                             Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                <ProgressBar Name="uiProgress" Height="2" Grid.Row="2"
                              Value="{Binding Path=Progress, Mode=OneWay}"
                              SnapsToDevicePixels="True">
                 </ProgressBar>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Name="uiTogglePanel" Grid.Column="1"
+                                Orientation="Horizontal" VerticalAlignment="Center"
+                                Button.Click ="_Click">
+                        <!--控制按钮-->
+                        <Button Name="PlayButton" Margin="8,0" Tag="play" ToolTip="启动传输"
+                                Content="{DynamicResource PathLitePlay}"
+                                Style="{DynamicResource GeometryButtonStyle}"/>
+                        <Button Name="StopButton" Tag="stop" ToolTip="关闭传输"
+                                Content="{DynamicResource PathLiteStop}"
+                                Style="{DynamicResource GeometryButtonStyle}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Name="uiTitlePanel">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontSize="14" Name="uiPrefixText"/>
+                                <TextBlock FontSize="14" Foreground="#FFA0A0A0" Text="{Binding Path=Name}"/>
+                            </StackPanel>
+                            <TextBlock Name="PathText" Text="{Binding Path=Path}"/>
+                        </StackPanel>
+                        <TextBlock Name="uiInfoText"/>
+                    </StackPanel>
+                </Grid>
             </Grid>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Path=Path, Converter={StaticResource StringEmptyConverter}}" Value="True">
                     <Setter TargetName="PathText" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
+
                 <DataTrigger Binding="{Binding Path=IsBatch}" Value="False">
                     <Setter TargetName="uiPrefixText" Property="Text" Value="[文件]"/>
                     <Setter TargetName="uiInfoText" Property="Text">
                         <Setter.Value>
-                            <MultiBinding StringFormat="用户昵称: {0}, 进度: {1} / {2}, {3:0.00}%, 速率: {4}/s, 状态: {5}, 剩余时间: {6:c}">
+                            <MultiBinding StringFormat="用户: {0}, {1} / {2}, {3:0.00}%, {4}/s, 状态: {5}, 剩余: {6:c}">
                                 <Binding Path="Profile.Name" Mode="OneWay"/>
                                 <Binding Path="Position" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
                                 <Binding Path="Length" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
@@ -84,7 +76,7 @@
                     <Setter TargetName="uiPrefixText" Property="Text" Value="[文件夹]"/>
                     <Setter TargetName="uiInfoText" Property="Text">
                         <Setter.Value>
-                            <MultiBinding StringFormat="用户昵称: {0}, 已传输: {1}, 速率: {2}/s, 状态: {3}">
+                            <MultiBinding StringFormat="用户: {0}, {1}, {2}/s, 状态: {3}">
                                 <Binding Path="Profile.Name" Mode="OneWay"/>
                                 <Binding Path="Position" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
                                 <Binding Path="Speed" Mode="OneWay" Converter="{StaticResource LengthUnitConverter}"/>
@@ -93,6 +85,7 @@
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
+
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=IsBatch}" Value="True"/>
@@ -118,6 +111,7 @@
                     <Setter TargetName="uiTitlePanel" Property="Visibility" Value="Collapsed"/>
                     <Setter TargetName="PlayButton" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
+
                 <DataTrigger Binding="{Binding Path=Status}" Value="连接">
                     <Setter TargetName="uiProgress" Property="IsIndeterminate" Value="True"/>
                 </DataTrigger>
@@ -133,7 +127,6 @@
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </UserControl.Resources>
-
     <UserControl.Style>
         <Style TargetType="UserControl">
             <Style.Setters>
@@ -143,5 +136,4 @@
             </Style.Setters>
         </Style>
     </UserControl.Style>
-
 </UserControl>

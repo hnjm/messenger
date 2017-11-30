@@ -56,23 +56,25 @@ namespace Messenger.Extensions
         /// <param name="pos">单位</param>
         internal static bool ToUnitEx(long length, out double len, out string pos)
         {
-            len = 0;
-            pos = string.Empty;
             if (length < 0)
-                return false;
-
+                goto fail;
             var tmp = length;
-            var i = 0;
-            while (i < _units.Count - 1)
+            var idx = 0;
+            while (idx < _units.Count - 1)
             {
-                if (tmp < (1 << 10))
+                if (tmp < 1024)
                     break;
                 tmp >>= 10;
-                i++;
+                idx++;
             }
-            len = length / Math.Pow(1024, i);
-            pos = _units[i];
+            len = length / Math.Pow(1024, idx);
+            pos = _units[idx];
             return true;
+
+            fail:
+            len = 0;
+            pos = string.Empty;
+            return false;
         }
 
         /// <summary>
@@ -91,6 +93,14 @@ namespace Messenger.Extensions
             return new IPEndPoint(IPAddress.Parse(add.Trim()), int.Parse(pot.Trim()));
         }
 
+        /// <summary>
+        /// 查找具有指定属性的方法
+        /// </summary>
+        /// <typeparam name="T">返回类型</typeparam>
+        /// <param name="assembly">程序集</param>
+        /// <param name="attribute">属性类型</param>
+        /// <param name="basic">目标类型基类 (可为 null)</param>
+        /// <param name="func">输出对象生成函数</param>
         internal static IEnumerable<T> FindAttribute<T>(Assembly assembly, Type attribute, Type basic, Func<Attribute, MethodInfo, Type, T> func) =>
             (basic == null
                 ? assembly.GetTypes()
@@ -112,17 +122,16 @@ namespace Messenger.Extensions
         {
             if (length < 0)
                 throw new ArgumentException("Receive file error!");
-            var idx = 0L;
             var fst = new FileStream(path, FileMode.CreateNew, FileAccess.Write);
 
             try
             {
-                while (idx < length)
+                while (length > 0)
                 {
-                    var sub = (int)Math.Min(length - idx, Links.BufferLength);
+                    var sub = (int)Math.Min(length, Links.BufferLength);
                     var buf = await socket.ReceiveAsyncEx(sub);
                     await fst.WriteAsync(buf, 0, buf.Length, token);
-                    idx += sub;
+                    length -= sub;
                     slice.Invoke(sub);
                 }
                 await fst.FlushAsync(token);
@@ -146,7 +155,6 @@ namespace Messenger.Extensions
         /// <param name="token">取消标志</param>
         internal static async Task SendFileEx(this Socket socket, string path, long length, Action<long> slice, CancellationToken token)
         {
-            var idx = 0L;
             var fst = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
             try
@@ -154,12 +162,12 @@ namespace Messenger.Extensions
                 if (fst.Length != length)
                     throw new ArgumentException("File length not match!");
                 var buf = new byte[Links.BufferLength];
-                while (idx < length)
+                while (length > 0)
                 {
-                    var len = (int)Math.Min(length - idx, Links.BufferLength);
-                    var sub = await fst.ReadAsync(buf, 0, len, token);
+                    var min = (int)Math.Min(length, Links.BufferLength);
+                    var sub = await fst.ReadAsync(buf, 0, min, token);
                     await socket.SendAsyncEx(buf, 0, sub);
-                    idx += sub;
+                    length -= sub;
                     slice.Invoke(sub);
                 }
             }

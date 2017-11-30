@@ -15,6 +15,7 @@ namespace Messenger.Modules
     internal class ShareModule : INotifyPropertyChanging, INotifyPropertyChanged
     {
         private const string _KeyPath = "share-path";
+        private const string _Path = "Share";
 
         private bool _hasShare = false;
         private bool _hasReceiver = false;
@@ -82,9 +83,12 @@ namespace Messenger.Modules
         /// </summary>
         public static void Register(ShareReceiver receiver)
         {
-            s_ins._receiverList.Add(receiver);
-            s_ins._pendingList.Add(receiver);
-            receiver.PropertyChanged += _RemovePending;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                s_ins._receiverList.Add(receiver);
+                s_ins._pendingList.Add(receiver);
+                receiver.PropertyChanged += _RemovePending;
+            });
         }
 
         private static void _RemovePending(object sender, PropertyChangedEventArgs e)
@@ -191,10 +195,7 @@ namespace Messenger.Modules
         [Loader(32, LoaderFlags.OnLoad)]
         public static void Load()
         {
-            var pth = OptionModule.GetOption(_KeyPath);
-            if (string.IsNullOrEmpty(pth))
-                pth = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Received");
-            s_ins._savepath = pth;
+            s_ins._savepath = OptionModule.GetOption(_KeyPath, _Path);
         }
 
         [Loader(4, LoaderFlags.OnExit)]

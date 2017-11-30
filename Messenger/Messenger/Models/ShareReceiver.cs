@@ -152,65 +152,72 @@ namespace Messenger.Models
 
         internal Task _Receive()
         {
-            var inf = _batch
-                ? ShareModule.AvailableDirectory(_name)
-                : (FileSystemInfo)ShareModule.AvailableFile(_name);
+            void _UpdateInfo(FileSystemInfo info)
+            {
+                _name = info.Name;
+                _path = info.FullName;
+                OnPropertyChanged(nameof(Name));
+                OnPropertyChanged(nameof(Path));
+            }
 
-            _name = inf.Name;
-            _path = inf.FullName;
-            OnPropertyChanged(nameof(Name));
-            OnPropertyChanged(nameof(Path));
-            // 接收目录
             if (_batch)
-                return _ReceiveDir(_path).ContinueWith(task => Log.Error(task.Exception));
-            // 接收单个文件
-            return _socket.ReceiveFileEx(_path, _length, r => _position += r, _cancel.Token);
+            {
+                var dir = ShareModule.AvailableDirectory(_name);
+                _UpdateInfo(dir);
+                return _ReceiveDir(dir.FullName);
+            }
+
+            var inf = ShareModule.AvailableFile(_name);
+            _UpdateInfo(inf);
+            return _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
         }
 
         internal async Task _ReceiveDir(string top)
         {
-            // 当前目录
+            if (Directory.Exists(top) == false)
+                Directory.CreateDirectory(top);
             var cur = top;
 
             while (true)
             {
                 var buf = await _socket.ReceiveAsyncExt();
                 var rea = new PacketReader(buf);
+                var typ = rea["type"].Pull<string>();
 
-                switch (rea["type"].Pull<string>())
+                if (typ == "dir")
                 {
-                    case "end":
+                    // 以根目录为基础重新拼接路径
+                    var lst = new List<string>() { top };
+                    var dir = rea["path"].PullList<string>();
+                    lst.AddRange(dir);
+                    cur = System.IO.Path.Combine(lst.ToArray());
+                    Directory.CreateDirectory(cur);
+                }
+                else if (typ == "file")
+                {
+                    var key = rea["path"].Pull<string>();
+                    var len = rea["length"].Pull<long>();
+                    var pth = System.IO.Path.Combine(cur, key);
+                    await _socket.ReceiveFileEx(pth, len, r => _position += r, _cancel.Token);
+                }
+                else
+                {
+                    if (typ == "end")
                         return;
-
-                    case "dir":
-                        // 以根目录为基础重新拼接路径
-                        var lst = new List<string>() { top };
-                        var dir = rea["path"].PullList<string>();
-                        lst.AddRange(dir);
-                        cur = System.IO.Path.Combine(lst.ToArray());
-                        Directory.CreateDirectory(cur);
-                        break;
-
-                    case "file":
-                        var key = rea["path"].Pull<string>();
-                        var len = rea["length"].Pull<long>();
-                        var pth = System.IO.Path.Combine(cur, key);
-                        await _socket.ReceiveFileEx(pth, len, r => _position += r, _cancel.Token);
-                        break;
-
-                    default:
-                        throw new ApplicationException("Batch receive error!");
+                    throw new ApplicationException("Batch receive error!");
                 }
             }
         }
 
         internal void _Finish(Task task)
         {
+            var exc = task.Exception;
+            Log.Error(task.Exception);
+
             lock (_locker)
             {
                 if (_disposed)
                     return;
-                var exc = task.Exception;
                 _status = (exc == null)
                     ? ShareStatus.成功
                     : ShareStatus.中断;
