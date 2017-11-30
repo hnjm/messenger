@@ -15,40 +15,6 @@
         <tool:StringEmptyConverter x:Key="StringEmptyConverter"/>
         <tool:ObjectTypeConverter x:Key="ObjectTypeConverter"/>
 
-        <!--文件共享-->
-        <ControlTemplate x:Key="ShareTemplate">
-            <Grid Background="Transparent">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto" Name="MiddleRow"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <StackPanel Grid.Row="0" Orientation="Horizontal">
-                    <TextBlock FontSize="14" Foreground="#FF808080" Name="SharePrefix"/>
-                    <TextBlock FontSize="14" Foreground="#FFC0C0C0" Text="{Binding Path=Name}" Margin="4,0"/>
-                </StackPanel>
-                <TextBlock Grid.Row="1" FontSize="12" Foreground="#808080" Text="{Binding Path=Length, Converter={StaticResource LengthUnitConverter}}"/>
-                <TextBlock Name="PathText" Grid.Row="2" FontSize="12" Foreground="#808080" Text="{Binding Path=Path}"/>
-                <Grid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Command="{x:Static local:Commands.Remove}"/>
-                    </ContextMenu>
-                </Grid.ContextMenu>
-            </Grid>
-            <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=IsBatch}" Value="False">
-                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件]"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=IsBatch}" Value="True">
-                    <Setter TargetName="SharePrefix" Property="Text" Value="[文件夹]"/>
-                    <Setter TargetName="MiddleRow" Property="Height" Value="0"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Path=Path, Converter={StaticResource StringEmptyConverter}}" Value="True">
-                    <Setter TargetName="PathText" Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-
         <!--消息模板-->
         <ControlTemplate x:Key="MessageTemplate">
             <Grid Margin="5" Width="{Binding ElementName=uiMessageGrid, Path=ActualWidth}">
@@ -155,13 +121,6 @@
                         </Setter>
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
-                <!--<DataTrigger Binding="{Binding Path=Path}" Value="share">
-                    <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
-                    -->
-                <!--<Setter TargetName="ViewControl" Property="Template" Value="{StaticResource ShareTemplate}"/>-->
-                <!--
-                    
-                </DataTrigger>-->
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Page.Resources>
