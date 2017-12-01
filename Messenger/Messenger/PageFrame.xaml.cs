@@ -12,10 +12,6 @@ namespace Messenger
     /// </summary>
     public partial class PageFrame : Page
     {
-        /// <summary>
-        /// 顶层 Frame 是否有内容
-        /// </summary>
-        private bool _visible = false;
         private readonly PageProfile _profPage = new PageProfile();
 
         public PageFrame()
@@ -37,20 +33,20 @@ namespace Messenger
             };
             uiMainBorder.MouseDown += (s, arg) => act.Invoke();
             uiMainBorder.TouchDown += (s, arg) => act.Invoke();
-            HistoryModule.Receiving += _HistoryReceiving;
+            HistoryModule.Receive += _HistoryReceiving;
         }
 
         private void _Unloaded(object sender, RoutedEventArgs e)
         {
-            HistoryModule.Receiving -= _HistoryReceiving;
+            HistoryModule.Receive -= _HistoryReceiving;
         }
 
         /// <summary>
-        /// 如果顶层 Frame 有内容 说明下层 Frame 不可见 因此消息提示也应存在
+        /// 如果 Frame 不为用户列表 则消息提示应当存在
         /// </summary>
         private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
-            if (_visible == false)
+            if (uiFrame.Content != _profPage)
                 return;
             e.Cancel = true;
         }
@@ -60,29 +56,24 @@ namespace Messenger
             var tag = (e.OriginalSource as RadioButton)?.Tag as string;
             if (tag == null)
                 return;
-            _visible = true;
 
-            var cur = uiMainFrame;
+            var cur = uiFrame;
+            var ctx = default(Page);
             if (tag == "self")
-                cur.Content = new Shower();
+                ctx = new Shower();
             else if (tag == "share")
-                cur.Content = new PageShare();
+                ctx = new PageShare();
             else if (tag == "setting")
-                cur.Content = new PageOption();
-            else if (tag != "switch")
-                _visible = false;
+                ctx = new PageOption();
+            else if (tag != "switch" && cur.Content != _profPage)
+                ctx = _profPage;
 
-            if (_visible)
+            if (ctx != null)
+                cur.Content = ctx;
+
+            // Context 属性会延迟生效, 因此只能与 ctx 比较
+            if (ctx == _profPage)
             {
-                // 隐藏下层 Frame
-                if (tag != "switch")
-                    uiFrame.Content = null;
-            }
-            else
-            {
-                // 隐藏上层 Frame, 同时将下层 Frame 中当前聊天未读计数置 0
-                uiFrame.Content = _profPage;
-                uiMainFrame.Content = null;
                 var sco = ProfileModule.Inscope;
                 if (sco != null)
                     sco.Hint = 0;
@@ -99,6 +90,10 @@ namespace Messenger
 
             if (uiNavigateGrid.Width > uiNavigateGrid.MinWidth)
                 uiSwitchRadio.IsChecked = false;
+
+            // 清空导航历史
+            while (NavigationService.CanGoBack)
+                NavigationService.RemoveBackEntry();
 
             uiMainBorder.Visibility = uiSwitchRadio.IsChecked == true ? Visibility.Visible : Visibility.Hidden;
         }

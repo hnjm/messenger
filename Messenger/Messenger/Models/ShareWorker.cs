@@ -1,10 +1,7 @@
 ﻿using Messenger.Extensions;
 using Mikodev.Logger;
-using Mikodev.Network;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,54 +57,7 @@ namespace Messenger.Models
 
             if (_source._info is FileInfo inf)
                 return _socket.SendFileEx(_source._path, _source._length, r => _position += r, _cancel.Token).ContinueWith(_Finish);
-            return _SendDir((DirectoryInfo)_source._info, Enumerable.Empty<string>()).ContinueWith(_Finish);
-        }
-
-        internal async Task _SendDir(DirectoryInfo subdir, IEnumerable<string> relative)
-        {
-            var lst = relative.ToList();
-            if (lst.Count > 0)
-            {
-                // 发送文件夹相对路径
-                var wtr = PacketWriter.Serialize(new
-                {
-                    type = "dir",
-                    path = lst,
-                });
-                var buf = wtr.GetBytes();
-                await _socket.SendAsyncExt(buf);
-            }
-
-            foreach (var file in subdir.GetFiles())
-            {
-                var len = file.Length;
-                var key = file.Name;
-                var wtr = PacketWriter.Serialize(new
-                {
-                    type = "file",
-                    path = key,
-                    length = len,
-                });
-                var buf = wtr.GetBytes();
-                await _socket.SendAsyncExt(buf);
-                await _socket.SendFileEx(file.FullName, len, r => _position += r, _cancel.Token);
-            }
-
-            foreach (var dir in subdir.GetDirectories())
-            {
-                await _SendDir(dir, relative.Concat(new[] { dir.Name }));
-            }
-
-            if (relative.Any() == false)
-            {
-                var wtr = PacketWriter.Serialize(new
-                {
-                    type = "end",
-                });
-
-                var buf = wtr.GetBytes();
-                await _socket.SendAsyncExt(buf);
-            }
+            return _socket.SendDirectoryAsyncEx(_source._path, r => _position += r, _cancel.Token).ContinueWith(_Finish);
         }
 
         internal void _Finish(Task task)

@@ -164,49 +164,12 @@ namespace Messenger.Models
             {
                 var dir = ShareModule.AvailableDirectory(_name);
                 _UpdateInfo(dir);
-                return _ReceiveDir(dir.FullName);
+                return _socket.ReceiveDirectoryAsyncEx(dir.FullName, r => _position += r, _cancel.Token);
             }
 
             var inf = ShareModule.AvailableFile(_name);
             _UpdateInfo(inf);
             return _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
-        }
-
-        internal async Task _ReceiveDir(string top)
-        {
-            if (Directory.Exists(top) == false)
-                Directory.CreateDirectory(top);
-            var cur = top;
-
-            while (true)
-            {
-                var buf = await _socket.ReceiveAsyncExt();
-                var rea = new PacketReader(buf);
-                var typ = rea["type"].Pull<string>();
-
-                if (typ == "dir")
-                {
-                    // 以根目录为基础重新拼接路径
-                    var lst = new List<string>() { top };
-                    var dir = rea["path"].PullList<string>();
-                    lst.AddRange(dir);
-                    cur = System.IO.Path.Combine(lst.ToArray());
-                    Directory.CreateDirectory(cur);
-                }
-                else if (typ == "file")
-                {
-                    var key = rea["path"].Pull<string>();
-                    var len = rea["length"].Pull<long>();
-                    var pth = System.IO.Path.Combine(cur, key);
-                    await _socket.ReceiveFileEx(pth, len, r => _position += r, _cancel.Token);
-                }
-                else
-                {
-                    if (typ == "end")
-                        return;
-                    throw new ApplicationException("Batch receive error!");
-                }
-            }
         }
 
         internal void _Finish(Task task)

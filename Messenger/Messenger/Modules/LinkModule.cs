@@ -64,7 +64,7 @@ namespace Messenger.Modules
 
             _Listen(soc).ContinueWith(tsk => Log.Error(tsk.Exception));
 
-            HistoryModule.OnHandled += _OnHistoryHandled;
+            HistoryModule.Handled += _OnHistoryHandled;
             ShareModule.PendingList.ListChanged += _PendingListChanged;
             ProfileModule.Current.ID = id;
 
@@ -118,7 +118,7 @@ namespace Messenger.Modules
 
             ShareModule.Close();
             ProfileModule.Clear();
-            HistoryModule.OnHandled -= _OnHistoryHandled;
+            HistoryModule.Handled -= _OnHistoryHandled;
             ShareModule.PendingList.ListChanged -= _PendingListChanged;
         }
 
@@ -141,17 +141,15 @@ namespace Messenger.Modules
 
         private static void _OnHistoryHandled(object sender, LinkEventArgs<Packet> e)
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                var pro = ProfileModule.Query(e.Record.Groups);
-                if (pro == null)
-                    return;
-                var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
-                    NativeMethods.FlashWindow(hdl, true);
-                if (e.Finish == false || e.Cancel == true)
-                    pro.Hint += 1;
-            });
+            var pro = ProfileModule.Query(e.Record.Groups);
+            if (pro == null)
+                return;
+            var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
+            if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
+                NativeMethods.FlashWindow(hdl, true);
+            if (e.Finish == false || e.Cancel == true)
+                pro.Hint += 1;
+            return;
         }
 
         private static void _PendingListChanged(object sender, ListChangedEventArgs e)

@@ -176,5 +176,75 @@ namespace Messenger.Extensions
                 fst.Dispose();
             }
         }
+
+        internal static async Task SendDirectoryAsyncEx(this Socket socket, string path, Action<long> slice, CancellationToken token)
+        {
+            async Task _SendDir(DirectoryInfo subdir, IEnumerable<string> relative)
+            {
+                // 发送文件夹相对路径
+                var cur = PacketWriter.Serialize(new
+                {
+                    type = "dir",
+                    path = relative,
+                });
+                await socket.SendAsyncExt(cur.GetBytes());
+
+                foreach (var file in subdir.GetFiles())
+                {
+                    var len = file.Length;
+                    var wtr = PacketWriter.Serialize(new
+                    {
+                        type = "file",
+                        path = file.Name,
+                        length = len,
+                    });
+                    await socket.SendAsyncExt(wtr.GetBytes());
+                    await socket.SendFileEx(file.FullName, len, slice, token);
+                }
+
+                foreach (var dir in subdir.GetDirectories())
+                {
+                    await _SendDir(dir, relative.Concat(new[] { dir.Name }));
+                }
+            }
+
+            await _SendDir(new DirectoryInfo(path), Enumerable.Empty<string>());
+            var end = PacketWriter.Serialize(new { type = "end", });
+            await socket.SendAsyncExt(end.GetBytes());
+        }
+
+        internal static async Task ReceiveDirectoryAsyncEx(this Socket _socket, string path, Action<long> slice, CancellationToken token)
+        {
+            // 当前目录
+            var cur = path;
+
+            while (true)
+            {
+                var buf = await _socket.ReceiveAsyncExt();
+                var rea = new PacketReader(buf);
+                var typ = rea["type"].Pull<string>();
+
+                if (typ == "dir")
+                {
+                    // 重新拼接路径
+                    var dir = rea["path"].PullList<string>();
+                    cur = Path.Combine(new[] { path }.Concat(dir).ToArray());
+                    Directory.CreateDirectory(cur);
+                }
+                else if (typ == "file")
+                {
+                    var key = rea["path"].Pull<string>();
+                    var len = rea["length"].Pull<long>();
+                    var pth = Path.Combine(cur, key);
+                    await _socket.ReceiveFileEx(pth, len, slice, token);
+                }
+                else
+                {
+                    if (typ == "end")
+                        return;
+                    throw new ApplicationException("Batch receive error!");
+                }
+            }
+        }
     }
 }

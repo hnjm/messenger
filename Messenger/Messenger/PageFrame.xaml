@@ -77,7 +77,6 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Frame x:Name="uiFrame" Grid.Column="1"/>
-        <Frame x:Name="uiMainFrame" Grid.Column="1"/>
         <Border x:Name="uiMainBorder" Grid.Column="1" Background="#80000000" Visibility="Hidden"/>
         <Grid x:Name="uiNavigateGrid" Grid.Column="0" Grid.ColumnSpan="2"
               Width="48" MinWidth="48" MaxWidth="264" 

@@ -31,7 +31,7 @@ namespace Messenger
 
         private void _Loaded(object sender, RoutedEventArgs e)
         {
-            HistoryModule.Receiving += _HistoryReceiving;
+            HistoryModule.Receive += _HistoryReceiving;
             (Application.Current as App).TextBoxKeyDown += _TextBoxKeyDown;
 
             _profile = ProfileModule.Inscope;
@@ -45,7 +45,7 @@ namespace Messenger
         private void _Unloaded(object sender, RoutedEventArgs e)
         {
             uiMessageBox.ItemsSource = null;
-            HistoryModule.Receiving -= _HistoryReceiving;
+            HistoryModule.Receive -= _HistoryReceiving;
             (Application.Current as App).TextBoxKeyDown -= _TextBoxKeyDown;
             _messages.ListChanged -= Messages_ListChanged;
         }

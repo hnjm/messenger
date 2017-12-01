@@ -34,12 +34,12 @@ namespace Messenger.Modules
         /// <summary>
         /// 消息接收事件
         /// </summary>
-        public static event EventHandler<LinkEventArgs<Packet>> Receiving { add => s_ins._rec += value; remove => s_ins._rec -= value; }
+        public static event EventHandler<LinkEventArgs<Packet>> Receive { add => s_ins._rec += value; remove => s_ins._rec -= value; }
 
         /// <summary>
         /// 消息接收事件处理后
         /// </summary>
-        public static event EventHandler<LinkEventArgs<Packet>> OnHandled { add => s_ins._han += value; remove => s_ins._han -= value; }
+        public static event EventHandler<LinkEventArgs<Packet>> Handled { add => s_ins._han += value; remove => s_ins._han -= value; }
 
         private static Packet _SetPath(Packet pkt, object value)
         {
@@ -76,18 +76,21 @@ namespace Messenger.Modules
             var pkt = new Packet() { Source = source, Target = target, Groups = gid };
             _SetPath(pkt, value);
             _Insert(pkt);
-            OnReceived(pkt);
+            _OnReceive(pkt);
             return pkt;
         }
 
         /// <summary>
         /// 触发事件
         /// </summary>
-        private static void OnReceived(Packet rcd)
+        private static void _OnReceive(Packet rcd)
         {
             var arg = new LinkEventArgs<Packet>() { Record = rcd };
-            s_ins._rec?.Invoke(s_ins, arg);
-            s_ins._han?.Invoke(s_ins, arg);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                s_ins._rec?.Invoke(s_ins, arg);
+                s_ins._han?.Invoke(s_ins, arg);
+            });
         }
 
         /// <summary>
@@ -95,8 +98,8 @@ namespace Messenger.Modules
         /// </summary>
         private static void _Insert(Packet pkt)
         {
-            if (s_ins._msg.TryGetValue(pkt.Groups, out var lst))
-                Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
+            var lst = Query(pkt.Groups);
+            Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
             if (s_ins._con == null)
                 return;
             var str = pkt.Value as string;
