@@ -78,7 +78,7 @@ namespace Messenger.Modules
                 source = LinkModule.ID,
                 target = Links.ID,
                 path = "user.group",
-                data = ProfileModule.GroupIDs?.ToList(),
+                data = ProfileModule.GroupIDs,
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Messenger.Extensions
 {
-    internal static class NativeMethods
+    internal static class NativeMethod
     {
         public const int GWL_STYLE = -16;
         public const int WS_SYSMENU = 0x80000;

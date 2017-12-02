@@ -28,7 +28,7 @@ namespace Messenger.Modules
         private string _grouptags = null;
         private string _imagesource = null;
         private byte[] _imagebuffer = null;
-        private IEnumerable<int> _groupids = null;
+        private List<int> _groupids = null;
         private BindingList<Profile> _recent = new BindingList<Profile>();
         private BindingList<Profile> _client = new BindingList<Profile>();
         private BindingList<Profile> _groups = new BindingList<Profile>();
@@ -103,7 +103,7 @@ namespace Messenger.Modules
         public static string GroupLabels => s_ins._grouptags;
         public static string ImageSource { get => s_ins._imagesource; set => s_ins._imagesource = value; }
         public static byte[] ImageBuffer { get => s_ins._imagebuffer; set => s_ins._imagebuffer = value; }
-        public static IEnumerable<int> GroupIDs => s_ins._groupids;
+        public static List<int> GroupIDs => s_ins._groupids;
         public static BindingList<Profile> RecentList => s_ins._recent;
         public static BindingList<Profile> ClientList => s_ins._client;
         public static BindingList<Profile> GroupsList => s_ins._groups;
@@ -181,9 +181,9 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() =>
             {
                 lst = clt.RemoveEx(r => ids.Contains(r.ID) == false);
-                foreach (var r in lst)
-                    if (r.Hint > 0)
-                        SetRecent(r);
+                foreach (var i in lst)
+                    if (i.Hint > 0)
+                        SetRecent(i);
             });
             return lst;
         }
@@ -193,12 +193,17 @@ namespace Messenger.Modules
         /// </summary>
         public static bool SetGroupLabels(string args)
         {
-            var val = (args ?? string.Empty).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            var tmp = (from s in val select new { Value = s, Hash = s.ToLower().GetHashCode() | 1 << 31 }).ToList();
-            var kvs = tmp.DistinctEx((a, b) => a.Hash == b.Hash);
+            var kvp = from k in
+                          from i in (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                          select new { Name = i, Hash = i.ToLower().GetHashCode() | 1 << 31 }
+                      group k by k.Hash into a
+                      select a.First();
+            var kvs = kvp.ToList();
+
             if (kvs.Count > Links.GroupLabelLimit)
                 return false;
-            var ids = from i in kvs select i.Hash;
+
+            var ids = (from i in kvs select i.Hash).ToList();
             s_ins._grouptags = args;
             s_ins._groupids = ids;
             var gro = s_ins._groups;
@@ -206,14 +211,16 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var lst = gro.RemoveEx(r => ids.Contains(r.ID) == false);
-                foreach (var r in lst)
-                    if (r.Hint > 0)
-                        SetRecent(r);
-                var add = from r in kvs where gro.FirstOrDefault(t => t.ID == r.Hash) == null select r;
+                foreach (var i in lst)
+                    if (i.Hint > 0)
+                        SetRecent(i);
+                var add = from r in kvs
+                          where gro.FirstOrDefault(t => t.ID == r.Hash) == null
+                          select r;
                 foreach (var i in add)
                 {
                     var pro = Query(i.Hash, true);
-                    pro.Name = i.Value;
+                    pro.Name = i.Name;
                     pro.Text = i.Hash.ToString("X8");
                     gro.Add(pro);
                 }
@@ -252,6 +259,7 @@ namespace Messenger.Modules
                 {
                     if (ReferenceEquals(rec[i], profile))
                         return;
+                    // 移除值相同但引用不同的项目
                     rec.RemoveAt(i);
                     break;
                 }

@@ -46,7 +46,7 @@ namespace Messenger
         /// </summary>
         private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
-            if (uiFrame.Content != _profPage)
+            if (uiFrame.Content == _profPage)
                 return;
             e.Cancel = true;
         }

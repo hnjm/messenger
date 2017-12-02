@@ -85,7 +85,7 @@ namespace Messenger.Modules
         /// </summary>
         private static void _OnReceive(Packet rcd)
         {
-            var arg = new LinkEventArgs<Packet>() { Record = rcd };
+            var arg = new LinkEventArgs<Packet>() { Object = rcd };
             Application.Current.Dispatcher.Invoke(() =>
             {
                 s_ins._rec?.Invoke(s_ins, arg);

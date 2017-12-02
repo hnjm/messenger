@@ -5,6 +5,7 @@ using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -18,26 +19,43 @@ namespace Messenger.Modules
     /// </summary>
     internal class LinkModule
     {
-        private readonly object _loc = new object();
+        private readonly object _locker = new object();
 
-        private LinkClient _clt = null;
+        private LinkClient _client = null;
 
         /// <summary>
         /// 监听反向连接 (用于文件传输)
         /// </summary>
-        private Socket _soc = null;
+        private Socket _socket = null;
 
         private static readonly LinkModule s_ins = new LinkModule();
 
-        public static int ID => s_ins._clt?.ID ?? ProfileModule.Current.ID;
+        public static int ID => s_ins._client?.ID ?? ProfileModule.Current.ID;
 
-        public static bool IsRunning => s_ins._clt?.IsRunning ?? false;
+        public static bool IsRunning => s_ins._client?.IsRunning ?? false;
 
+        /// <summary>
+        /// 启动连接 (与 <see cref="Shutdown"/> 方法为非完全线程安全的关系, 不过两个方法不可能同时调用)
+        /// </summary>
         public static void Start(int id, IPEndPoint endpoint)
         {
             var clt = new LinkClient(id);
-            clt.Received += (s, e) => RouteModule.Handle(e.Record);
-            clt.Shutdown += (s, e) => Entrance.ShowError("连接已断开", s_ins._clt?.Exception);
+
+            void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Handle(args.Object);
+
+            void _OnShutdown(object sender, LinkEventArgs<Exception> args)
+            {
+                clt.Received -= _OnReceived;
+                clt.Shutdown -= _OnShutdown;
+                // 置空
+                lock (s_ins._locker)
+                    s_ins._client = null;
+                Entrance.ShowError("连接中断", args.Object);
+            }
+
+            clt.Received += _OnReceived;
+            clt.Shutdown += _OnShutdown;
+
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
@@ -46,13 +64,13 @@ namespace Messenger.Modules
                 clt.Start(endpoint);
                 soc.Bind(clt.InnerEndPoint);
                 soc.Listen(Links.ClientCountLimit);
-                lock (s_ins._loc)
+                lock (s_ins._locker)
                 {
-                    lock (s_ins._loc)
-                        if (s_ins._clt != null || s_ins._soc != null)
+                    lock (s_ins._locker)
+                        if (s_ins._client != null || s_ins._socket != null)
                             throw new InvalidOperationException();
-                    s_ins._clt = clt;
-                    s_ins._soc = soc;
+                    s_ins._client = clt;
+                    s_ins._socket = soc;
                 }
             }
             catch (Exception)
@@ -108,12 +126,12 @@ namespace Messenger.Modules
         [Loader(0, LoaderFlags.OnExit)]
         public static void Shutdown()
         {
-            lock (s_ins._loc)
+            lock (s_ins._locker)
             {
-                s_ins._clt?.Dispose();
-                s_ins._clt = null;
-                s_ins._soc?.Dispose();
-                s_ins._soc = null;
+                s_ins._client?.Dispose();
+                s_ins._client = null;
+                s_ins._socket?.Dispose();
+                s_ins._socket = null;
             }
 
             ShareModule.Close();
@@ -122,31 +140,30 @@ namespace Messenger.Modules
             ShareModule.PendingList.ListChanged -= _PendingListChanged;
         }
 
-        public static void Enqueue(byte[] buffer) => s_ins._clt?.Enqueue(buffer);
+        public static void Enqueue(byte[] buffer) => s_ins._client?.Enqueue(buffer);
 
         /// <summary>
-        /// 获取与连接关联的 NAT 内部端点和外部端点 (若二者相同 则只返回一个 且不会返回 null)
+        /// 获取与连接关联的 NAT 内部端点和外部端点 (二者相同时只返回一个, 连接无效时返回空列表, 始终不会返回 null)
         /// </summary>
         public static List<IPEndPoint> GetEndPoints()
         {
             var lst = new List<IPEndPoint>();
-            var clt = s_ins._clt;
-            if (clt?.InnerEndPoint is IPEndPoint iep)
-                lst.Add(iep);
-            if (clt?.OuterEndPoint is IPEndPoint rep)
-                lst.Add(rep);
-            var res = lst.DistinctEx((a, b) => a.Equals(b));
+            if (Extension.Lock(s_ins._locker, ref s_ins._client, out var clt) == false)
+                return lst;
+            lst.Add(clt.InnerEndPoint);
+            lst.Add(clt.OuterEndPoint);
+            var res = lst.Distinct().ToList();
             return res;
         }
 
         private static void _OnHistoryHandled(object sender, LinkEventArgs<Packet> e)
         {
-            var pro = ProfileModule.Query(e.Record.Groups);
+            var pro = ProfileModule.Query(e.Object.Groups);
             if (pro == null)
                 return;
             var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
             if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
-                NativeMethods.FlashWindow(hdl, true);
+                NativeMethod.FlashWindow(hdl, true);
             if (e.Finish == false || e.Cancel == true)
                 pro.Hint += 1;
             return;
@@ -159,7 +176,7 @@ namespace Messenger.Modules
                 if (Application.Current.MainWindow.IsActive == true)
                     return;
                 var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                NativeMethods.FlashWindow(hdl, true);
+                NativeMethod.FlashWindow(hdl, true);
             }
         }
     }

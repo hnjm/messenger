@@ -9,7 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using static Messenger.Extensions.NativeMethods;
+using static Messenger.Extensions.NativeMethod;
 using static System.Windows.ResizeMode;
 using static System.Windows.WindowState;
 
@@ -85,7 +85,12 @@ namespace Messenger
                 if (win == null)
                     return;
                 win.uiHeadText.Text = title;
-                win.uiContentText.Text = content?.ToString() ?? "未提供信息";
+
+                var obj = content;
+                while (obj is AggregateException agg && agg.InnerExceptions.Count == 1)
+                    obj = agg.InnerException;
+
+                win.uiContentText.Text = obj?.ToString() ?? "未提供信息";
                 win.uiMessagePanel.Visibility = Visibility.Visible;
             });
         }

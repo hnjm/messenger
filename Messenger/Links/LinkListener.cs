@@ -129,7 +129,7 @@ namespace Mikodev.Network
 
             var clt = new LinkClient(cid) { _key = key, _blk = blk };
             clt.Received += _LinkClient_Received;
-            clt.Shutdown += _LinkClient_Shutdown;
+            clt.Shutdown += _ClientShutdown;
 
             lock (_loc)
             {
@@ -170,7 +170,7 @@ namespace Mikodev.Network
             }
         }
 
-        private void _LinkClient_Shutdown(object sender, EventArgs e)
+        private void _ClientShutdown(object sender, EventArgs e)
         {
             var cid = ((LinkClient)sender)._id;
             var wtr = PacketWriter.Serialize(new
@@ -215,7 +215,7 @@ namespace Mikodev.Network
 
         private void _LinkClient_Received(object sender, LinkEventArgs<LinkPacket> arg)
         {
-            var rea = arg.Record;
+            var rea = arg.Object;
             var src = rea.Source;
             var tar = rea.Target;
             var buf = rea.Buffer;

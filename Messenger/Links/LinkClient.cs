@@ -18,7 +18,6 @@ namespace Mikodev.Network
         internal byte[] _key = null;
         internal byte[] _blk = null;
         internal Socket _socket = null;
-        internal Exception _exc = null;
         internal IPEndPoint _iep = null;
         internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
 
@@ -26,15 +25,21 @@ namespace Mikodev.Network
 
         public bool IsRunning => _disposed == false && _started == true;
 
-        public Exception Exception => _exc;
+        /// <summary>
+        /// 本机端点 (不会返回 null)
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public IPEndPoint InnerEndPoint => ((IPEndPoint)_socket?.LocalEndPoint) ?? throw new InvalidOperationException("Inner endpoint not available!");
 
-        public IPEndPoint InnerEndPoint => _socket?.LocalEndPoint as IPEndPoint;
-
-        public IPEndPoint OuterEndPoint => _iep;
+        /// <summary>
+        /// 服务器报告的相对于服务器的外部端点 (不会返回 null)
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public IPEndPoint OuterEndPoint => _iep ?? throw new InvalidOperationException("Outer endpoint not available!");
 
         public event EventHandler<LinkEventArgs<LinkPacket>> Received = null;
 
-        public event EventHandler Shutdown = null;
+        public event EventHandler<LinkEventArgs<Exception>> Shutdown = null;
 
         public LinkClient(int id) => _id = id;
 
@@ -46,8 +51,8 @@ namespace Mikodev.Network
                     throw new InvalidOperationException("Client has benn marked as started or disposed!");
                 _started = true;
                 _socket = socket;
-                _Sender().ContinueWith(t => _Shutdown(t.Exception));
-                _Receiver().ContinueWith(t => _Shutdown(t.Exception));
+                _Sender().ContinueWith(_OnShutdown);
+                _Receiver().ContinueWith(_OnShutdown);
             }
         }
 
@@ -101,8 +106,8 @@ namespace Mikodev.Network
                 throw;
             }
 
-            _Sender().ContinueWith(t => _Shutdown(t.Exception));
-            _Receiver().ContinueWith(t => _Shutdown(t.Exception));
+            _Sender().ContinueWith(_OnShutdown);
+            _Receiver().ContinueWith(_OnShutdown);
         }
 
         public void Enqueue(byte[] buffer)
@@ -112,7 +117,7 @@ namespace Mikodev.Network
                 throw new ArgumentOutOfRangeException(nameof(buffer));
             lock (_loc)
             {
-                if (_disposed || _msglen > Links.BufferQueueLimit)
+                if (_disposed)
                     return;
                 _msglen += len;
                 _msgs.Enqueue(buffer);
@@ -154,41 +159,39 @@ namespace Mikodev.Network
             {
                 var buf = await _socket.ReceiveAsyncExt();
                 var res = LinkCrypto.Decrypt(buf, _key, _blk);
-                _Received(new LinkPacket().LoadValue(res));
+                _OnReceived(res);
             }
         }
 
-        internal int _Received(LinkPacket packet)
+        internal void _OnReceived(byte[] buffer)
         {
-            if (packet.Source == Links.ID && packet.Path == "link.shutdown")
-                return _Shutdown();
-            Received?.Invoke(this, new LinkEventArgs<LinkPacket>() { Source = this, Record = packet });
-            return 0;
+            var pkt = new LinkPacket().LoadValue(buffer);
+            var arg = new LinkEventArgs<LinkPacket>() { Object = pkt };
+            Received?.Invoke(this, arg);
         }
 
-        internal int _Shutdown(Exception ex = null)
+        internal void _OnShutdown(Task task)
         {
-            lock (_loc)
-                if (_disposed)
-                    return 0;
-            Log.Error(ex);
-            if (ex != null)
-                _exc = ex;
-            Dispose();
-            Shutdown?.Invoke(this, new EventArgs());
-            return 0;
+            var exc = task.Exception;
+            Log.Error(exc);
+            if (_OnDispose() == false)
+                return;
+            Shutdown?.Invoke(this, new LinkEventArgs<Exception> { Object = exc });
         }
 
-        public void Dispose()
+        internal bool _OnDispose()
         {
             lock (_loc)
             {
                 if (_disposed)
-                    return;
+                    return false;
                 _disposed = true;
                 _socket?.Dispose();
                 _socket = null;
+                return true;
             }
         }
+
+        public void Dispose() => _OnDispose();
     }
 }

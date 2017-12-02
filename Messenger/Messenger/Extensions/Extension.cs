@@ -246,5 +246,45 @@ namespace Messenger.Extensions
                 }
             }
         }
+
+        /// <summary>
+        /// 移除源列表中所有符合条件的项目, 返回被移除的项目
+        /// </summary>
+        public static List<T> RemoveEx<T>(this IList<T> lst, Func<T, bool> fun)
+        {
+            var idx = 0;
+            var res = new List<T>();
+            while (idx < lst.Count)
+            {
+                var val = lst[idx];
+                var con = fun.Invoke(val);
+                if (con == true)
+                {
+                    res.Add(val);
+                    lst.RemoveAt(idx);
+                }
+                else idx++;
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// [常用代码段] 锁定 <paramref name="locker"/> 以访问 <paramref name="location"/>, 若值不为 null 则返回 true, 否则返回 false
+        /// </summary>
+        public static bool Lock<TE, TR>(TE locker, ref TR location, out TR value) where TE : class where TR : class
+        {
+            lock (locker)
+            {
+                var val = location;
+                if (val == null)
+                {
+                    value = null;
+                    return false;
+                }
+
+                value = val;
+                return true;
+            }
+        }
     }
 }
