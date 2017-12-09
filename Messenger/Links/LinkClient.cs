@@ -4,110 +4,122 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Network
 {
     public sealed class LinkClient : IDisposable
     {
+        internal readonly int _id = 0;
+        internal readonly object _loc = new object();
+        internal readonly Socket _socket = null;
+        internal readonly Socket _listen = null;
+        internal readonly IPEndPoint _inner = null;
+        internal readonly IPEndPoint _outer = null;
+        internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
+        internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+
         internal bool _started = false;
         internal bool _disposed = false;
         internal long _msglen = 0;
-        internal readonly int _id = 0;
-        internal readonly object _loc = new object();
         internal byte[] _key = null;
         internal byte[] _blk = null;
-        internal Socket _socket = null;
-        internal IPEndPoint _iep = null;
-        internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
 
-        public int ID => _id;
+        public int Id => _id;
 
-        public bool IsRunning => _disposed == false && _started == true;
+        public bool IsRunning { get { lock (_loc) { return _started == true && _disposed == false; } } }
 
         /// <summary>
         /// 本机端点 (不会返回 null)
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        public IPEndPoint InnerEndPoint => ((IPEndPoint)_socket?.LocalEndPoint) ?? throw new InvalidOperationException("Inner endpoint not available!");
+        public IPEndPoint InnerEndPoint => _inner;
 
         /// <summary>
         /// 服务器报告的相对于服务器的外部端点 (不会返回 null)
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        public IPEndPoint OuterEndPoint => _iep ?? throw new InvalidOperationException("Outer endpoint not available!");
+        public IPEndPoint OuterEndPoint => _outer;
 
         public event EventHandler<LinkEventArgs<LinkPacket>> Received = null;
 
-        public event EventHandler<LinkEventArgs<Exception>> Shutdown = null;
+        public event EventHandler<LinkEventArgs<Exception>> Disposed = null;
 
-        public LinkClient(int id) => _id = id;
+        public event EventHandler<LinkEventArgs<Socket>> Requested = null;
 
-        public void Start(Socket socket)
+        internal LinkClient(int id, Socket socket, IPEndPoint inner, IPEndPoint outer)
         {
-            lock (_loc)
-            {
-                if (_started || _disposed)
-                    throw new InvalidOperationException("Client has benn marked as started or disposed!");
-                _started = true;
-                _socket = socket;
-                _Sender().ContinueWith(_OnShutdown);
-                _Receiver().ContinueWith(_OnShutdown);
-            }
+            _id = id;
+            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            _outer = outer ?? throw new ArgumentNullException(nameof(outer));
         }
 
-        public void Start(IPEndPoint ep)
+        public LinkClient(int id, EndPoint server)
         {
-            lock (_loc)
-            {
-                if (_started || _disposed)
-                    throw new InvalidOperationException("Client has benn marked as started or disposed!");
-                _started = true;
-            }
-
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            var lis = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var rsa = new RSACryptoServiceProvider();
-            var req = PacketWriter.Serialize(new
-            {
-                id = _id,
-                protocol = Links.Protocol,
-                rsakey = rsa.ToXmlString(false),
-            });
+            var iep = default(IPEndPoint);
+            var oep = default(IPEndPoint);
+            var key = default(byte[]);
+            var blk = default(byte[]);
 
             try
             {
-                soc.ConnectAsyncEx(ep).WaitTimeout("Timeout when connect to server.");
+                soc.ConnectAsyncEx(server).WaitTimeout("Timeout when connect to server.");
                 soc.SetKeepAlive();
-                soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout when client request.");
-                var buf = soc.ReceiveAsyncExt().WaitTimeout("Timeout when client response.");
+                iep = (IPEndPoint)soc.LocalEndPoint;
 
-                var rea = new PacketReader(buf);
-                var err = rea["result"].Pull<LinkError>();
-                LinkException.ThrowError(err);
+                lis.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                lis.Bind(iep);
+                lis.Listen(Links.ClientSocketLimit);
 
-                var aeskey = rea["aeskey"].PullList();
-                var aesiv = rea["aesiv"].PullList();
-                var iep = rea["endpoint"].Pull<IPEndPoint>();
-                var key = rsa.Decrypt(aeskey, true);
-                var blk = rsa.Decrypt(aesiv, true);
-                lock (_loc)
+                var req = PacketWriter.Serialize(new
                 {
-                    if (_disposed)
-                        throw new InvalidOperationException("Client has benn marked as disposed!");
-                    _socket = soc;
-                    _iep = iep;
-                    _key = key;
-                    _blk = blk;
-                }
+                    source = id,
+                    endpoint = iep,
+                    path = "link.connect",
+                    protocol = Links.Protocol,
+                    rsakey = rsa.ToXmlString(false),
+                });
+                soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout when client request.");
+
+                var rec = soc.ReceiveAsyncExt().WaitTimeout("Timeout when client response.");
+                var rea = new PacketReader(rec);
+                LinkException.ThrowError(rea["result"].Pull<LinkError>());
+
+                oep = rea["endpoint"].Pull<IPEndPoint>();
+                key = rsa.Decrypt(rea["aeskey"].PullList(), true);
+                blk = rsa.Decrypt(rea["aesiv"].PullList(), true);
             }
             catch (Exception)
             {
                 soc.Dispose();
+                lis.Dispose();
                 throw;
             }
 
-            _Sender().ContinueWith(_OnShutdown);
-            _Receiver().ContinueWith(_OnShutdown);
+            _id = id;
+            _socket = soc;
+            _listen = lis;
+            _inner = iep;
+            _outer = oep;
+            _key = key;
+            _blk = blk;
+        }
+
+        public void Start()
+        {
+            lock (_loc)
+            {
+                if (_started || _disposed)
+                    throw new InvalidOperationException("Client has benn marked as started or disposed!");
+                _started = true;
+                if (_listen != null)
+                    _Listener().ContinueWith(_Clean);
+                _Sender().ContinueWith(_Clean);
+                _Receiver().ContinueWith(_Clean);
+            }
         }
 
         public void Enqueue(byte[] buffer)
@@ -126,12 +138,12 @@ namespace Mikodev.Network
 
         internal async Task _Sender()
         {
-            bool dequeue(out byte[] buf)
+            bool _Dequeue(out byte[] buf)
             {
                 lock (_loc)
                 {
                     if (_msglen > Links.BufferQueueLimit)
-                        throw new LinkException(LinkError.QueueLimited, "Message queue length out of range!");
+                        throw new LinkException(LinkError.QueueLimited);
                     if (_msglen > 0)
                     {
                         buf = _msgs.Dequeue();
@@ -144,52 +156,96 @@ namespace Mikodev.Network
                 return false;
             }
 
-            while (_socket != null)
+            while (true)
             {
-                if (dequeue(out var buf))
+                if (_cancel.IsCancellationRequested)
+                    throw new TaskCanceledException("Client sender task exited.");
+                if (_Dequeue(out var buf))
                     await _socket.SendAsyncExt(LinkCrypto.Encrypt(buf, _key, _blk));
                 else
                     await Task.Delay(Links.Delay);
+                continue;
             }
         }
 
         internal async Task _Receiver()
         {
-            while (_socket != null)
+            while (true)
             {
+                if (_cancel.IsCancellationRequested)
+                    throw new TaskCanceledException("Client receiver task exited.");
                 var buf = await _socket.ReceiveAsyncExt();
+
+                var rec = Received;
+                if (rec == null)
+                    continue;
                 var res = LinkCrypto.Decrypt(buf, _key, _blk);
-                _OnReceived(res);
+                var pkt = new LinkPacket().LoadValue(res);
+                var arg = new LinkEventArgs<LinkPacket>(pkt);
+                rec.Invoke(this, arg);
             }
         }
 
-        internal void _OnReceived(byte[] buffer)
+        internal async Task _Listener()
         {
-            var pkt = new LinkPacket().LoadValue(buffer);
-            var arg = new LinkEventArgs<LinkPacket>() { Object = pkt };
-            Received?.Invoke(this, arg);
+            void _Invoke(Socket socket)
+            {
+                Task.Run(() =>
+                {
+                    Requested?.Invoke(this, new LinkEventArgs<Socket>(socket));
+                })
+                .ContinueWith(task =>
+                {
+                    Log.Error(task.Exception);
+                    socket.Dispose();
+                });
+            }
+
+            while (true)
+            {
+                if (_cancel.IsCancellationRequested)
+                    throw new TaskCanceledException("Client listener task exited.");
+                try
+                {
+                    _Invoke(await _listen.AcceptAsyncEx());
+                }
+                catch (SocketException ex)
+                {
+                    Log.Error(ex);
+                    continue;
+                }
+            }
         }
 
-        internal void _OnShutdown(Task task)
+        internal void _Clean(Task task)
         {
-            var exc = task.Exception;
-            Log.Error(exc);
-            if (_OnDispose() == false)
-                return;
-            Shutdown?.Invoke(this, new LinkEventArgs<Exception> { Object = exc });
+            var err = task.Exception;
+            Log.Error(err);
+            _OnDispose(err);
         }
 
-        internal bool _OnDispose()
+        internal void _OnDispose(Exception err = null)
         {
             lock (_loc)
             {
                 if (_disposed)
-                    return false;
+                    return;
                 _disposed = true;
-                _socket?.Dispose();
-                _socket = null;
-                return true;
             }
+            _cancel.Cancel();
+            _socket.Dispose();
+            _listen?.Dispose();
+
+            var dis = Disposed;
+            if (dis == null)
+                return;
+            Task.Run(() =>
+            {
+                if (err == null)
+                    err = new TaskCanceledException("Client disposed manually or by GC.");
+                var arg = new LinkEventArgs<Exception>(err);
+                dis.Invoke(this, arg);
+            });
         }
 
         public void Dispose() => _OnDispose();

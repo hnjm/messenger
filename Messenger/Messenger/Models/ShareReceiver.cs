@@ -49,7 +49,7 @@ namespace Messenger.Models
 
         public override ShareStatus Status => _status;
 
-        protected override int ID => _id;
+        protected override int Id => _id;
 
         public ShareReceiver(int id, PacketReader reader)
         {
@@ -100,7 +100,7 @@ namespace Messenger.Models
                 var buf = PacketWriter.Serialize(new
                 {
                     data = _key,
-                    source = LinkModule.ID,
+                    source = LinkModule.Id,
                 });
                 await soc.SendAsyncExt(buf.GetBytes());
             }

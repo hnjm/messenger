@@ -64,7 +64,7 @@ namespace Messenger.Modules
 
         public static Packet Insert(int gid, object obj)
         {
-            var pkt = new Packet() { Source = LinkModule.ID, Target = gid, Groups = gid };
+            var pkt = new Packet() { Source = LinkModule.Id, Target = gid, Groups = gid };
             _SetPath(pkt, obj);
             _Insert(pkt);
             return pkt;
@@ -72,7 +72,7 @@ namespace Messenger.Modules
 
         public static Packet Insert(int source, int target, object value)
         {
-            var gid = target == LinkModule.ID ? source : target;
+            var gid = target == LinkModule.Id ? source : target;
             var pkt = new Packet() { Source = source, Target = target, Groups = gid };
             _SetPath(pkt, value);
             _Insert(pkt);
@@ -85,11 +85,16 @@ namespace Messenger.Modules
         /// </summary>
         private static void _OnReceive(Packet rcd)
         {
-            var arg = new LinkEventArgs<Packet>() { Object = rcd };
+            var arg = new LinkEventArgs<Packet>(rcd);
             Application.Current.Dispatcher.Invoke(() =>
             {
                 s_ins._rec?.Invoke(s_ins, arg);
                 s_ins._han?.Invoke(s_ins, arg);
+
+                if (arg.Finish == true && arg.Cancel == false)
+                    return;
+                var pro = ProfileModule.Query(rcd.Groups, true);
+                pro.Hint += 1;
             });
         }
 

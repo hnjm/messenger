@@ -40,7 +40,7 @@ namespace Messenger
                 uiHostBox.Text = HostModule.Name;
                 uiPortBox.Text = HostModule.Port.ToString();
             }
-            uiCodeBox.Text = ProfileModule.Current.ID.ToString();
+            uiCodeBox.Text = ProfileModule.Current.Id.ToString();
             uiServerList.ItemsSource = _hosts;
             uiServerList.SelectionChanged += ListBox_SelectionChanged;
         }

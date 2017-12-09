@@ -1,6 +1,5 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
-using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
@@ -19,18 +18,12 @@ namespace Messenger.Modules
     /// </summary>
     internal class LinkModule
     {
+        private LinkModule() { }
+        private static readonly LinkModule s_ins = new LinkModule();
+        private LinkClient _client = null;
         private readonly object _locker = new object();
 
-        private LinkClient _client = null;
-
-        /// <summary>
-        /// 监听反向连接 (用于文件传输)
-        /// </summary>
-        private Socket _socket = null;
-
-        private static readonly LinkModule s_ins = new LinkModule();
-
-        public static int ID => s_ins._client?.ID ?? ProfileModule.Current.ID;
+        public static int Id => s_ins._client?.Id ?? ProfileModule.Current.Id;
 
         public static bool IsRunning => s_ins._client?.IsRunning ?? false;
 
@@ -39,88 +32,57 @@ namespace Messenger.Modules
         /// </summary>
         public static void Start(int id, IPEndPoint endpoint)
         {
-            var clt = new LinkClient(id);
+            var clt = new LinkClient(id, endpoint);
 
             void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Handle(args.Object);
 
-            void _OnShutdown(object sender, LinkEventArgs<Exception> args)
+            void _OnDisposed(object sender, LinkEventArgs<Exception> args)
             {
                 clt.Received -= _OnReceived;
-                clt.Shutdown -= _OnShutdown;
+                clt.Disposed -= _OnDisposed;
+                clt.Requested -= _ClientRequested;
                 // 置空
                 lock (s_ins._locker)
                     s_ins._client = null;
-                Entrance.ShowError("连接中断", args.Object);
+                var obj = args.Object;
+                if (obj == null || obj is TaskCanceledException)
+                    return;
+                Entrance.ShowError("连接中断", obj);
             }
 
             clt.Received += _OnReceived;
-            clt.Shutdown += _OnShutdown;
+            clt.Disposed += _OnDisposed;
+            clt.Requested += _ClientRequested;
 
-            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-            try
+            lock (s_ins._locker)
             {
-                clt.Start(endpoint);
-                soc.Bind(clt.InnerEndPoint);
-                soc.Listen(Links.ClientCountLimit);
-                lock (s_ins._locker)
+                if (s_ins._client != null)
                 {
-                    lock (s_ins._locker)
-                        if (s_ins._client != null || s_ins._socket != null)
-                            throw new InvalidOperationException();
-                    s_ins._client = clt;
-                    s_ins._socket = soc;
+                    clt.Dispose();
+                    throw new InvalidOperationException();
                 }
-            }
-            catch (Exception)
-            {
-                clt.Dispose();
-                soc.Dispose();
-                throw;
+                s_ins._client = clt;
             }
 
-            _Listen(soc).ContinueWith(tsk => Log.Error(tsk.Exception));
-
-            HistoryModule.Handled += _OnHistoryHandled;
+            HistoryModule.Handled += _HistoryHandled;
             ShareModule.PendingList.ListChanged += _PendingListChanged;
-            ProfileModule.Current.ID = id;
+            ProfileModule.Current.Id = id;
 
-            PostModule.UserProfile(Links.ID);
+            PostModule.UserProfile(Links.Id);
             PostModule.UserRequest();
             PostModule.UserGroups();
+
+            clt.Start();
         }
 
-        private static async Task _Listen(Socket socket)
+        private static void _ClientRequested(object sender, LinkEventArgs<Socket> e)
         {
-            while (true)
-            {
-                try
-                {
-                    var clt = await socket.AcceptAsyncEx();
-#pragma warning disable 4014
-                    Task.Run(() =>
-                    {
-                        var buf = clt.ReceiveAsyncExt().WaitTimeout("Timeout when accept transport header.");
-                        var rea = new PacketReader(buf);
-                        var key = rea["data"].Pull<Guid>();
-                        var src = rea["source"].Pull<int>();
+            var soc = e.Object;
+            var buf = soc.ReceiveAsyncExt().WaitTimeout("Timeout when accept transport header."); var rea = new PacketReader(buf);
+            var key = rea["data"].Pull<Guid>();
+            var src = rea["source"].Pull<int>();
 
-                        Share.Notify(src, key, clt)?.Wait();
-                    })
-                    .ContinueWith(tsk =>
-                    {
-                        Log.Error(tsk.Exception);
-                        clt.Dispose();
-                    });
-#pragma warning restore 4014
-                }
-                catch (SocketException ex)
-                {
-                    Log.Error(ex);
-                    continue;
-                }
-            }
+            Share.Notify(src, key, soc)?.Wait();
         }
 
         [Loader(0, LoaderFlags.OnExit)]
@@ -130,13 +92,11 @@ namespace Messenger.Modules
             {
                 s_ins._client?.Dispose();
                 s_ins._client = null;
-                s_ins._socket?.Dispose();
-                s_ins._socket = null;
             }
 
             ShareModule.Close();
             ProfileModule.Clear();
-            HistoryModule.Handled -= _OnHistoryHandled;
+            HistoryModule.Handled -= _HistoryHandled;
             ShareModule.PendingList.ListChanged -= _PendingListChanged;
         }
 
@@ -156,16 +116,11 @@ namespace Messenger.Modules
             return res;
         }
 
-        private static void _OnHistoryHandled(object sender, LinkEventArgs<Packet> e)
+        private static void _HistoryHandled(object sender, LinkEventArgs<Packet> e)
         {
-            var pro = ProfileModule.Query(e.Object.Groups);
-            if (pro == null)
-                return;
             var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
             if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
                 NativeMethod.FlashWindow(hdl, true);
-            if (e.Finish == false || e.Cancel == true)
-                pro.Hint += 1;
             return;
         }
 

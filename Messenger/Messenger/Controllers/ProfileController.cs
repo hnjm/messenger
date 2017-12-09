@@ -27,7 +27,7 @@ namespace Messenger.Controllers
         {
             var pro = new Profile()
             {
-                ID = Data["id"].Pull<int>(),
+                Id = Data["id"].Pull<int>(),
                 Name = Data["name"].Pull<string>(),
                 Text = Data["text"].Pull<string>(),
             };
@@ -39,7 +39,7 @@ namespace Messenger.Controllers
         }
 
         /// <summary>
-        /// 处理服务器返回的用户 ID 列表
+        /// 处理服务器返回的用户 Id 列表
         /// </summary>
         [Route("user.list")]
         public void List()

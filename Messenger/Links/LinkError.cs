@@ -8,8 +8,6 @@
 
         Overflow,
 
-        AssertFailed,
-
         ProtocolMismatch,
 
         CodeInvalid,

@@ -75,7 +75,7 @@
                 </Grid>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static module:LinkModule.ID}">
+                <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static module:LinkModule.Id}">
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                 </DataTrigger>

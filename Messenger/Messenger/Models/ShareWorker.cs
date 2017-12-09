@@ -20,7 +20,7 @@ namespace Messenger.Models
         internal bool _disposed = false;
         internal ShareStatus _status;
 
-        protected override int ID => _id;
+        protected override int Id => _id;
 
         public override long Length => _source.Length;
 

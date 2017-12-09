@@ -37,6 +37,12 @@ namespace Messenger.Modules
         private Profile _inscope = null;
         private EventHandler _inscopechanged = null;
 
+        public bool HasRecent
+        {
+            get => _hasrecent;
+            set => _EmitChange(ref _hasrecent, value);
+        }
+
         public bool HasClient
         {
             get => _hasclient;
@@ -47,12 +53,6 @@ namespace Messenger.Modules
         {
             get => _hasgroups;
             set => _EmitChange(ref _hasgroups, value);
-        }
-
-        public bool HasRecent
-        {
-            get => _hasrecent;
-            set => _EmitChange(ref _hasrecent, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -87,7 +87,7 @@ namespace Messenger.Modules
         {
             var cli = _client.Sum(r => r.Hint);
             var gro = _groups.Sum(r => r.Hint);
-            var rec = _recent.Sum(r => (r.Hint < 1 || _client.FirstOrDefault(t => t.ID == r.ID) != null || _groups.FirstOrDefault(t => t.ID == r.ID) != null) ? 0 : r.Hint);
+            var rec = _recent.Sum(r => (r.Hint < 1 || _client.FirstOrDefault(t => t.Id == r.Id) != null || _groups.FirstOrDefault(t => t.Id == r.Id) != null) ? 0 : r.Hint);
             HasClient = cli > 0;
             HasGroups = gro > 0;
             HasRecent = rec > 0;
@@ -103,7 +103,7 @@ namespace Messenger.Modules
         public static string GroupLabels => s_ins._grouptags;
         public static string ImageSource { get => s_ins._imagesource; set => s_ins._imagesource = value; }
         public static byte[] ImageBuffer { get => s_ins._imagebuffer; set => s_ins._imagebuffer = value; }
-        public static List<int> GroupIDs => s_ins._groupids;
+        public static List<int> GroupIds => s_ins._groupids;
         public static BindingList<Profile> RecentList => s_ins._recent;
         public static BindingList<Profile> ClientList => s_ins._client;
         public static BindingList<Profile> GroupsList => s_ins._groups;
@@ -123,9 +123,9 @@ namespace Messenger.Modules
             var clt = s_ins._client;
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var res = Query(profile.ID, true);
+                var res = Query(profile.Id, true);
                 res.CopyFrom(profile);
-                var tmp = clt.FirstOrDefault(r => r.ID == profile.ID);
+                var tmp = clt.FirstOrDefault(r => r.Id == profile.Id);
                 if (tmp == null)
                     clt.Add(res);
             });
@@ -139,7 +139,7 @@ namespace Messenger.Modules
         public static Profile Query(int id, bool create = false)
         {
             var ins = s_ins;
-            if (id == ins._local.ID)
+            if (id == ins._local.Id)
                 return ins._local;
             var spa = ins._spaces;
 
@@ -150,7 +150,7 @@ namespace Messenger.Modules
                 var tar = (Profile)spa[idx].Target;
                 if (tar != null)
                 {
-                    if (pro == null && tar.ID == id)
+                    if (pro == null && tar.Id == id)
                         pro = tar;
                     idx++;
                     continue;
@@ -160,27 +160,27 @@ namespace Messenger.Modules
 
             if (pro != null)
                 return pro;
-            pro = ins._client.Concat(ins._groups).Concat(ins._recent).FirstOrDefault(t => t.ID == id);
+            pro = ins._client.Concat(ins._groups).Concat(ins._recent).FirstOrDefault(t => t.Id == id);
             if (pro != null)
                 return pro;
             if (create == false)
                 return null;
-            pro = new Profile() { ID = id, Name = $"佚名 [{id}]" };
+            pro = new Profile() { Id = id, Name = $"佚名 [{id}]" };
             spa.Add(new WeakReference(pro));
             return pro;
         }
 
         /// <summary>
-        /// 移除所有 ID 不在给定集合的项目 并把含有未读消息的项目添加到最近列表
+        /// 移除所有 Id 不在给定集合的项目 并把含有未读消息的项目添加到最近列表
         /// </summary>
-        /// <param name="ids">ID 集合</param>
+        /// <param name="ids">Id 集合</param>
         public static List<Profile> Remove(IEnumerable<int> ids)
         {
             var clt = s_ins._client;
             var lst = default(List<Profile>);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                lst = clt.RemoveEx(r => ids.Contains(r.ID) == false);
+                lst = clt.RemoveEx(r => ids.Contains(r.Id) == false);
                 foreach (var i in lst)
                     if (i.Hint > 0)
                         SetRecent(i);
@@ -210,12 +210,12 @@ namespace Messenger.Modules
             PostModule.UserGroups();
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var lst = gro.RemoveEx(r => ids.Contains(r.ID) == false);
+                var lst = gro.RemoveEx(r => ids.Contains(r.Id) == false);
                 foreach (var i in lst)
                     if (i.Hint > 0)
                         SetRecent(i);
                 var add = from r in kvs
-                          where gro.FirstOrDefault(t => t.ID == r.Hash) == null
+                          where gro.FirstOrDefault(t => t.Id == r.Hash) == null
                           select r;
                 foreach (var i in add)
                 {
@@ -255,7 +255,7 @@ namespace Messenger.Modules
             var rec = s_ins._recent;
             for (var i = 0; i < rec.Count; i++)
             {
-                if (rec[i].ID == profile.ID)
+                if (rec[i].Id == profile.Id)
                 {
                     if (ReferenceEquals(rec[i], profile))
                         return;
@@ -272,7 +272,7 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._local.ID = int.Parse(OptionModule.GetOption(_KeyCode, new Random().Next(1, int.MaxValue).ToString()));
+                s_ins._local.Id = int.Parse(OptionModule.GetOption(_KeyCode, new Random().Next(1, int.MaxValue).ToString()));
                 s_ins._local.Name = OptionModule.GetOption(_KeyName);
                 s_ins._local.Text = OptionModule.GetOption(_KeyText);
                 var lbs = OptionModule.GetOption(_KeyLabel);
@@ -296,7 +296,7 @@ namespace Messenger.Modules
         [Loader(8, LoaderFlags.OnExit)]
         public static void Save()
         {
-            OptionModule.SetOption(_KeyCode, s_ins._local.ID.ToString());
+            OptionModule.SetOption(_KeyCode, s_ins._local.Id.ToString());
             OptionModule.SetOption(_KeyName, s_ins._local.Name);
             OptionModule.SetOption(_KeyText, s_ins._local.Text);
             OptionModule.SetOption(_KeyImage, s_ins._imagesource);

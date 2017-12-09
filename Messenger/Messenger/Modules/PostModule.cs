@@ -23,7 +23,7 @@ namespace Messenger.Modules
 
             var wtr = PacketWriter.Serialize(new
             {
-                source = LinkModule.ID,
+                source = LinkModule.Id,
                 target = target,
                 path = pth,
                 data = val,
@@ -41,12 +41,12 @@ namespace Messenger.Modules
             var pro = ProfileModule.Current;
             var wtr = PacketWriter.Serialize(new
             {
-                source = LinkModule.ID,
+                source = LinkModule.Id,
                 target = target,
                 path = "user.profile",
                 data = new
                 {
-                    id = pro.ID,
+                    id = pro.Id,
                     name = pro.Name,
                     text = pro.Text,
                     image = ProfileModule.ImageBuffer,
@@ -60,8 +60,8 @@ namespace Messenger.Modules
         {
             var wtr = PacketWriter.Serialize(new
             {
-                source = LinkModule.ID,
-                target = Links.ID,
+                source = LinkModule.Id,
+                target = Links.Id,
                 path = "user.request",
             });
             var buf = wtr.GetBytes();
@@ -75,10 +75,10 @@ namespace Messenger.Modules
         {
             var wtr = PacketWriter.Serialize(new
             {
-                source = LinkModule.ID,
-                target = Links.ID,
+                source = LinkModule.Id,
+                target = Links.Id,
                 path = "user.group",
-                data = ProfileModule.GroupIDs,
+                data = ProfileModule.GroupIds,
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
@@ -93,7 +93,7 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
-                source = LinkModule.ID,
+                source = LinkModule.Id,
                 target = target,
                 path = "share.info",
                 data = new
@@ -116,7 +116,7 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
-                source = LinkModule.ID,
+                source = LinkModule.Id,
                 target = target,
                 path = "share.info",
                 data = new

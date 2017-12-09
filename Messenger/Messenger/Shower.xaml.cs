@@ -26,7 +26,7 @@ namespace Messenger
             {
                 ProfileModule.Current.Name = uiNameBox.Text;
                 ProfileModule.Current.Text = uiSignBox.Text;
-                PostModule.UserProfile(Links.ID);
+                PostModule.UserProfile(Links.Id);
             }
             else if (tag == "image")
             {
@@ -40,7 +40,7 @@ namespace Messenger
                     ProfileModule.ImageSource = ofd.FileName;
                     ProfileModule.ImageBuffer = buf;
                     ProfileModule.Current.Image = str;
-                    PostModule.UserProfile(Links.ID);
+                    PostModule.UserProfile(Links.Id);
                 }
                 catch (Exception ex)
                 {

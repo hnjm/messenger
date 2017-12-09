@@ -4,10 +4,16 @@ namespace Mikodev.Network
 {
     public class LinkEventArgs<T> : EventArgs
     {
-        public T Object { get; set; } = default(T);
+        internal T _obj;
+        internal bool _cancel = false;
+        internal bool _finish = false;
 
-        public bool Cancel { get; set; } = false;
+        public LinkEventArgs(T value) => _obj = value;
 
-        public bool Finish { get; set; } = false;
+        public T Object => _obj;
+
+        public bool Cancel { get => _cancel; set => _cancel = value; }
+
+        public bool Finish { get => _finish; set => _finish = value; }
     }
 }

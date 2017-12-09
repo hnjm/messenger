@@ -25,9 +25,9 @@ namespace Launcher
         static void Entrance(string[] args)
         {
             var nam = default(string);
-            var max = Links.ClientCountLimit;
+            var max = Links.ServerSocketLimit;
             var pot = Links.ListenPort;
-            var bro = Links.ListenPort;
+            var bro = Links.BroadcastPort;
             var dic = new Dictionary<string, string>();
             foreach (var i in args)
             {
@@ -45,8 +45,8 @@ namespace Launcher
             if (dic.TryGetValue("broadcast", out var bad))
                 bro = int.Parse(bad);
 
-            var lis = new LinkListener();
-            lis.Listen(pot, max);
+            var lis = new LinkListener(pot, max);
+            lis.Listen();
             lis.Broadcast(bro, nam).Wait();
         }
     }

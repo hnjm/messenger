@@ -25,7 +25,7 @@ namespace Mikodev.Network
             return arr;
         }
 
-        public static Task ConnectAsyncEx(this Socket socket, IPEndPoint endpoint) => Task.Factory.FromAsync((a, o) => socket.BeginConnect(endpoint, a, o), socket.EndConnect, null);
+        public static Task ConnectAsyncEx(this Socket socket, EndPoint endpoint) => Task.Factory.FromAsync((a, o) => socket.BeginConnect(endpoint, a, o), socket.EndConnect, null);
 
         public static Task<Socket> AcceptAsyncEx(this Socket socket) => Task.Factory.FromAsync(socket.BeginAccept, socket.EndAccept, null);
 
@@ -50,7 +50,7 @@ namespace Mikodev.Network
         public static async Task<byte[]> ReceiveAsyncEx(this Socket socket, int length)
         {
             if (length < 1 || length > Links.BufferLengthLimit)
-                throw new LinkException(LinkError.Overflow, "Buffer length out of range!");
+                throw new LinkException(LinkError.Overflow);
             var offset = 0;
             var buffer = new byte[length];
             while (length > 0)

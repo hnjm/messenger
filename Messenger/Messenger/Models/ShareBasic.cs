@@ -56,7 +56,7 @@ namespace Messenger.Models
         private TimeSpan _remain = TimeSpan.Zero;
         private readonly List<Tick> _ticks = new List<Tick>();
 
-        protected abstract int ID { get; }
+        protected abstract int Id { get; }
 
         public abstract long Length { get; }
 
@@ -72,7 +72,7 @@ namespace Messenger.Models
 
         public abstract ShareStatus Status { get; }
 
-        public Profile Profile => ProfileModule.Query(ID, true);
+        public Profile Profile => ProfileModule.Query(Id, true);
 
         public TimeSpan Remain => _remain;
 

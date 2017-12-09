@@ -5,23 +5,24 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Network
 {
     public sealed partial class LinkListener
     {
-        internal int _climit = Links.ClientCountLimit;
-        internal int _port = Links.ListenPort;
+        internal bool _started = false;
+
+        internal readonly int _climit = Links.ServerSocketLimit;
+        internal readonly int _port = Links.ListenPort;
         internal readonly object _loc = new object();
 
-        internal Socket _soc = null;
+        internal readonly Socket _soc = null;
         internal readonly Dictionary<int, LinkClient> _dic = new Dictionary<int, LinkClient>();
         internal readonly Dictionary<int, HashSet<int>> _gro = new Dictionary<int, HashSet<int>>();
         internal readonly Dictionary<int, HashSet<int>> _set = new Dictionary<int, HashSet<int>>();
 
-        public Task Listen(int port = Links.ListenPort, int count = Links.ClientCountLimit)
+        public LinkListener(int port = Links.ListenPort, int count = Links.ServerSocketLimit)
         {
             if (count < 1)
                 throw new ArgumentOutOfRangeException(nameof(count), "Count limit must bigger than zero!");
@@ -32,10 +33,6 @@ namespace Mikodev.Network
             {
                 soc.Bind(iep);
                 soc.Listen(count);
-                if (Interlocked.CompareExchange(ref _soc, soc, null) != null)
-                    throw new InvalidOperationException("Listener socket not null!");
-                _climit = count;
-                _port = port;
             }
             catch (Exception)
             {
@@ -43,12 +40,25 @@ namespace Mikodev.Network
                 throw;
             }
 
+            _soc = soc;
+            _port = port;
+            _climit = count;
+        }
+
+        public Task Listen()
+        {
+            lock (_loc)
+            {
+                if (_started)
+                    throw new InvalidOperationException();
+                _started = true;
+            }
             return _Listen();
         }
 
         private async Task _Listen()
         {
-            void _Invoke(Socket soc) => Task.Run(() => _Handle(soc)).ContinueWith(tsk =>
+            void _Invoke(Socket soc) => Task.Run(() => _Connect(soc)).ContinueWith(tsk =>
             {
                 var ex = tsk.Exception;
                 if (ex == null)
@@ -71,11 +81,11 @@ namespace Mikodev.Network
             }
         }
 
-        private void _Handle(Socket client)
+        private void _Connect(Socket socket)
         {
             LinkError _Check(int code)
             {
-                if (code <= Links.ID)
+                if (code <= Links.Id)
                     return LinkError.CodeInvalid;
                 if (_dic.Count >= _climit)
                     return LinkError.CountLimited;
@@ -92,31 +102,35 @@ namespace Mikodev.Network
             var blk = LinkCrypto.GetBlock();
             var err = LinkError.None;
             var cid = 0;
+            var iep = default(IPEndPoint);
+            var oep = default(IPEndPoint);
 
-            byte[] _Respond(byte[] buf)
+            byte[] _Response(byte[] buf)
             {
                 var rea = new PacketReader(buf);
                 var rsa = new RSACryptoServiceProvider();
                 if (string.Equals(rea["protocol"].Pull<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
-                cid = rea["id"].Pull<int>();
+                cid = rea["source"].Pull<int>();
                 err = _Check(cid);
                 rsa.FromXmlString(rea["rsakey"].Pull<string>());
+                iep = rea["endpoint"].Pull<IPEndPoint>();
+                oep = (IPEndPoint)socket.RemoteEndPoint;
                 var res = PacketWriter.Serialize(new
                 {
                     result = err,
                     aeskey = rsa.Encrypt(key, true),
                     aesiv = rsa.Encrypt(blk, true),
-                    endpoint = (IPEndPoint)client.RemoteEndPoint
+                    endpoint = oep,
                 });
                 return res.GetBytes();
             }
 
             try
             {
-                var buf = client.ReceiveAsyncExt().WaitTimeout("Listener request timeout.");
-                var res = _Respond(buf);
-                client.SendAsyncExt(res).WaitTimeout("Listener response timeout.");
+                var buf = socket.ReceiveAsyncExt().WaitTimeout("Listener request timeout.");
+                var res = _Response(buf);
+                socket.SendAsyncExt(res).WaitTimeout("Listener response timeout.");
                 LinkException.ThrowError(err);
             }
             catch (Exception)
@@ -127,9 +141,9 @@ namespace Mikodev.Network
                 throw;
             }
 
-            var clt = new LinkClient(cid) { _key = key, _blk = blk };
-            clt.Received += _LinkClient_Received;
-            clt.Shutdown += _ClientShutdown;
+            var clt = new LinkClient(cid, socket, iep, oep) { _key = key, _blk = blk };
+            clt.Received += _ClientReceived;
+            clt.Disposed += _ClientDisposed;
 
             lock (_loc)
             {
@@ -138,7 +152,7 @@ namespace Mikodev.Network
                 _gro.Add(cid, new HashSet<int>());
             }
 
-            clt.Start(client);
+            clt.Start();
         }
 
         private void _ResetGroup(int source, IEnumerable<int> target = null)
@@ -170,13 +184,14 @@ namespace Mikodev.Network
             }
         }
 
-        private void _ClientShutdown(object sender, EventArgs e)
+        private void _ClientDisposed(object sender, EventArgs e)
         {
-            var cid = ((LinkClient)sender)._id;
+            var clt = (LinkClient)sender;
+            var cid = clt._id;
             var wtr = PacketWriter.Serialize(new
             {
-                source = Links.ID,
-                target = Links.ID,
+                source = Links.Id,
+                target = Links.Id,
                 path = "user.list",
             });
 
@@ -187,6 +202,8 @@ namespace Mikodev.Network
                 var buf = wtr.PushList("data", lst).GetBytes();
                 _EnqAll(buf, cid);
             }
+            clt.Received -= _ClientReceived;
+            clt.Disposed -= _ClientDisposed;
         }
 
         private void _EnqAll(byte[] buffer, int except)
@@ -213,7 +230,7 @@ namespace Mikodev.Network
             return;
         }
 
-        private void _LinkClient_Received(object sender, LinkEventArgs<LinkPacket> arg)
+        private void _ClientReceived(object sender, LinkEventArgs<LinkPacket> arg)
         {
             var rea = arg.Object;
             var src = rea.Source;
@@ -222,21 +239,21 @@ namespace Mikodev.Network
 
             switch (tar)
             {
-                case Links.ID when rea.Path == "user.group":
-                    var lst = rea.Data.PullList<int>().Where(r => r < Links.ID);
+                case Links.Id when rea.Path == "user.group":
+                    var lst = rea.Data.PullList<int>().Where(r => r < Links.Id);
                     var set = new HashSet<int>(lst);
                     if (set.Count > Links.GroupLabelLimit)
-                        throw new LinkException(LinkError.GroupLimited, "Group count out of range.");
+                        throw new LinkException(LinkError.GroupLimited);
                     lock (_loc)
                         _ResetGroup(src, set);
                     return;
 
-                case Links.ID:
+                case Links.Id:
                     lock (_loc)
                         _EnqAll(buf, src);
                     return;
 
-                case int _ when tar > Links.ID:
+                case int _ when tar > Links.Id:
                     lock (_loc)
                         _Enq(buf, tar);
                     return;

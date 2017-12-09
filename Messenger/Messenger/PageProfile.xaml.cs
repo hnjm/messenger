@@ -35,7 +35,7 @@ namespace Messenger
         private void ModuleProfile_InscopeChanged(object sender, EventArgs e)
         {
             var pag = uiRightFrame.Content as Chatter;
-            if (pag == null || pag.Profile.ID != ProfileModule.Inscope.ID)
+            if (pag == null || pag.Profile.Id != ProfileModule.Inscope.Id)
                 uiRightFrame.Navigate(new Chatter());
         }
 

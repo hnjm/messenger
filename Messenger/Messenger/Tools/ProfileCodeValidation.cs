@@ -12,7 +12,7 @@ namespace Messenger.Tools
             if (string.IsNullOrEmpty(str))
                 return new ValidationResult(false, "输入为空");
             if (int.TryParse(str, out var val))
-                if (val > Links.ID)
+                if (val > Links.Id)
                     return new ValidationResult(true, string.Empty);
                 else
                     return new ValidationResult(false, "用户编号应大于零");

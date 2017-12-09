@@ -35,7 +35,7 @@ namespace Messenger
             (Application.Current as App).TextBoxKeyDown += _TextBoxKeyDown;
 
             _profile = ProfileModule.Inscope;
-            _messages = HistoryModule.Query(_profile.ID);
+            _messages = HistoryModule.Query(_profile.Id);
             uiProfileGrid.DataContext = _profile;
             uiMessageBox.ItemsSource = _messages;
             _messages.ListChanged += Messages_ListChanged;
@@ -62,7 +62,7 @@ namespace Messenger
         /// </summary>
         private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
-            if (e.Object.Groups != _profile.ID)
+            if (e.Object.Groups != _profile.Id)
                 return;
             e.Finish = true;
         }
@@ -96,7 +96,7 @@ namespace Messenger
             else if (tag == "image")
                 _PushImage();
             else if (tag == "clean")
-                HistoryModule.Clear(_profile.ID);
+                HistoryModule.Clear(_profile.Id);
             uiInputBox.Focus();
         }
 
@@ -134,7 +134,7 @@ namespace Messenger
             if (str.Length < 1)
                 return;
             uiInputBox.Text = string.Empty;
-            PostModule.Message(_profile.ID, str);
+            PostModule.Message(_profile.Id, str);
             ProfileModule.SetRecent(_profile);
         }
 
@@ -146,7 +146,7 @@ namespace Messenger
             try
             {
                 var buf = CacheModule.ImageResize(ofd.FileName);
-                PostModule.Message(_profile.ID, buf);
+                PostModule.Message(_profile.Id, buf);
                 ProfileModule.SetRecent(_profile);
             }
             catch (Exception ex)
@@ -160,12 +160,12 @@ namespace Messenger
         {
             var sha = default(Share);
             if (File.Exists(path))
-                sha = PostModule.File(_profile.ID, path);
+                sha = PostModule.File(_profile.Id, path);
             else if (Directory.Exists(path))
-                sha = PostModule.Directory(_profile.ID, path);
+                sha = PostModule.Directory(_profile.Id, path);
             if (sha == null)
                 return;
-            var pkt = new Packet() { Source = LinkModule.ID, Target = _profile.ID, Groups = _profile.ID, Path = "share", Value = sha };
+            var pkt = new Packet() { Source = LinkModule.Id, Target = _profile.Id, Groups = _profile.Id, Path = "share", Value = sha };
             _messages.Add(pkt);
         }
 
