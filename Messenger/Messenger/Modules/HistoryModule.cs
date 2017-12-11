@@ -41,40 +41,32 @@ namespace Messenger.Modules
         /// </summary>
         public static event EventHandler<LinkEventArgs<Packet>> Handled { add => s_ins._han += value; remove => s_ins._han -= value; }
 
-        private static Packet _SetPath(Packet pkt, object value)
+        private static Packet _SetPacket(Packet pkt, string path, object value)
         {
-            if (value is string str)
-            {
-                pkt.Value = str;
-                pkt.Path = "text";
-            }
-            else if (value is byte[] buf)
-            {
-                pkt.Value = CacheModule.SetBuffer(buf, false);
-                pkt.Path = "image";
-            }
-            else if (value is ShareReceiver sha)
-            {
-                pkt.Value = sha;
-                pkt.Path = "share";
-            }
-            else throw new InvalidOperationException();
+            if ((path == "text" || path == "notice") && value is string)
+                pkt.Object = value;
+            else if (path == "image" && value is byte[] buf)
+                pkt.Object = CacheModule.SetBuffer(buf, false);
+            else if (path == "share" && (value is Share || value is ShareReceiver))
+                pkt.Object = value;
+            else throw new InvalidOperationException("Invalid condition!");
+            pkt.Path = path;
             return pkt;
         }
 
-        public static Packet Insert(int gid, object obj)
+        public static Packet Insert(int target, string path, object obj)
         {
-            var pkt = new Packet() { Source = LinkModule.Id, Target = gid, Groups = gid };
-            _SetPath(pkt, obj);
+            var pkt = new Packet() { Source = LinkModule.Id, Target = target, Groups = target };
+            _SetPacket(pkt, path, obj);
             _Insert(pkt);
             return pkt;
         }
 
-        public static Packet Insert(int source, int target, object value)
+        public static Packet Insert(int source, int target, string path, object value)
         {
             var gid = target == LinkModule.Id ? source : target;
             var pkt = new Packet() { Source = source, Target = target, Groups = gid };
-            _SetPath(pkt, value);
+            _SetPacket(pkt, path, value);
             _Insert(pkt);
             _OnReceive(pkt);
             return pkt;
@@ -107,7 +99,7 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
             if (s_ins._con == null)
                 return;
-            var str = pkt.Value as string;
+            var str = pkt.Object as string;
             if (str == null)
                 return;
 
@@ -165,7 +157,7 @@ namespace Messenger.Modules
                     rcd.Groups = rdr.GetInt32(2);
                     rcd.Timestamp = rdr.GetDateTime(3);
                     rcd.Path = rdr.GetString(4);
-                    rcd.Value = rdr.GetString(5);
+                    rcd.Object = rdr.GetString(5);
                     lis.Add(rcd);
                 }
                 // 查询是按照降序排列的 因此需要反转

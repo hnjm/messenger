@@ -20,17 +20,16 @@ namespace Messenger.Modules
     {
         private const int _Timeout = 1000;
         private const string _KeyLast = "server-last";
-        private const string _KeyList = "server-list";
-        private const string _KeyPort = "server-port";
+        private const string _KeyList = "server-broadcast-list";
 
-        private IPEndPoint _broadcast = null;
         private string _host = null;
         private int _port = 0;
-        private IEnumerable<IPEndPoint> _points = new List<IPEndPoint>();
+        private readonly List<IPEndPoint> _points = new List<IPEndPoint>();
 
         private static HostModule s_ins = new HostModule();
 
         public static string Name { get => s_ins._host; set => s_ins._host = value; }
+
         public static int Port { get => s_ins._port; set => s_ins._port = value; }
 
         internal static Host _GetHostInfo(byte[] buffer, int offset, int length)
@@ -117,9 +116,6 @@ namespace Messenger.Modules
             var lst = new List<IPEndPoint>();
             try
             {
-                var pot = OptionModule.GetOption(_KeyPort, Links.BroadcastPort.ToString());
-                if (pot != null)
-                    s_ins._broadcast = new IPEndPoint(IPAddress.Broadcast, int.Parse(pot));
                 var str = OptionModule.GetOption(_KeyLast);
                 Extension.ToHostEx(str, out s_ins._host, out s_ins._port);
                 var sts = OptionModule.GetOption(_KeyList) ?? string.Empty;
@@ -131,9 +127,13 @@ namespace Messenger.Modules
             {
                 Log.Error(ex);
             }
-            if (s_ins._broadcast != null)
-                lst.Add(s_ins._broadcast);
-            s_ins._points = lst.Distinct();
+            if (lst.Count < 1)
+                lst.Add(new IPEndPoint(IPAddress.Broadcast, Links.BroadcastPort));
+            var res = s_ins._points;
+            res.Clear();
+            foreach (var i in lst.Distinct())
+                res.Add(i);
+            return;
         }
 
         /// <summary>

@@ -38,8 +38,8 @@ namespace Messenger
             _messages = HistoryModule.Query(_profile.Id);
             uiProfileGrid.DataContext = _profile;
             uiMessageBox.ItemsSource = _messages;
-            _messages.ListChanged += Messages_ListChanged;
-            _ScrollToEnd();
+            _messages.ListChanged += _ListChanged;
+            _ScrollDown();
         }
 
         private void _Unloaded(object sender, RoutedEventArgs e)
@@ -47,14 +47,14 @@ namespace Messenger
             uiMessageBox.ItemsSource = null;
             HistoryModule.Receive -= _HistoryReceiving;
             (Application.Current as App).TextBoxKeyDown -= _TextBoxKeyDown;
-            _messages.ListChanged -= Messages_ListChanged;
+            _messages.ListChanged -= _ListChanged;
         }
 
-        private void Messages_ListChanged(object sender, ListChangedEventArgs e)
+        private void _ListChanged(object sender, ListChangedEventArgs e)
         {
             if (e.ListChangedType != ListChangedType.ItemAdded)
                 return;
-            _ScrollToEnd();
+            _ScrollDown();
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Messenger
                 return;
             if ((mod & ModifierKeys.Control) != ModifierKeys.Control && val == true)
                 return;
-            _PushText();
+            _SendText();
             e.Handled = true;
         }
 
@@ -92,7 +92,7 @@ namespace Messenger
                 uiSymbolGrid.Visibility = Visibility.Collapsed;
 
             if (tag == "text")
-                _PushText();
+                _SendText();
             else if (tag == "image")
                 _PushImage();
             else if (tag == "clean")
@@ -103,11 +103,11 @@ namespace Messenger
         private void _SymbolClick(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.DataContext is string con)
-                _InsertText(uiInputBox, con);
+                _TextBoxInsert(uiInputBox, con);
             uiInputBox.Focus();
         }
 
-        private void _ScrollToEnd()
+        private void _ScrollDown()
         {
             var idx = _messages.Count - 1;
             if (idx < 0)
@@ -115,7 +115,7 @@ namespace Messenger
             uiMessageBox.ScrollIntoView(_messages[idx]);
         }
 
-        private void _InsertText(TextBox textbox, string str)
+        private void _TextBoxInsert(TextBox textbox, string str)
         {
             var txt = textbox.Text;
             var sta = textbox.SelectionStart;
@@ -128,13 +128,13 @@ namespace Messenger
             textbox.SelectionLength = 0;
         }
 
-        private void _PushText()
+        private void _SendText()
         {
             var str = uiInputBox.Text.TrimEnd(new char[] { '\0', '\r', '\n', '\t', ' ' });
             if (str.Length < 1)
                 return;
             uiInputBox.Text = string.Empty;
-            PostModule.Message(_profile.Id, str);
+            PostModule.Text(_profile.Id, str);
             ProfileModule.SetRecent(_profile);
         }
 
@@ -145,8 +145,8 @@ namespace Messenger
                 return;
             try
             {
-                var buf = CacheModule.ImageResize(ofd.FileName);
-                PostModule.Message(_profile.Id, buf);
+                var buf = CacheModule.ImageZoom(ofd.FileName);
+                PostModule.Image(_profile.Id, buf);
                 ProfileModule.SetRecent(_profile);
             }
             catch (Exception ex)
@@ -158,15 +158,11 @@ namespace Messenger
 
         private void _Share(string path)
         {
-            var sha = default(Share);
             if (File.Exists(path))
-                sha = PostModule.File(_profile.Id, path);
+                PostModule.File(_profile.Id, path);
             else if (Directory.Exists(path))
-                sha = PostModule.Directory(_profile.Id, path);
-            if (sha == null)
-                return;
-            var pkt = new Packet() { Source = LinkModule.Id, Target = _profile.Id, Groups = _profile.Id, Path = "share", Value = sha };
-            _messages.Add(pkt);
+                PostModule.Directory(_profile.Id, path);
+            return;
         }
 
         private void _TextBoxPreviewDragOver(object sender, DragEventArgs e)

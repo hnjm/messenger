@@ -50,7 +50,7 @@ namespace Messenger
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)
                 return;
-            var str = msg.Value as string;
+            var str = msg.Object as string;
             if (str == null)
                 return;
             try

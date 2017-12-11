@@ -36,7 +36,7 @@ namespace Messenger.Models
         private int _hint = 0;
         private string _name = null;
         private string _text = null;
-        private string _imag = null;
+        private string _img = null;
 
         public bool IsClient => _id > Links.Id;
 
@@ -71,15 +71,15 @@ namespace Messenger.Models
 
         public string Image
         {
-            get => _imag;
-            set => OnPropertyChange(ref _imag, value);
+            get => _img;
+            set => OnPropertyChange(ref _img, value);
         }
 
         public Profile CopyFrom(Profile profile, bool ignoreid = true)
         {
             if (!ignoreid)
                 Id = profile._id;
-            Image = profile._imag;
+            Image = profile._img;
             Name = profile._name;
             Text = profile._text;
             return this;

@@ -23,6 +23,11 @@ namespace Messenger.Models
         internal readonly long _length;
         internal readonly bool _batch = false;
 
+        /// <summary>
+        /// 原始文件名
+        /// </summary>
+        internal readonly string _origin;
+
         internal bool _started = false;
         internal bool _disposed = false;
         internal long _position = 0;
@@ -66,7 +71,8 @@ namespace Messenger.Models
                 throw new ApplicationException("Invalid share type!");
 
             _key = reader["key"].Pull<Guid>();
-            _name = reader["name"].Pull<string>();
+            _origin = reader["name"].Pull<string>();
+            _name = _origin;
             _endpoints = reader["endpoints"].PullList<IPEndPoint>().ToList();
             _status = ShareStatus.等待;
         }
@@ -174,18 +180,22 @@ namespace Messenger.Models
 
         internal void _Finish(Task task)
         {
-            var exc = task.Exception;
+            var err = task.Exception;
             Log.Error(task.Exception);
 
             lock (_locker)
             {
                 if (_disposed)
                     return;
-                _status = (exc == null)
+                _status = (err == null)
                     ? ShareStatus.成功
                     : ShareStatus.中断;
                 Dispose();
             }
+
+            if (err != null)
+                return;
+            PostModule.Notice(_id, _batch ? "share.dir" : "share.file", _origin);
         }
 
         public void Dispose()

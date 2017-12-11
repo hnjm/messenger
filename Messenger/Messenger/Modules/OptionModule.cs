@@ -12,9 +12,9 @@ namespace Messenger.Modules
     /// </summary>
     internal class OptionModule
     {
-        private const string _Path = nameof(Messenger) + ".opt";
-        private const string _Root = "options-root";
-        private const string _Header = "option";
+        private const string _Path = nameof(Messenger) + ".settings.xml";
+        private const string _Root = "settings";
+        private const string _Header = "setting";
         private const string _Key = "key";
         private const string _Value = "value";
 

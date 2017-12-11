@@ -7,7 +7,7 @@ namespace Messenger.Modules
     /// </summary>
     internal class SettingModule
     {
-        private const string _KeyCtrlEnter = "setting-ctrlenter";
+        private const string _KeyCtrlEnter = "hotkey-control-enter";
 
         private bool _ctrlenter = false;
 

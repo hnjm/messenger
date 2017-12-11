@@ -22,7 +22,7 @@ namespace Mikodev.Logger
             var pth = _FilePath();
             var idx = 0;
             if (pth == null || (idx = pth.LastIndexOf(nameof(Mikodev.Logger)) - 1) < 0)
-                Environment.FailFast("日志类路径前缀无法正确解析");
+                Environment.FailFast("Logger initial error!");
             var pre = pth.Substring(0, idx);
             s_pre = pre;
             s_idx = pre.Length;
@@ -44,13 +44,13 @@ namespace Mikodev.Logger
                 return;
             while (ex is AggregateException a && a.InnerExceptions.Count == 1)
                 ex = a.InnerException;
-            Notice(ex.ToString(), name, file, line);
+            Info(ex.ToString(), name, file, line);
         }
 
         /// <summary>
         /// 记录自定义消息 (如果异常为空则不记录)
         /// </summary>
-        public static void Notice(string message, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+        public static void Info(string message, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
             if (message == null)
                 return;

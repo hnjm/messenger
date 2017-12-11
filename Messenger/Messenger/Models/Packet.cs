@@ -40,7 +40,7 @@ namespace Messenger.Models
         /// <summary>
         /// 底层数据 (怎么解读取决于 <see cref="Path"/>)
         /// </summary>
-        public object Value { get => _value; set => _value = value; }
+        public object Object { get => _value; set => _value = value; }
 
         /// <summary>
         /// 消息时间
@@ -48,7 +48,7 @@ namespace Messenger.Models
         public DateTime Timestamp { get => _time; set => _time = value; }
 
         /// <summary>
-        /// 用户信息
+        /// 发送者信息
         /// </summary>
         public Profile Profile
         {
@@ -83,6 +83,19 @@ namespace Messenger.Models
                 if (_image == null && _value is string str && _path == "image")
                     _image = CacheModule.GetPath(str);
                 return _image;
+            }
+        }
+
+        /// <summary>
+        /// 提醒
+        /// </summary>
+        public string MessageNotice
+        {
+            get
+            {
+                if (_value is string str && _path == "notice")
+                    return str;
+                return null;
             }
         }
     }

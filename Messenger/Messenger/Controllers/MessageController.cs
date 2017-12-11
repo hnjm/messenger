@@ -1,5 +1,6 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
+using Mikodev.Logger;
 using Mikodev.Network;
 
 namespace Messenger.Controllers
@@ -16,7 +17,7 @@ namespace Messenger.Controllers
         public void Text()
         {
             var txt = Data.Pull<string>();
-            HistoryModule.Insert(Source, Target, txt);
+            HistoryModule.Insert(Source, Target, "text", txt);
         }
 
         /// <summary>
@@ -26,7 +27,28 @@ namespace Messenger.Controllers
         public void Image()
         {
             var buf = Data.PullList();
-            HistoryModule.Insert(Source, Target, buf);
+            HistoryModule.Insert(Source, Target, "image", buf);
+        }
+
+        /// <summary>
+        /// 提示信息
+        /// </summary>
+        [Route("msg.notice")]
+        public void Notice()
+        {
+            var dat = Data;
+            var typ = Data["type"].Pull<string>();
+            var par = Data["parameter"].Pull<string>();
+            var str = typ == "share.file"
+                ? $"已成功接收文件 {par}"
+                : typ == "share.dir"
+                    ? $"已成功接收文件夹 {par}"
+                    : null;
+            if (str == null)
+                Log.Info($"Unknown notice type: {typ}, parameter: {par}");
+            else
+                HistoryModule.Insert(Source, Target, "notice", str);
+            return;
         }
     }
 }

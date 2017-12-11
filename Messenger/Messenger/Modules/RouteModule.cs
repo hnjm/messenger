@@ -51,7 +51,7 @@ namespace Messenger.Modules
             if (dic.TryGetValue(arg.Path, out var act))
                 act.Invoke(arg.Buffer);
             else
-                Log.Notice($"Path \"{arg.Path}\" not supported.");
+                Log.Info($"Path \"{arg.Path}\" not supported.");
         }
 
         [Loader(1, LoaderFlags.OnLoad)]

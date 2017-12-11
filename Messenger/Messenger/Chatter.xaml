@@ -32,7 +32,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" Margin="0,5" HorizontalAlignment="Left">
+                    <Grid Grid.Row="0" Margin="0,4" HorizontalAlignment="Left">
                         <TextBlock Foreground="#FF808080" FontSize="12">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0} {1:HH:mm:ss}">
@@ -65,7 +65,7 @@
                                 </ContextMenu>
                             </Image.ContextMenu>
                         </Image>
-                        <Control Name="ViewControl" Margin="4" Focusable="False" Visibility="Collapsed" DataContext="{Binding Path=Value}"/>
+                        <Control Name="ViewControl" Margin="4" Focusable="False" Visibility="Collapsed" DataContext="{Binding Path=Object}"/>
                         <Grid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Command="{x:Static local:Commands.Remove}"/>
@@ -91,7 +91,7 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=Path}" Value="share"/>
-                        <Condition Binding="{Binding Path=Value, Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:ShareReceiver}"/>
+                        <Condition Binding="{Binding Path=Object, Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:ShareReceiver}"/>
                     </MultiDataTrigger.Conditions>
                     <MultiDataTrigger.Setters>
                         <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
@@ -108,7 +108,7 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=Path}" Value="share"/>
-                        <Condition Binding="{Binding Path=Value, Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:Share}"/>
+                        <Condition Binding="{Binding Path=Object, Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type model:Share}"/>
                     </MultiDataTrigger.Conditions>
                     <MultiDataTrigger.Setters>
                         <Setter TargetName="ViewControl" Property="Visibility" Value="Visible"/>
@@ -122,6 +122,29 @@
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
             </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <ControlTemplate x:Key="MessageNotice">
+            <Grid Margin="5" Width="{Binding ElementName=uiMessageGrid, Path=ActualWidth}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Margin="0,4" Foreground="#FF808080" FontSize="12"
+                           HorizontalAlignment="Center"
+                           Text="{Binding Path=Timestamp, StringFormat=HH:mm:ss}">
+                </TextBlock>
+                <Grid Grid.Row="1" HorizontalAlignment="Center" Background="#30FFFFFF">
+                    <TextBlock Margin="4,2" FontSize="12" Foreground="#A0A0A0">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} {1}">
+                                <Binding Path="Profile.Name"/>
+                                <Binding Path="MessageNotice"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </Grid>
+            </Grid>
         </ControlTemplate>
     </Page.Resources>
 
@@ -162,8 +185,11 @@
                         <Setter Property="FocusVisualStyle" Value="{DynamicResource GenericFocusVisualStyle}"/>
                         <Setter Property="Background" Value="#303030"/>
                         <Setter Property="HorizontalAlignment" Value="Left"/>
-                        <Setter Property="Template" Value="{StaticResource ResourceKey=MessageTemplate}"/>
+                        <Setter Property="Template" Value="{StaticResource MessageTemplate}"/>
                         <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=Path}" Value="notice">
+                                <Setter Property="Template" Value="{StaticResource MessageNotice}"/>
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#202020"/>
                             </Trigger>

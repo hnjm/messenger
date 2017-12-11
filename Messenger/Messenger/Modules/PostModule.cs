@@ -1,36 +1,59 @@
 ﻿using Messenger.Models;
 using Mikodev.Network;
-using System;
 using System.IO;
-using System.Linq;
 using System.Windows;
 
 namespace Messenger.Modules
 {
     internal class PostModule
     {
-        /// <summary>
-        /// Post text message or image
-        /// </summary>
-        public static void Message(int target, object val)
+        public static void Text(int target, string val)
         {
-            var pth = string.Empty;
-            if (val is string)
-                pth = "msg.text";
-            else if (val is byte[])
-                pth = "msg.image";
-            else throw new ApplicationException();
-
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
                 target = target,
-                path = pth,
+                path = "msg.text",
                 data = val,
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            HistoryModule.Insert(target, val);
+            HistoryModule.Insert(target, "text", val);
+        }
+
+        public static void Image(int target, byte[] val)
+        {
+            var wtr = PacketWriter.Serialize(new
+            {
+                source = LinkModule.Id,
+                target = target,
+                path = "msg.image",
+                data = val,
+            });
+            var buf = wtr.GetBytes();
+            LinkModule.Enqueue(buf);
+            HistoryModule.Insert(target, "image", val);
+        }
+
+        /// <summary>
+        /// Post feedback message
+        /// </summary>
+        public static void Notice(int target, string type, string parameter)
+        {
+            var wtr = PacketWriter.Serialize(new
+            {
+                source = LinkModule.Id,
+                target = target,
+                path = "msg.notice",
+                data = new
+                {
+                    type = type,
+                    parameter = parameter,
+                },
+            });
+            var buf = wtr.GetBytes();
+            LinkModule.Enqueue(buf);
+            // you don't have to notice yourself in history module
         }
 
         /// <summary>
@@ -87,7 +110,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 发送文件信息
         /// </summary>
-        public static Share File(int target, string filepath)
+        public static void File(int target, string filepath)
         {
             var sha = new Share(new FileInfo(filepath));
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
@@ -107,10 +130,10 @@ namespace Messenger.Modules
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            return sha;
+            HistoryModule.Insert(target, "share", sha);
         }
 
-        public static Share Directory(int target, string directory)
+        public static void Directory(int target, string directory)
         {
             var sha = new Share(new DirectoryInfo(directory));
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
@@ -129,7 +152,7 @@ namespace Messenger.Modules
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            return sha;
+            HistoryModule.Insert(target, "share", sha);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Messenger.Modules
     /// </summary>
     internal class ShareModule : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        private const string _KeyPath = "share-path";
+        private const string _KeyPath = "share-save-path";
         private const string _Path = "Share";
 
         private bool _hasShare = false;

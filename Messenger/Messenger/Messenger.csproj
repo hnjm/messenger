@@ -149,7 +149,7 @@
     <Compile Include="Modules\HostModule.cs" />
     <Compile Include="Modules\CacheModule.cs" />
     <Compile Include="Tools\LogicToPixelConverter.cs" />
-    <Compile Include="Tools\ProfileCodeValidation.cs" />
+    <Compile Include="Tools\ProfileIdValidation.cs" />
     <Compile Include="Tools\ProfileLogoConverter.cs" />
     <Compile Include="Tools\ObjectTypeConverter.cs" />
     <Compile Include="Tools\SocketPortValidation.cs" />

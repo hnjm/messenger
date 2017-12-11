@@ -14,7 +14,7 @@ namespace Messenger.Controllers
         {
             var rec = new ShareReceiver(Source, Data);
             ShareModule.Register(rec);
-            HistoryModule.Insert(Source, Target, rec);
+            HistoryModule.Insert(Source, Target, "share", rec);
         }
     }
 }

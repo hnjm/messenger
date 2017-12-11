@@ -44,7 +44,7 @@
                             </Grid>
                         </Viewbox>
                         <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Path=IsClient}" Value="False">
+                            <DataTrigger Binding="{Binding Path=IsGroups}" Value="True">
                                 <Setter TargetName="GroupImagePanel" Property="Visibility" Value="Visible"/>
                             </DataTrigger>
 

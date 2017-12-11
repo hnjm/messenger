@@ -16,11 +16,11 @@ namespace Messenger.Modules
     /// </summary>
     internal class ProfileModule : INotifyPropertyChanging, INotifyPropertyChanged
     {
-        private const string _KeyCode = "profile-code";
+        private const string _KeyId = "profile-id";
         private const string _KeyName = "profile-name";
         private const string _KeyText = "profile-text";
         private const string _KeyImage = "profile-image";
-        private const string _KeyLabel = "profile-groups";
+        private const string _KeyLabel = "profile-group-labels";
 
         private bool _hasclient = false;
         private bool _hasgroups = false;
@@ -272,7 +272,7 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._local.Id = int.Parse(OptionModule.GetOption(_KeyCode, new Random().Next(1, int.MaxValue).ToString()));
+                s_ins._local.Id = int.Parse(OptionModule.GetOption(_KeyId, new Random().Next(1, int.MaxValue).ToString()));
                 s_ins._local.Name = OptionModule.GetOption(_KeyName);
                 s_ins._local.Text = OptionModule.GetOption(_KeyText);
                 var lbs = OptionModule.GetOption(_KeyLabel);
@@ -296,7 +296,7 @@ namespace Messenger.Modules
         [Loader(8, LoaderFlags.OnExit)]
         public static void Save()
         {
-            OptionModule.SetOption(_KeyCode, s_ins._local.Id.ToString());
+            OptionModule.SetOption(_KeyId, s_ins._local.Id.ToString());
             OptionModule.SetOption(_KeyName, s_ins._local.Name);
             OptionModule.SetOption(_KeyText, s_ins._local.Text);
             OptionModule.SetOption(_KeyImage, s_ins._imagesource);

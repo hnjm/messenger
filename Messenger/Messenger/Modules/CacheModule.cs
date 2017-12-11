@@ -1,5 +1,6 @@
 ﻿using Messenger.Models;
 using Mikodev.Logger;
+using Mikodev.Network;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -15,18 +16,26 @@ namespace Messenger.Modules
     /// </summary>
     internal class CacheModule
     {
-        private const string _CacheFolder = "Cache";
-        private const string _CacheExtension = ".png";
+        private const string _Directory = "Cache";
+        private const string _ImageSuffix = ".png";
+        private const string _KeyCache = "cache-path";
 
-        private const int _Limit = 384;
+        /// <summary>
+        /// 图片文件大小限制
+        /// </summary>
+        private const int _LengthLimit = 4 * 1024 * 1024;
+
+        /// <summary>
+        /// 图像最大分辨率
+        /// </summary>
+        private const int _PixelLimit = 384;
+
+        /// <summary>
+        /// 图像 DPI
+        /// </summary>
         private const float _Density = 96;
-        private const string _KeyCache = "cache-dir";
-        private const string _KeyLimit = "cache-limit";
-        private const string _KeyDensity = "cache-density";
 
-        private int _imgLimit = _Limit;
-        private float _imgdpi = _Density;
-        private string _dir = _CacheFolder;
+        private string _dir = _Directory;
 
         private static CacheModule s_ins = new CacheModule();
 
@@ -37,9 +46,7 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._dir = OptionModule.GetOption(_KeyCache, _CacheFolder);
-                s_ins._imgLimit = int.Parse(OptionModule.GetOption(_KeyLimit, _Limit.ToString()));
-                s_ins._imgdpi = float.Parse(OptionModule.GetOption(_KeyDensity, _Density.ToString()));
+                s_ins._dir = OptionModule.GetOption(_KeyCache, _Directory);
             }
             catch (Exception ex)
             {
@@ -50,7 +57,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 计算缓存的 SHA256 值
         /// </summary>
-        public static string GetCode(byte[] buffer)
+        public static string GetSHA256(byte[] buffer)
         {
             using (var sha = new SHA256Managed())
             {
@@ -63,34 +70,55 @@ namespace Messenger.Modules
         /// <summary>
         /// 从本地缓存查找指定 SHA256 值的图像
         /// </summary>
-        public static string GetPath(string code)
+        public static string GetPath(string sha)
         {
             var dir = new DirectoryInfo(s_ins._dir);
-            var pth = Path.Combine(dir.FullName, code + _CacheExtension);
-            return pth;
+            var pth = Path.Combine(dir.FullName, sha + _ImageSuffix);
+            var inf = new FileInfo(pth);
+
+            try
+            {
+                if (inf.Exists == false)
+                    return null;
+                if (inf.Length < Links.BufferLengthLimit)
+                    return inf.FullName;
+                Log.Info("Cache file length overflow!");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+            return null;
         }
 
         /// <summary>
         /// 写入本地缓存, 并将 SHA256 值作为文件名
         /// </summary>
-        /// <param name="returnPath">返回完整路径(真), 返回 SHA256 值 (假)</param>
-        public static string SetBuffer(byte[] buffer, bool returnPath, bool nothrow = true)
+        /// <param name="fullPath">为真时返回完整路径, 否则返回 SHA256 值</param>
+        public static string SetBuffer(byte[] buffer, bool fullPath, bool nothrow = true)
         {
+            if (buffer.Length > Links.BufferLengthLimit)
+            {
+                Log.Info("Cache buffer length overflow!");
+                return null;
+            }
+
             var fst = default(FileStream);
-            var cod = GetCode(buffer);
+            var sha = GetSHA256(buffer);
 
             try
             {
                 var dir = new DirectoryInfo(s_ins._dir);
                 if (dir.Exists == false)
                     dir.Create();
-                var pth = Path.Combine(dir.FullName, cod + _CacheExtension);
+                var pth = Path.Combine(dir.FullName, sha + _ImageSuffix);
                 if (File.Exists(pth) == false)
                 {
                     fst = new FileStream(pth, FileMode.CreateNew, FileAccess.Write);
                     fst.Write(buffer, 0, buffer.Length);
+                    fst.Dispose();
                 }
-                return returnPath ? pth : cod;
+                return fullPath ? pth : sha;
             }
             catch (Exception ex)
             {
@@ -102,7 +130,6 @@ namespace Messenger.Modules
             finally
             {
                 fst?.Dispose();
-                fst = null;
             }
         }
 
@@ -111,6 +138,9 @@ namespace Messenger.Modules
         /// </summary>
         public static byte[] ImageSquare(string filepath)
         {
+            var inf = new FileInfo(filepath);
+            if (inf.Length > _LengthLimit)
+                throw new IOException("File too big!");
             var bmp = new Bitmap(filepath);
             var src = new Rectangle();
             if (bmp.Width > bmp.Height)
@@ -119,7 +149,7 @@ namespace Messenger.Modules
                 src = new Rectangle(0, (bmp.Height - bmp.Width) / 2, bmp.Width, bmp.Width);
             var len = bmp.Width > bmp.Height ? bmp.Height : bmp.Width;
             var div = 1;
-            for (div = 1; len / div > s_ins._imgLimit; div++) ;
+            for (div = 1; len / div > _PixelLimit; div++) ;
             var dst = new Rectangle(0, 0, len / div, len / div);
             return _LoadImage(bmp, src, dst, ImageFormat.Png);
         }
@@ -127,12 +157,15 @@ namespace Messenger.Modules
         /// <summary>
         /// 按比例缩放图像 (用于聊天)
         /// </summary>
-        public static byte[] ImageResize(string filepath)
+        public static byte[] ImageZoom(string filepath)
         {
+            var inf = new FileInfo(filepath);
+            if (inf.Length > _LengthLimit)
+                throw new IOException("File too big!");
             var bmp = new Bitmap(filepath);
             var len = bmp.Size;
             var div = 1;
-            for (div = 1; len.Width / div > s_ins._imgLimit || len.Height / div > s_ins._imgLimit; div++) ;
+            for (div = 1; len.Width / div > _PixelLimit || len.Height / div > _PixelLimit; div++) ;
 
             var src = new Rectangle(0, 0, bmp.Width, bmp.Height);
             var dst = new Rectangle(0, 0, len.Width / div, len.Height / div);
@@ -149,7 +182,7 @@ namespace Messenger.Modules
 
             try
             {
-                img.SetResolution(s_ins._imgdpi, s_ins._imgdpi);
+                img.SetResolution(_Density, _Density);
                 gra.DrawImage(bmp, dst, src, GraphicsUnit.Pixel);
                 img.Save(mst, format);
                 buf = mst.ToArray();
