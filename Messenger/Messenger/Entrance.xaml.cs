@@ -1,6 +1,7 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
 using Messenger.Modules;
+using Microsoft.Win32;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -127,7 +128,10 @@ namespace Messenger
         {
             if (ResizeMode != CanResize && ResizeMode != CanResizeWithGrip)
                 return;
-            WindowState = (WindowState == Maximized) ? Normal : Maximized;
+            var cur = WindowState;
+            if (cur == Maximized && _IsTabletMode())
+                return;
+            WindowState = (cur == Maximized) ? Normal : Maximized;
         }
 
         private void _MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -137,6 +141,16 @@ namespace Messenger
             else
                 DragMove();
             return;
+        }
+
+        private const string _TabletModeKey = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ImmersiveShell";
+
+        private const string _TabletModeValue = "TabletMode";
+
+        private bool _IsTabletMode()
+        {
+            var val = Registry.GetValue(_TabletModeKey, _TabletModeValue, -1);
+            return val.Equals(1);
         }
         #endregion
     }
