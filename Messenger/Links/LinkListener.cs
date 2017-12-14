@@ -69,14 +69,18 @@ namespace Mikodev.Network
 
             while (true)
             {
+                var soc = default(Socket);
+
                 try
                 {
-                    var clt = await _soc.AcceptAsyncEx();
-                    _Invoke(clt);
+                    soc = await _soc.AcceptAsyncEx();
+                    soc.SetKeepAlive();
+                    _Invoke(soc);
                 }
                 catch (SocketException ex)
                 {
                     Log.Error(ex);
+                    soc?.Dispose();
                 }
             }
         }

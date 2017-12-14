@@ -116,5 +116,12 @@ namespace Mikodev.Network
                     : new TimeoutException(message);
             return;
         }
+
+        public static void AssertFatal(this bool result, string message)
+        {
+            if (result)
+                return;
+            Environment.FailFast(message);
+        }
     }
 }

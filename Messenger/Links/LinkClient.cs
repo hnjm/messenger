@@ -205,13 +205,18 @@ namespace Mikodev.Network
             {
                 if (_cancel.IsCancellationRequested)
                     throw new TaskCanceledException("Client listener task exited.");
+                var soc = default(Socket);
+
                 try
                 {
-                    _Invoke(await _listen.AcceptAsyncEx());
+                    soc = await _listen.AcceptAsyncEx();
+                    soc.SetKeepAlive();
+                    _Invoke(soc);
                 }
                 catch (SocketException ex)
                 {
                     Log.Error(ex);
+                    soc?.Dispose();
                     continue;
                 }
             }
