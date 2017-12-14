@@ -40,7 +40,7 @@ namespace Messenger
                 uiHostBox.Text = HostModule.Name;
                 uiPortBox.Text = HostModule.Port.ToString();
             }
-            uiCodeBox.Text = ProfileModule.Current.Id.ToString();
+            uiIdBox.Text = ProfileModule.Current.Id.ToString();
             uiServerList.ItemsSource = _hosts;
             uiServerList.SelectionChanged += ListBox_SelectionChanged;
         }
@@ -100,7 +100,7 @@ namespace Messenger
 
             try
             {
-                var uid = int.Parse(uiCodeBox.Text);
+                var uid = int.Parse(uiIdBox.Text);
                 var pot = int.Parse(uiPortBox.Text);
                 var hos = uiHostBox.Text;
 

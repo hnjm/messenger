@@ -151,7 +151,7 @@ namespace Messenger.Modules
             var div = 1;
             for (div = 1; len / div > _PixelLimit; div++) ;
             var dst = new Rectangle(0, 0, len / div, len / div);
-            return _LoadImage(bmp, src, dst, ImageFormat.Png);
+            return _LoadImage(bmp, src, dst, ImageFormat.Jpeg);
         }
 
         /// <summary>
@@ -183,6 +183,8 @@ namespace Messenger.Modules
             try
             {
                 img.SetResolution(_Density, _Density);
+                if (format != ImageFormat.Png)
+                    gra.Clear(Color.Black);
                 gra.DrawImage(bmp, dst, src, GraphicsUnit.Pixel);
                 img.Save(mst, format);
                 buf = mst.ToArray();

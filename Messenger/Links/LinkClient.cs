@@ -86,7 +86,7 @@ namespace Mikodev.Network
 
                 var rec = soc.ReceiveAsyncExt().WaitTimeout("Timeout when client response.");
                 var rea = new PacketReader(rec);
-                LinkException.ThrowError(rea["result"].Pull<LinkError>());
+                rea["result"].Pull<LinkError>().AssertError();
 
                 oep = rea["endpoint"].Pull<IPEndPoint>();
                 key = rsa.Decrypt(rea["aeskey"].PullList(), true);

@@ -86,8 +86,8 @@
                         </Binding>
                     </TextBox.Text>
                 </TextBox>
-                <Label Grid.Column="0" Grid.Row="4" Foreground="#A0A0A0" Target="{Binding ElementName=uiCodeBox}">编号(_N)</Label>
-                <TextBox x:Name="uiCodeBox" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Style="{DynamicResource TextBoxWithErrorTip}">
+                <Label Grid.Column="0" Grid.Row="4" Foreground="#A0A0A0" Target="{Binding ElementName=uiIdBox}">编号(_N)</Label>
+                <TextBox x:Name="uiIdBox" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Style="{DynamicResource TextBoxWithErrorTip}">
                     <TextBox.Text>
                         <Binding Path="I" UpdateSourceTrigger="PropertyChanged" Delay="200">
                             <Binding.ValidationRules>

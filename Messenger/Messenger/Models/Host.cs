@@ -62,7 +62,7 @@ namespace Messenger.Models
         }
 
         /// <summary>
-        /// 调用 IPEndPoint 的 GetHashCode 方法
+        /// 调用 <see cref="IPEndPoint.GetHashCode"/>
         /// </summary>
         public override int GetHashCode()
         {

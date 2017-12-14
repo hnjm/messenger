@@ -9,7 +9,7 @@ namespace Mikodev.Network
 {
     public sealed partial class LinkListener
     {
-        internal Socket _broad = null;
+        internal Socket _broadcast = null;
 
         internal string _sname = null;
 
@@ -22,7 +22,7 @@ namespace Mikodev.Network
                 if (string.IsNullOrEmpty(name))
                     name = Dns.GetHostName();
                 soc.Bind(new IPEndPoint(IPAddress.Any, port));
-                if (Interlocked.CompareExchange(ref _broad, soc, null) != null)
+                if (Interlocked.CompareExchange(ref _broadcast, soc, null) != null)
                     throw new InvalidOperationException("Broadcast socket not null!");
                 _sname = name;
             }
@@ -45,9 +45,9 @@ namespace Mikodev.Network
                 limit = _climit,
             });
 
-            while (_broad != null)
+            while (_broadcast != null)
             {
-                var ava = _broad.Available;
+                var ava = _broadcast.Available;
                 if (ava < 1)
                 {
                     await Task.Delay(Links.Delay);
@@ -58,13 +58,13 @@ namespace Mikodev.Network
                 {
                     var buf = new byte[Math.Min(ava, Links.BufferLength)];
                     var iep = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
-                    var len = _broad.ReceiveFrom(buf, ref iep);
+                    var len = _broadcast.ReceiveFrom(buf, ref iep);
 
                     var rea = new PacketReader(buf, 0, len);
                     if (string.Equals(Links.Protocol, rea["protocol", true]?.Pull<string>()) == false)
                         continue;
-                    var res = wtr.Push("count", _dic.Count).GetBytes();
-                    var sub = _broad.SendTo(res, iep);
+                    var res = wtr.Push("count", _clients.Count).GetBytes();
+                    var sub = _broadcast.SendTo(res, iep);
                 }
                 catch (SocketException ex)
                 {

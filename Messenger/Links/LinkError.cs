@@ -10,9 +10,9 @@
 
         ProtocolMismatch,
 
-        CodeInvalid,
+        IdInvalid,
 
-        CodeConflict,
+        IdConflict,
 
         CountLimited,
 

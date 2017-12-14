@@ -123,5 +123,12 @@ namespace Mikodev.Network
                 return;
             Environment.FailFast(message);
         }
+
+        public static void AssertError(this LinkError error)
+        {
+            if (error == LinkError.Success)
+                return;
+            throw new LinkException(error);
+        }
     }
 }

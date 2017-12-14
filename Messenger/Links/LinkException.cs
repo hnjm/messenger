@@ -27,16 +27,6 @@ namespace Mikodev.Network
             base.GetObjectData(info, context);
         }
 
-        /// <summary>
-        /// 如果传入值不为 <see cref="LinkError.Success"/>, 则抛出异常
-        /// </summary>
-        public static void ThrowError(LinkError error)
-        {
-            if (error == LinkError.Success)
-                return;
-            throw new LinkException(error);
-        }
-
         internal static string _GetMessage(LinkError error)
         {
             switch (error)
@@ -47,9 +37,9 @@ namespace Mikodev.Network
                     return "Buffer length overflow!";
                 case LinkError.ProtocolMismatch:
                     return "Protocol mismatch!";
-                case LinkError.CodeInvalid:
+                case LinkError.IdInvalid:
                     return "Invalid client id!";
-                case LinkError.CodeConflict:
+                case LinkError.IdConflict:
                     return "Client id conflict with current users!";
                 case LinkError.CountLimited:
                     return "Client count has been limited!";
