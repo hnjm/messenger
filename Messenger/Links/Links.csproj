@@ -52,6 +52,8 @@
     <Compile Include="LinkException.cs" />
     <Compile Include="LinkExtension.cs" />
     <Compile Include="LinkListener.cs" />
+    <Compile Include="LinkNotice.cs" />
+    <Compile Include="LinkNoticeSource.cs" />
     <Compile Include="LinkPacket.cs" />
     <Compile Include="Links.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

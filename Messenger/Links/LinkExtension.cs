@@ -124,6 +124,13 @@ namespace Mikodev.Network
             Environment.FailFast(message);
         }
 
+        public static void AssertFatal(this bool result, bool assert, string message)
+        {
+            if (result && assert)
+                return;
+            Environment.FailFast(message);
+        }
+
         public static void AssertError(this LinkError error)
         {
             if (error == LinkError.Success)

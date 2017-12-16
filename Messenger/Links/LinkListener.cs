@@ -12,6 +12,9 @@ namespace Mikodev.Network
 {
     public sealed partial class LinkListener
     {
+        internal const int _NoticeDelay = 100;
+        internal static readonly TimeSpan _NoticeInterval = TimeSpan.FromMilliseconds(1000);
+
         internal bool _started = false;
 
         internal readonly int _climit = Links.ServerSocketLimit;
@@ -19,6 +22,7 @@ namespace Mikodev.Network
         internal readonly object _locker = new object();
 
         internal readonly Socket _socket = null;
+        internal readonly LinkNoticeSource _notice = new LinkNoticeSource(_NoticeInterval);
         internal readonly ConcurrentDictionary<int, LinkClient> _clients = new ConcurrentDictionary<int, LinkClient>();
         internal readonly Dictionary<int, HashSet<int>> _joined = new Dictionary<int, HashSet<int>>();
         internal readonly ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>> _set = new ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>>();
@@ -54,7 +58,15 @@ namespace Mikodev.Network
                     throw new InvalidOperationException();
                 _started = true;
             }
-            return _Listen();
+
+            _Notice().ContinueWith(_Continuation);
+            return _Listen().ContinueWith(_Continuation);
+        }
+
+        private void _Continuation(Task task)
+        {
+            var err = task.Exception;
+            Log.Error(err);
         }
 
         private async Task _Listen()
@@ -94,10 +106,7 @@ namespace Mikodev.Network
                     return LinkError.IdInvalid;
                 if (_clients.Count >= _climit)
                     return LinkError.CountLimited;
-                lock (_locker)
-                {
-                    return _clients.TryAdd(code, null) ? LinkError.Success : LinkError.IdConflict;
-                }
+                return _clients.TryAdd(code, null) ? LinkError.Success : LinkError.IdConflict;
             }
 
             var key = LinkCrypto.GetKey();
@@ -138,8 +147,7 @@ namespace Mikodev.Network
             catch (Exception)
             {
                 if (err == LinkError.Success)
-                    lock (_locker)
-                        _clients.TryRemove(cid, out var _).AssertFatal("Failed to remove placeholder!");
+                    _clients.TryRemove(cid, out var val).AssertFatal(val == null, "Failed to remove placeholder!");
                 throw;
             }
 
@@ -156,7 +164,7 @@ namespace Mikodev.Network
             clt.Start();
         }
 
-        private void _ResetGroup(LinkClient client, IEnumerable<int> target = null)
+        private void _ClientReset(LinkClient client, IEnumerable<int> groups = null)
         {
             /* Require lock */
             var cid = client._id;
@@ -164,95 +172,108 @@ namespace Mikodev.Network
             foreach (var i in set)
             {
                 _set.TryGetValue(i, out var gro).AssertFatal("Failed to get group collection!");
-                gro.TryRemove(cid, out var _).AssertFatal("Failed to remove client from group collection!");
+                gro.TryRemove(cid, out var val).AssertFatal(val == client, "Failed to remove client from group collection!");
                 if (gro.Count > 0)
                     continue;
-                _set.TryRemove(i, out var _).AssertFatal("Failed to remove empty group!");
+                _set.TryRemove(i, out var res).AssertFatal(res == gro, "Failed to remove empty group!");
             }
 
-            if (target == null)
+            if (groups == null)
             {
+                /* Client shutdown */
                 _joined.Remove(cid);
-                _clients.TryRemove(cid, out var _).AssertFatal("Failed to remove client!");
+                _clients.TryRemove(cid, out var val).AssertFatal(val == client, "Failed to remove client!");
                 return;
             }
 
             // Union with -> add range
             set.Clear();
-            set.UnionWith(target);
-            foreach (var i in target)
+            set.UnionWith(groups);
+            foreach (var i in groups)
             {
                 var gro = _set.GetOrAdd(i, _ => new ConcurrentDictionary<int, LinkClient>());
                 gro.TryAdd(cid, client).AssertFatal("Failed to add client to group collection!");
             }
         }
 
+        private async Task _Notice()
+        {
+            while (true)
+            {
+                await Task.Delay(_NoticeDelay);
+                var res = _notice.GetNotice();
+                if (res.IsAny == false)
+                    continue;
+
+                var lst = _clients.Where(r => r.Value != null).Select(r => r.Key).ToList();
+                var wtr = PacketWriter.Serialize(new
+                {
+                    source = Links.Id,
+                    target = Links.Id,
+                    path = "user.list",
+                    data = lst,
+                });
+
+                var buf = wtr.GetBytes();
+                foreach (var i in _clients.Values)
+                    i?.Enqueue(buf);
+                res.Handled();
+            }
+        }
+
         private void _ClientDisposed(object sender, EventArgs e)
         {
             var clt = (LinkClient)sender;
-            var cid = clt._id;
-            var wtr = PacketWriter.Serialize(new
-            {
-                source = Links.Id,
-                target = Links.Id,
-                path = "user.list",
-            });
 
             lock (_locker)
-            {
-                _ResetGroup(clt);
-                var lst = _clients.Where(r => r.Value != null).Select(r => r.Key);
-                var buf = wtr.PushList("data", lst).GetBytes();
-                _EnqAll(buf, cid);
-            }
+                _ClientReset(clt);
+            _notice.Update();
+
             clt.Received -= _ClientReceived;
             clt.Disposed -= _ClientDisposed;
         }
 
-        private void _EnqAll(byte[] buffer, int except)
-        {
-            foreach (var val in _clients.Values)
-                if (val != null && val._id != except)
-                    val.Enqueue(buffer);
-            return;
-        }
-
         private void _ClientReceived(object sender, LinkEventArgs<LinkPacket> arg)
         {
-            var clt = (LinkClient)sender;
-            var rea = arg.Object;
-            var src = rea.Source;
-            var tar = rea.Target;
-            var buf = rea.Buffer;
+            var obj = arg.Object;
+            var src = obj.Source;
+            var tar = obj.Target;
+            var buf = obj.Buffer;
 
-            switch (tar)
+            if (tar == Links.Id)
             {
-                case Links.Id when rea.Path == "user.group":
-                    var lst = rea.Data.PullList<int>().Where(r => r < Links.Id);
+                if (obj.Path == "user.group")
+                {
+                    var lst = obj.Data.PullList<int>().Where(r => r < Links.Id);
                     var set = new HashSet<int>(lst);
                     if (set.Count > Links.GroupLabelLimit)
                         throw new LinkException(LinkError.GroupLimited);
+                    var clt = (LinkClient)sender;
                     lock (_locker)
-                        _ResetGroup(clt, set);
+                        _ClientReset(clt, set);
                     return;
+                }
 
-                case Links.Id:
-                    _EnqAll(buf, src);
-                    return;
-
-                case int _ when tar > Links.Id:
-                    // Thread safe operation
-                    if (_clients.TryGetValue(tar, out var val))
-                        val?.Enqueue(buf);
-                    return;
-
-                default:
-                    // Thread safe operation
-                    if (_set.TryGetValue(tar, out var res))
-                        foreach (var obj in res.Values)
-                            if (obj != null && obj._id != src)
-                                obj.Enqueue(buf);
-                    return;
+                foreach (var val in _clients.Values)
+                    if (val != null && val._id != src)
+                        val.Enqueue(buf);
+                return;
+            }
+            else if (tar > Links.Id)
+            {
+                // Thread safe operation
+                if (_clients.TryGetValue(tar, out var val))
+                    val?.Enqueue(buf);
+                return;
+            }
+            else
+            {
+                // Thread safe operation
+                if (_set.TryGetValue(tar, out var grp))
+                    foreach (var val in grp.Values)
+                        if (val != null && val._id != src)
+                            val.Enqueue(buf);
+                return;
             }
         }
     }
