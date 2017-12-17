@@ -144,7 +144,7 @@ namespace Messenger.Modules
             var lis = new List<Packet>();
             try
             {
-                cmd = new SQLiteCommand(s_ins._con) { CommandText = "select * from messages where group = @gid order by tick desc limit 0,@max" };
+                cmd = new SQLiteCommand(s_ins._con) { CommandText = "select * from messages where port = @gid order by tick desc limit 0,@max" };
                 cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                 cmd.Parameters.Add(new SQLiteParameter("@max", max));
                 rdr = cmd.ExecuteReader();
@@ -193,7 +193,7 @@ namespace Messenger.Modules
                 cmd = new SQLiteCommand(con)
                 {
                     CommandText = "create table if not exists messages(" +
-                    "source integer not null, target integer not null, group integer not null, " +
+                    "source integer not null, target integer not null, port integer not null, " +
                     "tick timestamp not null, path varchar not null, text varchar not null)"
                 };
                 cmd.ExecuteNonQuery();
@@ -223,7 +223,7 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where group == @gid and tick == @mrt" };
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where port == @gid and tick == @mrt" };
                     cmd.Parameters.Add(new SQLiteParameter("@gid", record.Group));
                     cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp));
                     cmd.ExecuteNonQuery();
@@ -254,7 +254,7 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where group == @gid" };
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where port == @gid" };
                     cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                     cmd.ExecuteNonQuery();
                 }
