@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
-    public class ShareWorker : ShareBasic, IDisposed
+    public sealed class ShareWorker : ShareBasic, IDisposed
     {
         internal readonly int _id;
         internal readonly object _locker = new object();
@@ -81,6 +81,7 @@ namespace Messenger.Models
                 if (_disposed)
                     return;
                 _cancel.Cancel();
+                _cancel.Dispose();
                 _disposed = true;
                 OnPropertyChanged(nameof(IsDisposed));
             }

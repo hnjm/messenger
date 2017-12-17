@@ -18,7 +18,7 @@ namespace Messenger
 
         private void _Loaded(object sender, RoutedEventArgs e)
         {
-            PageManager.SetProfilePage(this, uiListbox, ProfileModule.GroupsList);
+            PageManager.SetProfilePage(this, uiListbox, ProfileModule.GroupList);
         }
 
         private void _Click(object sender, RoutedEventArgs e)

@@ -245,7 +245,7 @@
                         <Path.Style>
                             <Style TargetType="Path">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Path=HasGroups}" Value="False">
+                                    <DataTrigger Binding="{Binding Path=HasGroup}" Value="False">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                 </Style.Triggers>

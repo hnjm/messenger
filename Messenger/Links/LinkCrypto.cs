@@ -62,21 +62,11 @@ namespace Mikodev.Network
         internal static byte[] _Writer(byte[] buffer, int offset, int count, ICryptoTransform tramsform)
         {
             var mst = new MemoryStream();
-            var cst = new CryptoStream(mst, tramsform, CryptoStreamMode.Write);
-
-            try
+            using (var cst = new CryptoStream(mst, tramsform, CryptoStreamMode.Write))
             {
                 cst.Write(buffer, offset, count);
-                cst.Dispose();
-                mst.Dispose();
-                return mst.ToArray();
             }
-            catch (Exception)
-            {
-                cst.Dispose();
-                mst.Dispose();
-                throw;
-            }
+            return mst.ToArray();
         }
     }
 }

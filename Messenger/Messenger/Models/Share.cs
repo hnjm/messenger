@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Messenger.Models
 {
-    public class Share : IDisposed, INotifyPropertyChanged
+    public sealed class Share : IDisposed, INotifyPropertyChanged
     {
         internal static Func<int, Guid, Socket, Task> _backlog;
 
@@ -49,7 +49,7 @@ namespace Messenger.Models
         #region PropertyChange
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(string str = null) =>
+        internal void OnPropertyChanged(string str = null) =>
             Application.Current.Dispatcher.Invoke(() =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty)));
         #endregion

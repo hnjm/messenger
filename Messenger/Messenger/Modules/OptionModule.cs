@@ -2,8 +2,13 @@
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
+using static Messenger.Extensions.Extension;
 
 namespace Messenger.Modules
 {
@@ -12,37 +17,55 @@ namespace Messenger.Modules
     /// </summary>
     internal class OptionModule
     {
+        private const int _NoticeDelay = 1000;
+        private static readonly TimeSpan _NoticeInterval = TimeSpan.FromSeconds(10);
+
         private const string _Path = nameof(Messenger) + ".settings.xml";
         private const string _Root = "settings";
         private const string _Header = "setting";
         private const string _Key = "key";
         private const string _Value = "value";
 
-        private XmlDocument _doc = null;
+        private readonly object _locker = new object();
+        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
+        private readonly LinkNoticeSource _source = new LinkNoticeSource(_NoticeInterval);
 
         private static OptionModule s_ins = new OptionModule();
 
         private OptionModule() { }
 
+        private void _Load(XmlDocument document)
+        {
+            var itm = document.SelectNodes($"/{_Root}/{_Header}[@{_Key}]");
+            foreach (var i in itm)
+            {
+                var ele = (XmlElement)i;
+                var key = (XmlAttribute)ele.SelectSingleNode($"@{_Key}");
+                // Maybe null
+                var val = (XmlAttribute)ele.SelectSingleNode($"@{_Value}");
+                _Update(key.Value, val?.Value);
+            }
+        }
+
         [Loader(0, LoaderFlags.OnLoad)]
         public static void Load()
         {
-            if (s_ins._doc != null)
-                return;
             var fst = default(FileStream);
-            var doc = new XmlDocument();
 
             try
             {
+                var inf = new FileInfo(_Path);
+                if (inf.Exists == false)
+                    return;
                 fst = new FileStream(_Path, FileMode.Open);
+                var doc = new XmlDocument();
                 if (fst.Length <= Links.BufferLengthLimit)
                     doc.Load(fst);
-                s_ins._doc = doc;
+                s_ins._Load(doc);
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
-                s_ins._doc = new XmlDocument();
             }
             finally
             {
@@ -50,95 +73,104 @@ namespace Messenger.Modules
             }
         }
 
-        [Loader(int.MaxValue, LoaderFlags.OnExit)]
-        public static void Save()
+        /// <summary>
+        /// 保存配置并忽略异常
+        /// </summary>
+        private bool _Save(string path)
         {
-            var str = default(FileStream);
+            var fst = default(FileStream);
             var wtr = default(XmlWriter);
             var set = new XmlWriterSettings() { Indent = true };
+
+            var lst = Lock(_locker, () => _settings.ToList());
+            var doc = new XmlDocument();
+            var top = doc.CreateElement(_Root);
+            doc.AppendChild(top);
+            lst.Sort((a, b) => a.Key.CompareTo(b.Key));
+            foreach (var i in lst)
+            {
+                var key = i.Key;
+                var val = i.Value;
+                var ele = doc.CreateElement(_Header);
+                ele.SetAttribute(_Key, key);
+                if (val != null)
+                    ele.SetAttribute(_Value, val);
+                top.AppendChild(ele);
+            }
+
             try
             {
-                var doc = s_ins?._doc;
-                if (doc == null)
-                    return;
-                str = new FileStream(_Path, FileMode.Create);
-                wtr = XmlWriter.Create(str, set);
+                fst = new FileStream(path, FileMode.Create);
+                wtr = XmlWriter.Create(fst, set);
                 doc.Save(wtr);
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
+                return false;
             }
             finally
             {
                 wtr?.Dispose();
-                str?.Dispose();
             }
+            return true;
         }
 
-        private static XmlElement _GetElement(string key)
+        private void _Save()
         {
-            var doc = s_ins._doc;
-            var roo = doc.SelectSingleNode($"/{_Root}") as XmlElement;
-            if (roo == null)
-            {
-                roo = doc.CreateElement(_Root);
-                doc.AppendChild(roo);
-            }
-            var ele = doc.CreateElement(_Header);
-            ele.SetAttribute(_Key, key);
-            roo.AppendChild(ele);
-            return ele;
+            var res = _source.GetNotice(true);
+            if (res.IsAny == false)
+                return;
+            _Save(_Path);
+            res.Handled();
         }
 
-        public static string GetOption(string key, string empty = null)
+        private string _Query(string key, string value)
         {
-            var doc = s_ins?._doc;
-            if (doc == null)
-                throw new InvalidOperationException();
-            try
+            lock (_locker)
             {
-                var pth = $"/{_Root}/{_Header}[@{_Key}=\"{key}\"]";
-                if (doc.SelectSingleNode(pth) is XmlElement ele)
-                {
-                    if (ele.HasAttribute(_Value))
-                        return ele.GetAttribute(_Value);
-                    if (empty != null)
-                        ele.SetAttribute(_Value, empty);
-                }
-                else
-                {
-                    ele = _GetElement(key);
-                    if (empty != null)
-                        ele.SetAttribute(_Value, empty);
-                }
+                if (_settings.TryGetValue(key, out var val))
+                    return val;
+                _settings.Add(key, value);
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex);
-            }
-            return empty;
+            _source.Update();
+            return value;
         }
 
-        public static bool SetOption(string key, string value)
+        private void _Update(string key, string value)
         {
-            var doc = s_ins?._doc;
-            if (doc == null)
-                throw new InvalidOperationException();
-            try
+            lock (_locker)
             {
-                var pth = $"/{_Root}/{_Header}[@{_Key}=\"{key}\"]";
-                var ele = doc.SelectSingleNode(pth) as XmlElement;
-                if (ele == null)
-                    ele = _GetElement(key);
-                if (value != null)
-                    ele.SetAttribute(_Value, value);
-                return true;
+                if (_settings.TryGetValue(key, out var val) && Equals(val, value))
+                    return;
+                _settings[key] = value;
             }
-            catch (Exception ex)
+            _source.Update();
+        }
+
+        public static string Query(string key, string defaultValue = null) => s_ins._Query(key, defaultValue);
+
+        public static void Update(string key, string value) => s_ins._Update(key, value);
+
+        [Loader(int.MaxValue, LoaderFlags.OnExit)]
+        public static void Save() => s_ins._Save();
+
+        [Loader(0, LoaderFlags.AsTask)]
+        public static async Task Scan(CancellationToken token)
+        {
+            while (true)
             {
-                Log.Error(ex);
-                return false;
+                token.ThrowIfCancellationRequested();
+                await Task.Delay(_NoticeDelay);
+                token.ThrowIfCancellationRequested();
+
+                var res = s_ins._source.Notice();
+                if (res.IsAny == false)
+                    continue;
+
+                if (s_ins._Save(_Path) == false)
+                    continue;
+                res.Handled();
             }
         }
     }

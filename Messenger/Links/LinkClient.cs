@@ -238,6 +238,7 @@ namespace Mikodev.Network
                 _disposed = true;
             }
             _cancel.Cancel();
+            _cancel.Dispose();
             _socket.Dispose();
             _listen?.Dispose();
 

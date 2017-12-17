@@ -110,6 +110,7 @@
     <Compile Include="Fallback.xaml.cs">
       <DependentUpon>Fallback.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Framework.cs" />
     <Compile Include="Models\LoaderAttribute.cs" />
     <Compile Include="Models\LoaderFlags.cs" />
     <Compile Include="Models\RouteAttribute.cs" />
@@ -159,7 +160,7 @@
     <Compile Include="PageShare.xaml.cs">
       <DependentUpon>PageShare.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Extensions\NativeMethod.cs" />
+    <Compile Include="Extensions\NativeMethods.cs" />
     <Page Include="Chatter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -16,21 +16,23 @@ namespace Messenger.Modules
         /// <summary>
         /// 使用 ctrl + enter 发送消息还是 enter
         /// </summary>
-        public static bool UseCtrlEnter { get => s_ins._ctrlenter; set => s_ins._ctrlenter = value; }
+        public static bool UseCtrlEnter
+        {
+            get => s_ins._ctrlenter;
+            set
+            {
+                s_ins._ctrlenter = value;
+                OptionModule.Update(_KeyCtrlEnter, value.ToString());
+            }
+        }
 
         [Loader(8, LoaderFlags.OnLoad)]
         public static void Load()
         {
-            var str = OptionModule.GetOption(_KeyCtrlEnter);
+            var str = OptionModule.Query(_KeyCtrlEnter, false.ToString());
             if (str != null && bool.TryParse(str, out var res))
                 s_ins._ctrlenter = res;
             return;
-        }
-
-        [Loader(16, LoaderFlags.OnExit)]
-        public static void Save()
-        {
-            OptionModule.SetOption(_KeyCtrlEnter, s_ins._ctrlenter.ToString());
         }
     }
 }

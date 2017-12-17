@@ -1,6 +1,5 @@
 ﻿using Messenger.Modules;
 using Mikodev.Logger;
-using Mikodev.Network;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,9 +23,7 @@ namespace Messenger
                 return;
             if (tag == "apply")
             {
-                ProfileModule.Current.Name = uiNameBox.Text;
-                ProfileModule.Current.Text = uiSignBox.Text;
-                PostModule.UserProfile(Links.Id);
+                ProfileModule.SetProfile(uiNameBox.Text, uiSignBox.Text);
             }
             else if (tag == "image")
             {
@@ -35,15 +32,11 @@ namespace Messenger
                     return;
                 try
                 {
-                    var buf = CacheModule.ImageSquare(ofd.FileName);
-                    var str = CacheModule.SetBuffer(buf, true);
-                    ProfileModule.ImageSource = ofd.FileName;
-                    ProfileModule.ImageBuffer = buf;
-                    ProfileModule.Current.Image = str;
-                    PostModule.UserProfile(Links.Id);
+                    ProfileModule.SetImage(ofd.FileName);
                 }
                 catch (Exception ex)
                 {
+                    Entrance.ShowError("设置头像失败!", ex);
                     Log.Error(ex);
                 }
             }

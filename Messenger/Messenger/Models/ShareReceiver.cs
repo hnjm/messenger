@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
-    public class ShareReceiver : ShareBasic, IDisposed
+    public sealed class ShareReceiver : ShareBasic, IDisposed
     {
         private readonly object _locker = new object();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
@@ -210,6 +210,7 @@ namespace Messenger.Models
                     _status = ShareStatus.取消;
 
                 _cancel.Cancel();
+                _cancel.Dispose();
                 _socket?.Dispose();
                 _disposed = true;
                 OnPropertyChanged(nameof(IsDisposed));

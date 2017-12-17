@@ -4,9 +4,9 @@
     {
         public const string Protocol = "mikodev.messenger.v1.18";
 
-        public const int ListenPort = 7550;
+        public const int Port = 7550;
 
-        public const int BroadcastPort = ListenPort;
+        public const int BroadcastPort = Port;
 
         public const int Timeout = 5 * 1000;
 
@@ -15,6 +15,8 @@
         public const int KeepAliveInterval = Timeout;
 
         public const int Id = 0;
+
+        public const int DefaultId = 0x7FFFFFFF;
 
         public const int ServerSocketLimit = 256;
 

@@ -22,20 +22,26 @@ namespace Messenger.Modules
         private const string _KeyImage = "profile-image";
         private const string _KeyLabel = "profile-group-labels";
 
+        private readonly Profile _local = new Profile(Links.DefaultId);
+        private int _id;
         private bool _hasclient = false;
         private bool _hasgroups = false;
         private bool _hasrecent = false;
         private string _grouptags = null;
-        private string _imagesource = null;
         private byte[] _imagebuffer = null;
         private List<int> _groupids = null;
+        private BindingList<Profile> _group = new BindingList<Profile>();
         private BindingList<Profile> _recent = new BindingList<Profile>();
         private BindingList<Profile> _client = new BindingList<Profile>();
-        private BindingList<Profile> _groups = new BindingList<Profile>();
         private List<WeakReference> _spaces = new List<WeakReference>();
-        private Profile _local = new Profile();
         private Profile _inscope = null;
         private EventHandler _inscopechanged = null;
+
+        public bool HasGroup
+        {
+            get => _hasgroups;
+            set => _EmitChange(ref _hasgroups, value);
+        }
 
         public bool HasRecent
         {
@@ -47,12 +53,6 @@ namespace Messenger.Modules
         {
             get => _hasclient;
             set => _EmitChange(ref _hasclient, value);
-        }
-
-        public bool HasGroups
-        {
-            get => _hasgroups;
-            set => _EmitChange(ref _hasgroups, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -76,7 +76,7 @@ namespace Messenger.Modules
                     _Changed();
             };
             _client.ListChanged += (s, e) => _Changed();
-            _groups.ListChanged += (s, e) => _Changed();
+            _group.ListChanged += (s, e) => _Changed();
             _recent.ListChanged += (s, e) => _Changed();
         }
 
@@ -86,10 +86,10 @@ namespace Messenger.Modules
         private void _Changed()
         {
             var cli = _client.Sum(r => r.Hint);
-            var gro = _groups.Sum(r => r.Hint);
-            var rec = _recent.Sum(r => (r.Hint < 1 || _client.FirstOrDefault(t => t.Id == r.Id) != null || _groups.FirstOrDefault(t => t.Id == r.Id) != null) ? 0 : r.Hint);
+            var gro = _group.Sum(r => r.Hint);
+            var rec = _recent.Sum(r => (r.Hint < 1 || _client.FirstOrDefault(t => t.Id == r.Id) != null || _group.FirstOrDefault(t => t.Id == r.Id) != null) ? 0 : r.Hint);
             HasClient = cli > 0;
-            HasGroups = gro > 0;
+            HasGroup = gro > 0;
             HasRecent = rec > 0;
         }
 
@@ -97,16 +97,16 @@ namespace Messenger.Modules
 
         private static ProfileModule s_ins = new ProfileModule();
 
+        public static int Id => s_ins._id;
         public static ProfileModule Instance => s_ins;
         public static Profile Current => s_ins._local;
         public static Profile Inscope => s_ins._inscope;
         public static string GroupLabels => s_ins._grouptags;
-        public static string ImageSource { get => s_ins._imagesource; set => s_ins._imagesource = value; }
-        public static byte[] ImageBuffer { get => s_ins._imagebuffer; set => s_ins._imagebuffer = value; }
+        public static byte[] ImageBuffer => s_ins._imagebuffer;
         public static List<int> GroupIds => s_ins._groupids;
+        public static BindingList<Profile> GroupList => s_ins._group;
         public static BindingList<Profile> RecentList => s_ins._recent;
         public static BindingList<Profile> ClientList => s_ins._client;
-        public static BindingList<Profile> GroupsList => s_ins._groups;
         public static event EventHandler InscopeChanged { add => s_ins._inscopechanged += value; remove => s_ins._inscopechanged -= value; }
 
         public static void Clear()
@@ -160,12 +160,12 @@ namespace Messenger.Modules
 
             if (pro != null)
                 return pro;
-            pro = ins._client.Concat(ins._groups).Concat(ins._recent).FirstOrDefault(t => t.Id == id);
+            pro = ins._client.Concat(ins._group).Concat(ins._recent).FirstOrDefault(t => t.Id == id);
             if (pro != null)
                 return pro;
             if (create == false)
                 return null;
-            pro = new Profile() { Id = id, Name = $"佚名 [{id}]" };
+            pro = new Profile(id) { Name = $"佚名 [{id}]" };
             spa.Add(new WeakReference(pro));
             return pro;
         }
@@ -203,11 +203,11 @@ namespace Messenger.Modules
             if (kvs.Count > Links.GroupLabelLimit)
                 return false;
 
+            var gro = s_ins._group;
             var ids = (from i in kvs select i.Hash).ToList();
-            s_ins._grouptags = args;
             s_ins._groupids = ids;
-            var gro = s_ins._groups;
-            PostModule.UserGroups();
+            s_ins._grouptags = args;
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var lst = gro.RemoveEx(r => ids.Contains(r.Id) == false);
@@ -225,7 +225,41 @@ namespace Messenger.Modules
                     gro.Add(pro);
                 }
             });
+
+            PostModule.UserGroups();
+            OptionModule.Update(_KeyLabel, args);
             return true;
+        }
+
+        /// <summary>
+        /// 更新头像 (在主线程上操作, 需要捕捉异常)
+        /// </summary>
+        public static void SetImage(string path)
+        {
+            var buf = CacheModule.ImageSquare(path);
+            var str = CacheModule.SetBuffer(buf, true);
+            s_ins._imagebuffer = buf;
+            s_ins._local.Image = str;
+
+            PostModule.UserProfile(Links.Id);
+            OptionModule.Update(_KeyImage, path);
+        }
+
+        public static void SetProfile(string name, string text)
+        {
+            var pro = s_ins._local;
+            pro.Name = name;
+            pro.Text = text;
+
+            OptionModule.Update(_KeyName, name);
+            OptionModule.Update(_KeyText, text);
+            PostModule.UserProfile(Links.Id);
+        }
+
+        public static void SetId(int id)
+        {
+            s_ins._id = id;
+            OptionModule.Update(_KeyId, id.ToString());
         }
 
         /// <summary>
@@ -272,18 +306,19 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._local.Id = int.Parse(OptionModule.GetOption(_KeyId, new Random().Next(1, int.MaxValue).ToString()));
-                s_ins._local.Name = OptionModule.GetOption(_KeyName);
-                s_ins._local.Text = OptionModule.GetOption(_KeyText);
-                var lbs = OptionModule.GetOption(_KeyLabel);
+                var pro = s_ins._local;
+                s_ins._id = int.Parse(OptionModule.Query(_KeyId, new Random().Next(1, 1 << 16 + 1).ToString()));
+                pro.Name = OptionModule.Query(_KeyName);
+                pro.Text = OptionModule.Query(_KeyText);
+
+                var lbs = OptionModule.Query(_KeyLabel);
                 SetGroupLabels(lbs);
-                var pth = OptionModule.GetOption(_KeyImage);
+                var pth = OptionModule.Query(_KeyImage);
                 if (pth == null)
                     return;
                 var buf = CacheModule.ImageSquare(pth);
                 var sha = CacheModule.SetBuffer(buf, false);
                 s_ins._local.Image = CacheModule.GetPath(sha);
-                s_ins._imagesource = pth;
                 s_ins._imagebuffer = buf;
             }
             catch (Exception ex)
@@ -291,16 +326,6 @@ namespace Messenger.Modules
                 Log.Error(ex);
                 return;
             }
-        }
-
-        [Loader(8, LoaderFlags.OnExit)]
-        public static void Save()
-        {
-            OptionModule.SetOption(_KeyId, s_ins._local.Id.ToString());
-            OptionModule.SetOption(_KeyName, s_ins._local.Name);
-            OptionModule.SetOption(_KeyText, s_ins._local.Text);
-            OptionModule.SetOption(_KeyImage, s_ins._imagesource);
-            OptionModule.SetOption(_KeyLabel, s_ins._grouptags);
         }
     }
 }

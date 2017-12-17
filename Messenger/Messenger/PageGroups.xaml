@@ -24,7 +24,7 @@
         </Grid>
         <ListBox x:Name="uiListbox" Grid.Row="1"
                  Style="{DynamicResource ThinListBox}"
-                 ItemsSource="{x:Static module:ProfileModule.GroupsList}"
+                 ItemsSource="{x:Static module:ProfileModule.GroupList}"
                  ItemContainerStyle="{DynamicResource ProfileItemStyle}">
         </ListBox>
         <Border Grid.Row="2" Background="#404040" Height="1" SnapsToDevicePixels="True"/>

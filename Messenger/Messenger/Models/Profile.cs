@@ -32,21 +32,19 @@ namespace Messenger.Models
             InstancePropertyChanged?.Invoke(this, evb);
         }
 
-        private int _id = 0;
+        private readonly int _id = 0;
         private int _hint = 0;
         private string _name = null;
         private string _text = null;
         private string _img = null;
 
+        public Profile(int id) => _id = id;
+
         public bool IsClient => _id > Links.Id;
 
         public bool IsGroups => _id < Links.Id;
 
-        public int Id
-        {
-            get => _id;
-            set => OnPropertyChange(ref _id, value);
-        }
+        public int Id => _id;
 
         /// <summary>
         /// 未读消息计数
@@ -75,10 +73,8 @@ namespace Messenger.Models
             set => OnPropertyChange(ref _img, value);
         }
 
-        public Profile CopyFrom(Profile profile, bool ignoreid = true)
+        public Profile CopyFrom(Profile profile)
         {
-            if (!ignoreid)
-                Id = profile._id;
             Image = profile._img;
             Name = profile._name;
             Text = profile._text;

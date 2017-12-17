@@ -71,11 +71,22 @@ namespace Messenger.Modules
 
         private static readonly ShareModule s_ins = new ShareModule();
 
-        public static string SavePath { get => s_ins._savepath; set => s_ins._savepath = value; }
+        public static string SavePath
+        {
+            get => s_ins._savepath;
+            set
+            {
+                s_ins._savepath = value;
+                OptionModule.Update(_KeyPath, value);
+            }
+        }
+
         public static ShareModule Instance => s_ins;
 
         public static BindingList<Share> ShareList => s_ins._shareList;
+
         public static BindingList<ShareReceiver> ReceiverList => s_ins._receiverList;
+
         public static BindingList<ShareReceiver> PendingList => s_ins._pendingList;
 
         /// <summary>
@@ -195,13 +206,7 @@ namespace Messenger.Modules
         [Loader(32, LoaderFlags.OnLoad)]
         public static void Load()
         {
-            s_ins._savepath = OptionModule.GetOption(_KeyPath, _Path);
-        }
-
-        [Loader(4, LoaderFlags.OnExit)]
-        public static void Save()
-        {
-            OptionModule.SetOption(_KeyPath, s_ins._savepath);
+            s_ins._savepath = OptionModule.Query(_KeyPath, _Path);
         }
         #endregion
     }

@@ -286,5 +286,16 @@ namespace Messenger.Extensions
                 return true;
             }
         }
+
+        /// <summary>
+        /// [常用代码段] 锁定 <paramref name="locker"/> 以调用 <paramref name="func"/>, 常用于具有匿名类型返回值的函数
+        /// </summary>
+        public static TR Lock<TE, TR>(TE locker, Func<TR> func) where TE : class
+        {
+            lock (locker)
+            {
+                return func.Invoke();
+            }
+        }
     }
 }

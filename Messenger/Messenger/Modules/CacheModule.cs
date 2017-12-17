@@ -46,7 +46,7 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._dir = OptionModule.GetOption(_KeyCache, _Directory);
+                s_ins._dir = OptionModule.Query(_KeyCache, _Directory);
             }
             catch (Exception ex)
             {
@@ -105,20 +105,19 @@ namespace Messenger.Modules
 
             var fst = default(FileStream);
             var sha = GetSHA256(buffer);
+            var pth = default(string);
 
             try
             {
                 var dir = new DirectoryInfo(s_ins._dir);
                 if (dir.Exists == false)
                     dir.Create();
-                var pth = Path.Combine(dir.FullName, sha + _ImageSuffix);
+                pth = Path.Combine(dir.FullName, sha + _ImageSuffix);
                 if (File.Exists(pth) == false)
                 {
                     fst = new FileStream(pth, FileMode.CreateNew, FileAccess.Write);
                     fst.Write(buffer, 0, buffer.Length);
-                    fst.Dispose();
                 }
-                return fullPath ? pth : sha;
             }
             catch (Exception ex)
             {
@@ -131,6 +130,7 @@ namespace Messenger.Modules
             {
                 fst?.Dispose();
             }
+            return fullPath ? pth : sha;
         }
 
         /// <summary>

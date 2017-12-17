@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Messenger.Modules
@@ -28,9 +27,25 @@ namespace Messenger.Modules
 
         private static HostModule s_ins = new HostModule();
 
-        public static string Name { get => s_ins._host; set => s_ins._host = value; }
+        public static string Name
+        {
+            get => s_ins._host;
+            set
+            {
+                s_ins._host = value;
+                OptionModule.Update(_KeyLast, $"{value}:{s_ins._port}");
+            }
+        }
 
-        public static int Port { get => s_ins._port; set => s_ins._port = value; }
+        public static int Port
+        {
+            get => s_ins._port;
+            set
+            {
+                s_ins._port = value;
+                OptionModule.Update(_KeyLast, $"{s_ins._host}:{value}");
+            }
+        }
 
         internal static Host _GetHostInfo(byte[] buffer, int offset, int length)
         {
@@ -114,50 +129,35 @@ namespace Messenger.Modules
         public static void Load()
         {
             var lst = new List<IPEndPoint>();
+            var hos = default(string);
+            var pot = Links.BroadcastPort;
+            var iep = new IPEndPoint(IPAddress.Broadcast, Links.BroadcastPort);
+
             try
             {
-                var str = OptionModule.GetOption(_KeyLast);
-                Extension.ToHostEx(str, out s_ins._host, out s_ins._port);
-                var sts = OptionModule.GetOption(_KeyList) ?? string.Empty;
-                var arr = sts.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var s in arr)
+                var sts = OptionModule.Query(_KeyList, iep.ToString());
+                foreach (var s in sts.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
                     lst.Add(s.ToEndPointEx());
+
+                var str = OptionModule.Query(_KeyLast, $"{IPAddress.Loopback}:{Links.Port}");
+                Extension.ToHostEx(str, out hos, out pot);
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
             }
+
             if (lst.Count < 1)
-                lst.Add(new IPEndPoint(IPAddress.Broadcast, Links.BroadcastPort));
+                lst.Add(iep);
+
             var res = s_ins._points;
             res.Clear();
             foreach (var i in lst.Distinct())
                 res.Add(i);
-            return;
-        }
 
-        /// <summary>
-        /// 保存列表到文件
-        /// </summary>
-        [Loader(32, LoaderFlags.OnExit)]
-        public static void Save()
-        {
-            var stb = new StringBuilder();
-            var eps = s_ins._points?.ToList();
-            if (eps != null)
-            {
-                var idx = 0;
-                while (idx < eps.Count)
-                {
-                    stb.Append(eps[idx]);
-                    if (idx < eps.Count - 1)
-                        stb.Append('|');
-                    idx++;
-                }
-            }
-            if (s_ins._host != null)
-                OptionModule.SetOption(_KeyLast, $"{s_ins._host}:{s_ins._port}");
-            OptionModule.SetOption(_KeyList, stb.ToString());
+            s_ins._host = hos;
+            s_ins._port = pot;
+            return;
         }
     }
 }

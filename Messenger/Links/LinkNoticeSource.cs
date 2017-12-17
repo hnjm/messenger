@@ -22,12 +22,17 @@ namespace Mikodev.Network
             Interlocked.Increment(ref _version);
         }
 
-        public LinkNotice GetNotice()
+        public LinkNotice Notice() => GetNotice(false);
+
+        public LinkNotice GetNotice(bool force)
         {
             var ver = Volatile.Read(ref _version);
             var cur = _handled;
             if (cur == ver)
                 goto nothing;
+
+            if (force)
+                return new LinkNotice(this, _version);
 
             var old = _timestamp;
             var now = DateTime.Now;

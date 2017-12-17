@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Network
@@ -15,19 +16,19 @@ namespace Mikodev.Network
         internal const int _NoticeDelay = 100;
         internal static readonly TimeSpan _NoticeInterval = TimeSpan.FromMilliseconds(1000);
 
-        internal bool _started = false;
+        internal int _started = 0;
 
         internal readonly int _climit = Links.ServerSocketLimit;
-        internal readonly int _port = Links.ListenPort;
+        internal readonly int _port = Links.Port;
         internal readonly object _locker = new object();
 
         internal readonly Socket _socket = null;
         internal readonly LinkNoticeSource _notice = new LinkNoticeSource(_NoticeInterval);
         internal readonly ConcurrentDictionary<int, LinkClient> _clients = new ConcurrentDictionary<int, LinkClient>();
-        internal readonly Dictionary<int, HashSet<int>> _joined = new Dictionary<int, HashSet<int>>();
+        internal readonly ConcurrentDictionary<int, HashSet<int>> _joined = new ConcurrentDictionary<int, HashSet<int>>();
         internal readonly ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>> _set = new ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>>();
 
-        public LinkListener(int port = Links.ListenPort, int count = Links.ServerSocketLimit)
+        public LinkListener(int port = Links.Port, int count = Links.ServerSocketLimit)
         {
             if (count < 1 || count > Links.ServerSocketLimit)
                 throw new ArgumentOutOfRangeException(nameof(count), "Count limit out of range!");
@@ -52,21 +53,11 @@ namespace Mikodev.Network
 
         public Task Listen()
         {
-            lock (_locker)
-            {
-                if (_started)
-                    throw new InvalidOperationException();
-                _started = true;
-            }
+            if (Interlocked.CompareExchange(ref _started, 1, 0) != 0)
+                throw new InvalidOperationException("Listen task already started!");
 
-            _Notice().ContinueWith(_Continuation);
-            return _Listen().ContinueWith(_Continuation);
-        }
-
-        private void _Continuation(Task task)
-        {
-            var err = task.Exception;
-            Log.Error(err);
+            _Notice().ContinueWith(task => Log.Error(task.Exception));
+            return _Listen();
         }
 
         private async Task _Listen()
@@ -152,15 +143,10 @@ namespace Mikodev.Network
             }
 
             var clt = new LinkClient(cid, socket, iep, oep) { _key = key, _blk = blk };
+            _clients.TryUpdate(cid, clt, null).AssertFatal("Failed to update client!");
+
             clt.Received += _ClientReceived;
             clt.Disposed += _ClientDisposed;
-
-            lock (_locker)
-            {
-                _clients.TryUpdate(cid, clt, null).AssertFatal("Failed to update client!");
-                _joined.Add(cid, new HashSet<int>());
-            }
-
             clt.Start();
         }
 
@@ -168,7 +154,7 @@ namespace Mikodev.Network
         {
             /* Require lock */
             var cid = client._id;
-            var set = _joined[cid];
+            var set = _joined.GetOrAdd(cid, _ => new HashSet<int>());
             foreach (var i in set)
             {
                 _set.TryGetValue(i, out var gro).AssertFatal("Failed to get group collection!");
@@ -181,7 +167,7 @@ namespace Mikodev.Network
             if (groups == null)
             {
                 /* Client shutdown */
-                _joined.Remove(cid);
+                _joined.TryRemove(cid, out var res).AssertFatal(res == set, "Failed to remove group set!");
                 _clients.TryRemove(cid, out var val).AssertFatal(val == client, "Failed to remove client!");
                 return;
             }
@@ -201,7 +187,7 @@ namespace Mikodev.Network
             while (true)
             {
                 await Task.Delay(_NoticeDelay);
-                var res = _notice.GetNotice();
+                var res = _notice.Notice();
                 if (res.IsAny == false)
                     continue;
 

@@ -56,7 +56,7 @@ namespace Messenger
             else
             {
                 var txt = uiSearchBox.Text.ToLower();
-                var val = (from i in ProfileModule.ClientList.Union(ProfileModule.GroupsList).Union(ProfileModule.RecentList)
+                var val = (from i in ProfileModule.ClientList.Union(ProfileModule.GroupList).Union(ProfileModule.RecentList)
                            where i.Name?.ToLower().Contains(txt) == true || i.Text?.ToLower().Contains(txt) == true
                            select i).ToList();
                 var idx = val.IndexOf(ProfileModule.Inscope);

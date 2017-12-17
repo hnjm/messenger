@@ -26,6 +26,9 @@ namespace Messenger
             };
 
             SessionEnding += (s, arg) => LinkModule.Shutdown();
+            Exit += (s, _) => Framework.Close();
+
+            Framework.Start();
         }
     }
 }

@@ -144,20 +144,21 @@ namespace Messenger.Modules
             var lis = new List<Packet>();
             try
             {
-                cmd = new SQLiteCommand(s_ins._con);
-                cmd.CommandText = "select * from messages where groups = @gid order by time desc limit 0,@max";
+                cmd = new SQLiteCommand(s_ins._con) { CommandText = "select * from messages where groups = @gid order by time desc limit 0,@max" };
                 cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                 cmd.Parameters.Add(new SQLiteParameter("@max", max));
                 rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    var rcd = new Packet();
-                    rcd.Source = rdr.GetInt32(0);
-                    rcd.Target = rdr.GetInt32(1);
-                    rcd.Groups = rdr.GetInt32(2);
-                    rcd.Timestamp = rdr.GetDateTime(3);
-                    rcd.Path = rdr.GetString(4);
-                    rcd.Object = rdr.GetString(5);
+                    var rcd = new Packet
+                    {
+                        Source = rdr.GetInt32(0),
+                        Target = rdr.GetInt32(1),
+                        Groups = rdr.GetInt32(2),
+                        Timestamp = rdr.GetDateTime(3),
+                        Path = rdr.GetString(4),
+                        Object = rdr.GetString(5)
+                    };
                     lis.Add(rcd);
                 }
                 // 查询是按照降序排列的 因此需要反转
@@ -189,10 +190,12 @@ namespace Messenger.Modules
             {
                 con = new SQLiteConnection($"data source = {_Path}");
                 con.Open();
-                cmd = new SQLiteCommand(con);
-                cmd.CommandText = "create table if not exists messages(" +
+                cmd = new SQLiteCommand(con)
+                {
+                    CommandText = "create table if not exists messages(" +
                     "source integer not null, target integer not null, groups integer not null, " +
-                    "time timestamp not null, path varchar not null, text varchar not null)";
+                    "time timestamp not null, path varchar not null, text varchar not null)"
+                };
                 cmd.ExecuteNonQuery();
                 // 确保连接有效
                 s_ins._con = con;
@@ -220,8 +223,7 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con);
-                    cmd.CommandText = "delete from messages where groups == @gid and time == @mrt";
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where groups == @gid and time == @mrt" };
                     cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
                     cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp));
                     cmd.ExecuteNonQuery();
@@ -252,8 +254,7 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con);
-                    cmd.CommandText = "delete from messages where groups == @gid";
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where groups == @gid" };
                     cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                     cmd.ExecuteNonQuery();
                 }
@@ -271,7 +272,7 @@ namespace Messenger.Modules
         /// <summary>
         /// 关闭数据库
         /// </summary>
-        [Loader(2, LoaderFlags.OnExit)]
+        [Loader(1, LoaderFlags.OnExit)]
         public static void Save()
         {
             s_ins._con?.Dispose();

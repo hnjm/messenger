@@ -26,7 +26,7 @@ namespace Launcher
         {
             var nam = default(string);
             var max = Links.ServerSocketLimit;
-            var pot = Links.ListenPort;
+            var pot = Links.Port;
             var bro = Links.BroadcastPort;
             var dic = new Dictionary<string, string>();
             foreach (var i in args)

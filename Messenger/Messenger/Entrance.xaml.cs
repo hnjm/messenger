@@ -1,16 +1,13 @@
-﻿using Messenger.Extensions;
-using Messenger.Models;
-using Messenger.Modules;
+﻿using Messenger.Modules;
 using Microsoft.Win32;
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using static Messenger.Extensions.NativeMethod;
+using static Messenger.Extensions.NativeMethods;
 using static System.Windows.ResizeMode;
 using static System.Windows.WindowState;
 
@@ -24,34 +21,7 @@ namespace Messenger
         public Entrance()
         {
             InitializeComponent();
-            Loaded += _Loaded;
             Closing += _Closing;
-        }
-
-        private void _Loaded(object sender, RoutedEventArgs e)
-        {
-            // 利用反射运行模块
-            var lst = Extension.FindAttribute(
-                typeof(LoaderAttribute).Assembly,
-                typeof(LoaderAttribute), null,
-                (a, m, t) => new { Attribute = (LoaderAttribute)a, Action = (Action)Delegate.CreateDelegate(typeof(Action), m) }
-            ).ToList();
-
-            var loa = from r in lst
-                      where r.Attribute.Flag == LoaderFlags.OnLoad
-                      orderby r.Attribute.Level
-                      select r.Action;
-
-            var ext = from r in lst
-                      where r.Attribute.Flag == LoaderFlags.OnExit
-                      orderby r.Attribute.Level
-                      select r.Action;
-
-            var run = loa.ToList();
-            var sav = ext.ToList();
-
-            run.ForEach(r => r.Invoke());
-            Closed += (s, a) => sav.ForEach(r => r.Invoke());
         }
 
         private void _Closing(object sender, CancelEventArgs e)

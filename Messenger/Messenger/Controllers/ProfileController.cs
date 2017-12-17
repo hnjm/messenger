@@ -25,9 +25,9 @@ namespace Messenger.Controllers
         [Route("user.profile")]
         public void Profile()
         {
-            var pro = new Profile()
+            var cid = Data["id"].Pull<int>();
+            var pro = new Profile(cid)
             {
-                Id = Data["id"].Pull<int>(),
                 Name = Data["name"].Pull<string>(),
                 Text = Data["text"].Pull<string>(),
             };

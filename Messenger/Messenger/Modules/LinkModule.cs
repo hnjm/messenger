@@ -23,7 +23,7 @@ namespace Messenger.Modules
         private LinkClient _client = null;
         private readonly object _locker = new object();
 
-        public static int Id => s_ins._client?.Id ?? ProfileModule.Current.Id;
+        public static int Id => s_ins._client?.Id ?? ProfileModule.Id;
 
         public static bool IsRunning => s_ins._client?.IsRunning ?? false;
 
@@ -66,7 +66,8 @@ namespace Messenger.Modules
 
             HistoryModule.Handled += _HistoryHandled;
             ShareModule.PendingList.ListChanged += _PendingListChanged;
-            ProfileModule.Current.Id = id;
+
+            ProfileModule.SetId(id);
 
             PostModule.UserProfile(Links.Id);
             PostModule.UserRequest();
@@ -120,7 +121,7 @@ namespace Messenger.Modules
         {
             var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
             if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
-                NativeMethod.FlashWindow(hdl, true);
+                NativeMethods.FlashWindow(hdl, true);
             return;
         }
 
@@ -131,7 +132,7 @@ namespace Messenger.Modules
                 if (Application.Current.MainWindow.IsActive == true)
                     return;
                 var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                NativeMethod.FlashWindow(hdl, true);
+                NativeMethods.FlashWindow(hdl, true);
             }
         }
     }

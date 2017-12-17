@@ -13,5 +13,10 @@
         /// 在程序退出时执行
         /// </summary>
         OnExit,
+
+        /// <summary>
+        /// 作为任务在后台运行
+        /// </summary>
+        AsTask,
     }
 }
