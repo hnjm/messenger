@@ -7,48 +7,48 @@ namespace Messenger.Modules
 {
     internal class PostModule
     {
-        public static void Text(int target, string val)
+        public static void Text(int dst, string val)
         {
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
-                target = target,
+                target = dst,
                 path = "msg.text",
                 data = val,
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            HistoryModule.Insert(target, "text", val);
+            HistoryModule.Insert(dst, "text", val);
         }
 
-        public static void Image(int target, byte[] val)
+        public static void Image(int dst, byte[] val)
         {
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
-                target = target,
+                target = dst,
                 path = "msg.image",
                 data = val,
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            HistoryModule.Insert(target, "image", val);
+            HistoryModule.Insert(dst, "image", val);
         }
 
         /// <summary>
         /// Post feedback message
         /// </summary>
-        public static void Notice(int target, string type, string parameter)
+        public static void Notice(int dst, string genre, string arg)
         {
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
-                target = target,
+                target = dst,
                 path = "msg.notice",
                 data = new
                 {
-                    type = type,
-                    parameter = parameter,
+                    type = genre,
+                    parameter = arg,
                 },
             });
             var buf = wtr.GetBytes();
@@ -59,17 +59,17 @@ namespace Messenger.Modules
         /// <summary>
         /// 向指定用户发送本机用户信息
         /// </summary>
-        public static void UserProfile(int target)
+        public static void UserProfile(int dst)
         {
             var pro = ProfileModule.Current;
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
-                target = target,
+                target = dst,
                 path = "user.profile",
                 data = new
                 {
-                    id = pro.Id,
+                    id = ProfileModule.Id,
                     name = pro.Name,
                     text = pro.Text,
                     image = ProfileModule.ImageBuffer,
@@ -110,14 +110,14 @@ namespace Messenger.Modules
         /// <summary>
         /// 发送文件信息
         /// </summary>
-        public static void File(int target, string filepath)
+        public static void File(int dst, string filepath)
         {
             var sha = new Share(new FileInfo(filepath));
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
-                target = target,
+                target = dst,
                 path = "share.info",
                 data = new
                 {
@@ -130,17 +130,17 @@ namespace Messenger.Modules
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            HistoryModule.Insert(target, "share", sha);
+            HistoryModule.Insert(dst, "share", sha);
         }
 
-        public static void Directory(int target, string directory)
+        public static void Directory(int dst, string directory)
         {
             var sha = new Share(new DirectoryInfo(directory));
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(sha));
             var wtr = PacketWriter.Serialize(new
             {
                 source = LinkModule.Id,
-                target = target,
+                target = dst,
                 path = "share.info",
                 data = new
                 {
@@ -152,7 +152,7 @@ namespace Messenger.Modules
             });
             var buf = wtr.GetBytes();
             LinkModule.Enqueue(buf);
-            HistoryModule.Insert(target, "share", sha);
+            HistoryModule.Insert(dst, "share", sha);
         }
     }
 }

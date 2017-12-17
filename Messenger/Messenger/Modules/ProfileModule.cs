@@ -139,7 +139,7 @@ namespace Messenger.Modules
         public static Profile Query(int id, bool create = false)
         {
             var ins = s_ins;
-            if (id == ins._local.Id)
+            if (id == ins._id || id == Links.DefaultId)
                 return ins._local;
             var spa = ins._spaces;
 

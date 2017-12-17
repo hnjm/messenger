@@ -91,13 +91,13 @@ namespace Mikodev.Network
 
         private void _Connect(Socket socket)
         {
-            LinkError _Check(int code)
+            LinkError _Check(int id)
             {
-                if (code <= Links.Id)
+                if ((Links.Id < id && id < Links.DefaultId) == false)
                     return LinkError.IdInvalid;
                 if (_clients.Count >= _climit)
                     return LinkError.CountLimited;
-                return _clients.TryAdd(code, null) ? LinkError.Success : LinkError.IdConflict;
+                return _clients.TryAdd(id, null) ? LinkError.Success : LinkError.IdConflict;
             }
 
             var key = LinkCrypto.GetKey();

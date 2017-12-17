@@ -32,15 +32,15 @@ namespace Messenger.Models
             InstancePropertyChanged?.Invoke(this, evb);
         }
 
-        private readonly int _id = 0;
+        private readonly int _id;
         private int _hint = 0;
         private string _name = null;
         private string _text = null;
-        private string _img = null;
+        private string _logo = null;
+
+        public Profile() { }
 
         public Profile(int id) => _id = id;
-
-        public bool IsClient => _id > Links.Id;
 
         public bool IsGroups => _id < Links.Id;
 
@@ -69,15 +69,15 @@ namespace Messenger.Models
 
         public string Image
         {
-            get => _img;
-            set => OnPropertyChange(ref _img, value);
+            get => _logo;
+            set => OnPropertyChange(ref _logo, value);
         }
 
         public Profile CopyFrom(Profile profile)
         {
-            Image = profile._img;
             Name = profile._name;
             Text = profile._text;
+            Image = profile._logo;
             return this;
         }
     }
