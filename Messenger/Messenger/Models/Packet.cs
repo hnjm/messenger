@@ -10,7 +10,7 @@ namespace Messenger.Models
     {
         private int _target = 0;
         private int _source = 0;
-        private int _groups = 0;
+        private int _group = 0;
         private string _image = null;
         private object _value = null;
         private Profile _profile = null;
@@ -30,7 +30,7 @@ namespace Messenger.Models
         /// <summary>
         /// 分组编号
         /// </summary>
-        public int Groups { get => _groups; set => _groups = value; }
+        public int Group { get => _group; set => _group = value; }
 
         /// <summary>
         /// 消息类型

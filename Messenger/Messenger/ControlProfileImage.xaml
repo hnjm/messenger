@@ -10,6 +10,7 @@
     <UserControl.Resources>
         <tool:StringEmptyConverter x:Key="StringEmptyConverter"/>
         <tool:ProfileLogoConverter x:Key="ProfileLogoConverter"/>
+        <tool:ImageSourceConverter x:Key="ImageSourceConverter"/>
 
         <Style x:Key="ProfileImageControlStyle" TargetType="UserControl">
             <Setter Property="Template">
@@ -17,7 +18,7 @@
                     <ControlTemplate TargetType="UserControl">
                         <Viewbox>
                             <Grid Width="32" Height="32">
-                                <Grid Name="DefaultImagePanel" Visibility="Hidden">
+                                <Grid Name="DefaultImagePanel">
                                     <Ellipse Fill="Gray"/>
                                     <TextBlock FontSize="12" Foreground="White"
                                                Text="{Binding Path=Name, Converter={StaticResource ProfileLogoConverter}}" 
@@ -44,19 +45,10 @@
                             </Grid>
                         </Viewbox>
                         <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Path=IsGroups}" Value="True">
+                            <DataTrigger Binding="{Binding Path=IsGroup}" Value="True">
                                 <Setter TargetName="GroupImagePanel" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="DefaultImagePanel" Property="Visibility" Value="Hidden"/>
                             </DataTrigger>
-
-                            <MultiDataTrigger>
-                                <MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding Path=IsClient}" Value="True"/>
-                                    <Condition Binding="{Binding Path=Image, Converter={StaticResource StringEmptyConverter}}" Value="True"/>
-                                </MultiDataTrigger.Conditions>
-                                <MultiDataTrigger.Setters>
-                                    <Setter TargetName="DefaultImagePanel" Property="Visibility" Value="Visible"/>
-                                </MultiDataTrigger.Setters>
-                            </MultiDataTrigger>
 
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
@@ -65,11 +57,8 @@
                                 </MultiDataTrigger.Conditions>
                                 <MultiDataTrigger.Setters>
                                     <Setter TargetName="CircleImageSharp" Property="Visibility" Value="Visible"/>
-                                    <Setter TargetName="CircleImageSharp" Property="Fill">
-                                        <Setter.Value>
-                                            <ImageBrush ImageSource="{Binding Path=Image}"/>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="DefaultImagePanel" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="CircleImageSharp" Property="Fill" Value="{Binding Path=Image, Converter={StaticResource ImageSourceConverter}}"/>
                                 </MultiDataTrigger.Setters>
                             </MultiDataTrigger>
                         </ControlTemplate.Triggers>

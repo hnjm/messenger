@@ -38,11 +38,11 @@ namespace Messenger.Models
         private string _text = null;
         private string _logo = null;
 
-        public Profile() { }
-
         public Profile(int id) => _id = id;
 
-        public bool IsGroups => _id < Links.Id;
+        public bool IsGroup => _id < Links.Id;
+
+        public bool IsClient => Links.Id < _id;
 
         public int Id => _id;
 

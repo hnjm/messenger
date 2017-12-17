@@ -56,7 +56,7 @@ namespace Messenger.Modules
 
         public static Packet Insert(int target, string path, object obj)
         {
-            var pkt = new Packet() { Source = LinkModule.Id, Target = target, Groups = target };
+            var pkt = new Packet() { Source = LinkModule.Id, Target = target, Group = target };
             _SetPacket(pkt, path, obj);
             _Insert(pkt);
             return pkt;
@@ -65,7 +65,7 @@ namespace Messenger.Modules
         public static Packet Insert(int source, int target, string path, object value)
         {
             var gid = target == LinkModule.Id ? source : target;
-            var pkt = new Packet() { Source = source, Target = target, Groups = gid };
+            var pkt = new Packet() { Source = source, Target = target, Group = gid };
             _SetPacket(pkt, path, value);
             _Insert(pkt);
             _OnReceive(pkt);
@@ -85,7 +85,7 @@ namespace Messenger.Modules
 
                 if (arg.Finish == true && arg.Cancel == false)
                     return;
-                var pro = ProfileModule.Query(rcd.Groups, true);
+                var pro = ProfileModule.Query(rcd.Group, true);
                 pro.Hint += 1;
             });
         }
@@ -95,7 +95,7 @@ namespace Messenger.Modules
         /// </summary>
         private static void _Insert(Packet pkt)
         {
-            var lst = Query(pkt.Groups);
+            var lst = Query(pkt.Group);
             Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
             if (s_ins._con == null)
                 return;
@@ -111,7 +111,7 @@ namespace Messenger.Modules
                     cmd = new SQLiteCommand(s_ins._con) { CommandText = "insert into messages values(@sid, @tid, @gid, @tim, @typ, @msg)" };
                     cmd.Parameters.Add(new SQLiteParameter("@sid", pkt.Source));
                     cmd.Parameters.Add(new SQLiteParameter("@tid", pkt.Target));
-                    cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Groups));
+                    cmd.Parameters.Add(new SQLiteParameter("@gid", pkt.Group));
                     cmd.Parameters.Add(new SQLiteParameter("@tim", pkt.Timestamp));
                     cmd.Parameters.Add(new SQLiteParameter("@typ", pkt.Path));
                     cmd.Parameters.Add(new SQLiteParameter("@msg", str));
@@ -144,7 +144,7 @@ namespace Messenger.Modules
             var lis = new List<Packet>();
             try
             {
-                cmd = new SQLiteCommand(s_ins._con) { CommandText = "select * from messages where groups = @gid order by time desc limit 0,@max" };
+                cmd = new SQLiteCommand(s_ins._con) { CommandText = "select * from messages where group = @gid order by tick desc limit 0,@max" };
                 cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                 cmd.Parameters.Add(new SQLiteParameter("@max", max));
                 rdr = cmd.ExecuteReader();
@@ -154,7 +154,7 @@ namespace Messenger.Modules
                     {
                         Source = rdr.GetInt32(0),
                         Target = rdr.GetInt32(1),
-                        Groups = rdr.GetInt32(2),
+                        Group = rdr.GetInt32(2),
                         Timestamp = rdr.GetDateTime(3),
                         Path = rdr.GetString(4),
                         Object = rdr.GetString(5)
@@ -193,8 +193,8 @@ namespace Messenger.Modules
                 cmd = new SQLiteCommand(con)
                 {
                     CommandText = "create table if not exists messages(" +
-                    "source integer not null, target integer not null, groups integer not null, " +
-                    "time timestamp not null, path varchar not null, text varchar not null)"
+                    "source integer not null, target integer not null, group integer not null, " +
+                    "tick timestamp not null, path varchar not null, text varchar not null)"
                 };
                 cmd.ExecuteNonQuery();
                 // 确保连接有效
@@ -213,7 +213,7 @@ namespace Messenger.Modules
 
         public static void Remove(Packet record)
         {
-            if (s_ins._msg.TryGetValue(record.Groups, out var lst))
+            if (s_ins._msg.TryGetValue(record.Group, out var lst))
                 lst.Remove(record);
             if (s_ins._con == null)
                 return;
@@ -223,8 +223,8 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where groups == @gid and time == @mrt" };
-                    cmd.Parameters.Add(new SQLiteParameter("@gid", record.Groups));
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where group == @gid and tick == @mrt" };
+                    cmd.Parameters.Add(new SQLiteParameter("@gid", record.Group));
                     cmd.Parameters.Add(new SQLiteParameter("@mrt", record.Timestamp));
                     cmd.ExecuteNonQuery();
                 }
@@ -240,7 +240,7 @@ namespace Messenger.Modules
         }
 
         /// <summary>
-        /// 清除指定 <see cref="Packet.Groups"/> 下的所有消息记录
+        /// 清除指定 <see cref="Packet.Group"/> 下的所有消息记录
         /// </summary>
         public static void Clear(int gid)
         {
@@ -254,7 +254,7 @@ namespace Messenger.Modules
                 var cmd = default(SQLiteCommand);
                 try
                 {
-                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where groups == @gid" };
+                    cmd = new SQLiteCommand(s_ins._con) { CommandText = "delete from messages where group == @gid" };
                     cmd.Parameters.Add(new SQLiteParameter("@gid", gid));
                     cmd.ExecuteNonQuery();
                 }

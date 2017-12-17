@@ -24,8 +24,8 @@ namespace Messenger.Modules
 
         private readonly Profile _local = new Profile(Links.DefaultId);
         private int _id;
+        private bool _hasgroup = false;
         private bool _hasclient = false;
-        private bool _hasgroups = false;
         private bool _hasrecent = false;
         private string _grouptags = null;
         private byte[] _imagebuffer = null;
@@ -39,8 +39,8 @@ namespace Messenger.Modules
 
         public bool HasGroup
         {
-            get => _hasgroups;
-            set => _EmitChange(ref _hasgroups, value);
+            get => _hasgroup;
+            set => _EmitChange(ref _hasgroup, value);
         }
 
         public bool HasRecent
