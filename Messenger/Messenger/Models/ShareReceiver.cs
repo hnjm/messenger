@@ -92,7 +92,9 @@ namespace Messenger.Models
             async Task _Request()
             {
                 // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
-                var soc = _ConnectAny();
+                //var soc = _ConnectAny();
+                var soc = _endpoints.Select(r => _Connect(r)).FirstOrDefault(r => r != null) ?? throw new ApplicationException("Source network unreachable.");
+
                 lock (_locker)
                 {
                     if (_disposed)
@@ -105,8 +107,10 @@ namespace Messenger.Models
 
                 var buf = PacketWriter.Serialize(new
                 {
+                    path = "share." + (_batch ? "directory" : "file"),
                     data = _key,
                     source = LinkModule.Id,
+                    target = _id,
                 });
                 await soc.SendAsyncExt(buf.GetBytes());
             }
@@ -135,25 +139,25 @@ namespace Messenger.Models
             });
         }
 
-        internal Socket _ConnectAny()
+        internal Socket _Connect(EndPoint endpoint)
         {
-            foreach (var i in _endpoints)
+            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            try
             {
-                var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                try
-                {
-                    soc.ConnectAsyncEx(i).WaitTimeout("Port receiver timeout.");
-                    soc.SetKeepAlive();
-                    return soc;
-                }
-                catch (Exception ex) when (ex is SocketException || ex is TimeoutException)
-                {
-                    soc.Dispose();
-                    Log.Error(ex);
-                    continue;
-                }
+                soc.ConnectAsyncEx(endpoint).WaitTimeout("Share receiver timeout.");
+                soc.SetKeepAlive();
             }
-            throw new ApplicationException("Network unreachable.");
+            catch (Exception err)
+            {
+                Log.Error(err);
+                soc.Dispose();
+
+                err = err.Disaggregate();
+                if (err is SocketException || err is TimeoutException)
+                    return null;
+                throw;
+            }
+            return soc;
         }
 
         internal Task _Receive()

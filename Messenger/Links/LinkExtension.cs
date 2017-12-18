@@ -137,5 +137,27 @@ namespace Mikodev.Network
                 return;
             throw new LinkException(error);
         }
+
+        /// <summary>
+        /// Get <see cref="Exception.InnerException"/> from <see cref="AggregateException"/>
+        /// </summary>
+        /// <param name="value">Value can be null or any</param>
+        public static Exception Disaggregate(this Exception value)
+        {
+            while (value is AggregateException agg && agg.InnerExceptions?.Count == 1 && agg.InnerException is Exception err)
+                value = err;
+            return value;
+        }
+
+        /// <summary>
+        /// Get <see cref="Exception.InnerException"/> from <see cref="AggregateException"/>
+        /// </summary>
+        /// <param name="value">Value can be null or any</param>
+        public static object Disaggregate(this object value)
+        {
+            while (value is AggregateException agg && agg.InnerExceptions?.Count == 1 && agg.InnerException is Exception err)
+                value = err;
+            return value;
+        }
     }
 }

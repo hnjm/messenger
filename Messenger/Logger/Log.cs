@@ -38,13 +38,13 @@ namespace Mikodev.Logger
         /// <summary>
         /// 记录异常 (如果异常为空则不记录)
         /// </summary>
-        public static void Error(Exception ex, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
+        public static void Error(Exception err, [CallerMemberName] string name = null, [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
-            if (ex == null)
+            if (err == null)
                 return;
-            while (ex is AggregateException a && a.InnerExceptions.Count == 1)
-                ex = a.InnerException;
-            Info(ex.ToString(), name, file, line);
+            while (err is AggregateException a && a.InnerExceptions?.Count == 1 && a.InnerException is Exception val)
+                err = val;
+            Info(err.ToString(), name, file, line);
         }
 
         /// <summary>

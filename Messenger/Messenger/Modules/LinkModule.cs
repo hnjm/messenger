@@ -1,5 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
+using Mikodev.Logger;
 using Mikodev.Network;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -32,7 +32,7 @@ namespace Messenger.Modules
         /// </summary>
         public static void Start(int id, IPEndPoint endpoint)
         {
-            var clt = new LinkClient(id, endpoint);
+            var clt = new LinkClient(id, endpoint, _RequestHandler);
 
             void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Handle(args.Object);
 
@@ -40,19 +40,18 @@ namespace Messenger.Modules
             {
                 clt.Received -= _OnReceived;
                 clt.Disposed -= _OnDisposed;
-                clt.Requested -= _ClientRequested;
+
                 // 置空
                 lock (s_ins._locker)
                     s_ins._client = null;
                 var obj = args.Object;
-                if (obj == null || obj is TaskCanceledException)
+                if (obj == null || obj is OperationCanceledException)
                     return;
                 Entrance.ShowError("连接中断", obj);
             }
 
             clt.Received += _OnReceived;
             clt.Disposed += _OnDisposed;
-            clt.Requested += _ClientRequested;
 
             lock (s_ins._locker)
             {
@@ -76,14 +75,19 @@ namespace Messenger.Modules
             clt.Start();
         }
 
-        private static void _ClientRequested(object sender, LinkEventArgs<Socket> e)
+        private static void _RequestHandler(Socket socket, LinkPacket packet)
         {
-            var soc = e.Object;
-            var buf = soc.ReceiveAsyncExt().WaitTimeout("Timeout when accept transport header."); var rea = new PacketReader(buf);
-            var key = rea["data"].Pull<Guid>();
-            var src = rea["source"].Pull<int>();
-
-            Share.Notify(src, key, soc)?.Wait();
+            var pth = packet.Path;
+            if (pth == "share.directory" || pth == "share.file")
+            {
+                var src = packet.Source;
+                var key = packet.Data.Pull<Guid>();
+                Share.Notify(src, key, socket)?.Wait();
+            }
+            else
+            {
+                Log.Info($"Path \"{pth}\" not supported.");
+            }
         }
 
         [Loader(0, LoaderFlags.OnExit)]

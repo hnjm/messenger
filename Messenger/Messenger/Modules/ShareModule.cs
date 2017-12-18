@@ -165,20 +165,20 @@ namespace Messenger.Modules
         /// <exception cref="IOException"></exception>
         public static FileInfo AvailableFile(string name)
         {
-            var dif = new DirectoryInfo(s_ins._savepath);
-            if (dif.Exists == false)
-                dif.Create();
-            var pth = Path.Combine(dif.FullName, name);
-            var fif = new FileInfo(pth);
-            if (fif.Exists == false)
-                return fif;
-            int idx = fif.FullName.LastIndexOf(fif.Extension);
-            var pathNoExt = (idx < 0 ? fif.FullName : fif.FullName.Substring(0, idx));
-            var str = $"{pathNoExt} [{DateTime.Now:yyyyMMdd-HHmmss-fff}-{new Random().Next():x8}]{fif.Extension}";
-            var inf = new FileInfo(str);
-            if (inf.Exists)
+            var dir = new DirectoryInfo(s_ins._savepath);
+            if (dir.Exists == false)
+                dir.Create();
+            var inf = new FileInfo(Path.Combine(dir.FullName, name));
+            if (inf.Exists == false)
+                return inf;
+
+            var pre = Path.GetFileNameWithoutExtension(name);
+            var ext = Path.GetExtension(name);
+            var str = $"{pre}@{DateTime.Now:yyyyMMdd-HHmmss-fff}{ext}";
+            var res = new FileInfo(Path.Combine(dir.FullName, str));
+            if (res.Exists)
                 throw new IOException();
-            return inf;
+            return res;
         }
 
         /// <summary>
@@ -188,19 +188,19 @@ namespace Messenger.Modules
         /// <exception cref="IOException"></exception>
         public static DirectoryInfo AvailableDirectory(string name)
         {
-            var dif = new DirectoryInfo(s_ins._savepath);
-            if (dif.Exists == false)
-                dif.Create();
-            var pth = Path.Combine(dif.FullName, name);
-            var fif = new DirectoryInfo(pth);
-            if (fif.Exists == false)
-                return fif;
+            var dir = new DirectoryInfo(s_ins._savepath);
+            if (dir.Exists == false)
+                dir.Create();
+            var pth = Path.Combine(dir.FullName, name);
+            var inf = new DirectoryInfo(pth);
+            if (inf.Exists == false)
+                return inf;
 
-            var str = $"{name} [{DateTime.Now:yyyyMMdd-HHmmss-fff}-{new Random().Next():x8}]";
-            var inf = new DirectoryInfo(Path.Combine(dif.FullName, str));
-            if (inf.Exists)
+            var str = $"{name}@{DateTime.Now:yyyyMMdd-HHmmss-fff}";
+            var res = new DirectoryInfo(Path.Combine(dir.FullName, str));
+            if (res.Exists)
                 throw new IOException();
-            return inf;
+            return res;
         }
 
         [Loader(32, LoaderFlags.OnLoad)]

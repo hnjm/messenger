@@ -17,8 +17,10 @@ namespace Mikodev.Network
         internal readonly Socket _listen = null;
         internal readonly IPEndPoint _inner = null;
         internal readonly IPEndPoint _outer = null;
+        internal readonly IPEndPoint _connected = null;
         internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
         internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+        internal readonly Action<Socket, LinkPacket> _requested;
 
         internal bool _started = false;
         internal bool _disposed = false;
@@ -44,8 +46,6 @@ namespace Mikodev.Network
 
         public event EventHandler<LinkEventArgs<Exception>> Disposed = null;
 
-        public event EventHandler<LinkEventArgs<Socket>> Requested = null;
-
         internal LinkClient(int id, Socket socket, IPEndPoint inner, IPEndPoint outer)
         {
             _id = id;
@@ -54,8 +54,12 @@ namespace Mikodev.Network
             _outer = outer ?? throw new ArgumentNullException(nameof(outer));
         }
 
-        public LinkClient(int id, EndPoint server)
+        public LinkClient(int id, IPEndPoint connect, Action<Socket, LinkPacket> request)
         {
+            _id = id;
+            _connected = connect ?? throw new ArgumentNullException(nameof(connect));
+            _requested = request ?? throw new ArgumentNullException(nameof(request));
+
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var lis = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var rsa = new RSACryptoServiceProvider();
@@ -66,7 +70,7 @@ namespace Mikodev.Network
 
             try
             {
-                soc.ConnectAsyncEx(server).WaitTimeout("Timeout when connect to server.");
+                soc.ConnectAsyncEx(connect).WaitTimeout("Timeout, at connect to server.");
                 soc.SetKeepAlive();
                 iep = (IPEndPoint)soc.LocalEndPoint;
 
@@ -82,9 +86,9 @@ namespace Mikodev.Network
                     protocol = Links.Protocol,
                     rsakey = rsa.ToXmlString(false),
                 });
-                soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout when client request.");
+                soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout, at client request.");
 
-                var rec = soc.ReceiveAsyncExt().WaitTimeout("Timeout when client response.");
+                var rec = soc.ReceiveAsyncExt().WaitTimeout("Timeout, at client response.");
                 var rea = new PacketReader(rec);
                 rea["result"].Pull<LinkError>().AssertError();
 
@@ -99,7 +103,6 @@ namespace Mikodev.Network
                 throw;
             }
 
-            _id = id;
             _socket = soc;
             _listen = lis;
             _inner = iep;
@@ -116,9 +119,9 @@ namespace Mikodev.Network
                     throw new InvalidOperationException("Client has benn marked as started or disposed!");
                 _started = true;
                 if (_listen != null)
-                    _Listener().ContinueWith(_Clean);
-                _Sender().ContinueWith(_Clean);
-                _Receiver().ContinueWith(_Clean);
+                    _Listener(_cancel.Token).ContinueWith(_Clean);
+                _Sender(_cancel.Token).ContinueWith(_Clean);
+                _Receiver(_cancel.Token).ContinueWith(_Clean);
             }
         }
 
@@ -136,7 +139,7 @@ namespace Mikodev.Network
             }
         }
 
-        internal async Task _Sender()
+        internal async Task _Sender(CancellationToken token)
         {
             bool _Dequeue(out byte[] buf)
             {
@@ -158,8 +161,7 @@ namespace Mikodev.Network
 
             while (true)
             {
-                if (_cancel.IsCancellationRequested)
-                    throw new TaskCanceledException("Client sender task exited.");
+                token.ThrowIfCancellationRequested();
                 if (_Dequeue(out var buf))
                     await _socket.SendAsyncExt(LinkCrypto.Encrypt(buf, _key, _blk));
                 else
@@ -168,12 +170,11 @@ namespace Mikodev.Network
             }
         }
 
-        internal async Task _Receiver()
+        internal async Task _Receiver(CancellationToken token)
         {
             while (true)
             {
-                if (_cancel.IsCancellationRequested)
-                    throw new TaskCanceledException("Client receiver task exited.");
+                token.ThrowIfCancellationRequested();
                 var buf = await _socket.ReceiveAsyncExt();
 
                 var rec = Received;
@@ -186,13 +187,15 @@ namespace Mikodev.Network
             }
         }
 
-        internal async Task _Listener()
+        internal async Task _Listener(CancellationToken token)
         {
             void _Invoke(Socket socket)
             {
                 Task.Run(() =>
                 {
-                    Requested?.Invoke(this, new LinkEventArgs<Socket>(socket));
+                    var buf = socket.ReceiveAsyncExt().WaitTimeout("Timeout, at receive header packet.");
+                    var pkt = new LinkPacket().LoadValue(buf);
+                    _requested.Invoke(socket, pkt);
                 })
                 .ContinueWith(task =>
                 {
@@ -203,8 +206,7 @@ namespace Mikodev.Network
 
             while (true)
             {
-                if (_cancel.IsCancellationRequested)
-                    throw new TaskCanceledException("Client listener task exited.");
+                token.ThrowIfCancellationRequested();
                 var soc = default(Socket);
 
                 try
@@ -248,7 +250,7 @@ namespace Mikodev.Network
             Task.Run(() =>
             {
                 if (err == null)
-                    err = new TaskCanceledException("Client disposed manually or by GC.");
+                    err = new OperationCanceledException("Client disposed manually or by GC.");
                 var arg = new LinkEventArgs<Exception>(err);
                 dis.Invoke(this, arg);
             });

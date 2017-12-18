@@ -116,8 +116,11 @@ namespace Messenger.Modules
             {
                 Log.Error(ex);
             }
+            finally
+            {
+                soc.Dispose();
+            }
 
-            soc.Dispose();
             stw.Stop();
             return lst;
         }

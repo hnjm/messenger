@@ -18,6 +18,7 @@ namespace Messenger.Modules
     internal class OptionModule
     {
         private const int _NoticeDelay = 1000;
+        private const int _NoticeErrorDelay = 15 * 1000 - _NoticeDelay;
         private static readonly TimeSpan _NoticeInterval = TimeSpan.FromSeconds(10);
 
         private const string _Path = nameof(Messenger) + ".settings.xml";
@@ -51,17 +52,18 @@ namespace Messenger.Modules
         public static void Load()
         {
             var fst = default(FileStream);
+            var doc = default(XmlDocument);
 
             try
             {
                 var inf = new FileInfo(_Path);
                 if (inf.Exists == false)
                     return;
-                fst = new FileStream(_Path, FileMode.Open);
-                var doc = new XmlDocument();
-                if (fst.Length <= Links.BufferLengthLimit)
-                    doc.Load(fst);
-                s_ins._Load(doc);
+                fst = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                if (fst.Length > Links.BufferLengthLimit)
+                    return;
+                doc = new XmlDocument();
+                doc.Load(fst);
             }
             catch (Exception ex)
             {
@@ -71,6 +73,9 @@ namespace Messenger.Modules
             {
                 fst?.Dispose();
             }
+
+            // Do not call this method if xml file not disposed!!!
+            s_ins._Load(doc);
         }
 
         /// <summary>
@@ -78,10 +83,6 @@ namespace Messenger.Modules
         /// </summary>
         private bool _Save(string path)
         {
-            var fst = default(FileStream);
-            var wtr = default(XmlWriter);
-            var set = new XmlWriterSettings() { Indent = true };
-
             var lst = Lock(_locker, () => _settings.ToList());
             var doc = new XmlDocument();
             var top = doc.CreateElement(_Root);
@@ -98,22 +99,24 @@ namespace Messenger.Modules
                 top.AppendChild(ele);
             }
 
+            var fst = default(FileStream);
+            var res = false;
+
             try
             {
                 fst = new FileStream(path, FileMode.Create);
-                wtr = XmlWriter.Create(fst, set);
-                doc.Save(wtr);
+                doc.Save(fst);
+                res = true;
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
-                return false;
             }
             finally
             {
-                wtr?.Dispose();
+                fst?.Dispose();
             }
-            return true;
+            return res;
         }
 
         private void _Save()
@@ -169,8 +172,10 @@ namespace Messenger.Modules
                     continue;
 
                 if (s_ins._Save(_Path) == false)
-                    continue;
-                res.Handled();
+                    await Task.Delay(_NoticeErrorDelay);
+                else
+                    res.Handled();
+                continue;
             }
         }
     }
