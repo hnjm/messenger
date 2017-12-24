@@ -226,8 +226,11 @@ namespace Mikodev.Network
 
         internal void _Clean(Task task)
         {
-            var err = task.Exception;
-            Log.Error(err);
+            var err = task.Exception.Disaggregate();
+            var a = err is SocketException soc && soc.ErrorCode == (int)SocketError.ConnectionReset;
+            var b = err is ObjectDisposedException dis && dis.ObjectName == typeof(Socket).FullName;
+            if (a == false && b == false)
+                Log.Error(err);
             _OnDispose(err);
         }
 

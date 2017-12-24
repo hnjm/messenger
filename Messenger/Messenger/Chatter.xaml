@@ -17,17 +17,18 @@
 
         <!--消息模板-->
         <ControlTemplate x:Key="MessageTemplate">
-            <Grid Margin="5" Width="{Binding ElementName=uiMessageGrid, Path=ActualWidth}">
+            <Grid Margin="0,6" Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollContentPresenter}, Path=ActualWidth}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Width="48"/>
+                    <ColumnDefinition Name="LeftDefinition" Width="0"/>
                     <ColumnDefinition/>
-                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Name="RightDefinition" Width="48"/>
+                    <ColumnDefinition Width="48"/>
                 </Grid.ColumnDefinitions>
-                <local:ControlProfileImage x:Name="control" Grid.ColumnSpan="3" Height="32" Width="32"
-                                           DataContext="{Binding Path=Profile}"
-                                           HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                                           VerticalAlignment="Top"/>
-                <Grid Grid.Column="1" Margin="10,0">
+                <local:ControlProfileImage x:Name="ProfileImage" Grid.Column="0" Height="32" Width="32"
+                                           HorizontalAlignment="Center"  VerticalAlignment="Top"
+                                           DataContext="{Binding Path=Profile}"/>
+                <Grid Grid.Column="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
@@ -78,6 +79,9 @@
                 <DataTrigger Binding="{Binding Path=Source}" Value="{x:Static module:LinkModule.Id}">
                     <Setter Property="Background" Value="#2B3335"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
+                    <Setter TargetName="ProfileImage" Property="Grid.Column" Value="4"/>
+                    <Setter TargetName="LeftDefinition" Property="Width" Value="48"/>
+                    <Setter TargetName="RightDefinition" Property="Width" Value="0"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=Path}" Value="text">
                     <Setter TargetName="ViewTextBox" Property="Visibility" Value="Visible"/>
@@ -125,7 +129,7 @@
         </ControlTemplate>
 
         <ControlTemplate x:Key="MessageNotice">
-            <Grid Margin="5" Width="{Binding ElementName=uiMessageGrid, Path=ActualWidth}">
+            <Grid Margin="0,4" Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ScrollContentPresenter}, Path=ActualWidth}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -178,7 +182,6 @@
                 <ColumnDefinition Width="8*" MinWidth="500"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            <Grid x:Name="uiMessageGrid" Margin="32,0" Grid.Column="1"/>
             <ListBox x:Name="uiMessageBox" Grid.Column="1" BorderThickness="0" Background="Transparent" Style="{StaticResource ThinListBox}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
