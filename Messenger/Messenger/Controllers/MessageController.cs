@@ -16,7 +16,7 @@ namespace Messenger.Controllers
         [Route("msg.text")]
         public void Text()
         {
-            var txt = Data.Pull<string>();
+            var txt = Data.GetValue<string>();
             HistoryModule.Insert(Source, Target, "text", txt);
         }
 
@@ -26,7 +26,7 @@ namespace Messenger.Controllers
         [Route("msg.image")]
         public void Image()
         {
-            var buf = Data.PullList();
+            var buf = Data.GetBytes();
             HistoryModule.Insert(Source, Target, "image", buf);
         }
 
@@ -37,8 +37,8 @@ namespace Messenger.Controllers
         public void Notice()
         {
             var dat = Data;
-            var typ = Data["type"].Pull<string>();
-            var par = Data["parameter"].Pull<string>();
+            var typ = Data["type"].GetValue<string>();
+            var par = Data["parameter"].GetValue<string>();
             var str = typ == "share.file"
                 ? $"已成功接收文件 {par}"
                 : typ == "share.dir"

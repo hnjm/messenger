@@ -90,9 +90,9 @@ namespace Mikodev.Network
             var ori = new PacketReader(buf);
             src._buf = buf;
             src._ori = ori;
-            src._src = ori["source"].Pull<int>();
-            src._tar = ori["target"].Pull<int>();
-            src._pth = ori["path"].Pull<string>();
+            src._src = ori["source"].GetValue<int>();
+            src._tar = ori["target"].GetValue<int>();
+            src._pth = ori["path"].GetValue<string>();
             src._dat = ori["data", true];
             return src;
         }

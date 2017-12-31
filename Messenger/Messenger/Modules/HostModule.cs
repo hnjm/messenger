@@ -54,11 +54,11 @@ namespace Messenger.Modules
                 var rea = new PacketReader(buffer, offset, length);
                 var inf = new Host()
                 {
-                    Protocol = rea["protocol"].Pull<string>(),
-                    Port = rea["port"].Pull<int>(),
-                    Name = rea["name"].Pull<string>(),
-                    Count = rea["count"].Pull<int>(),
-                    CountLimit = rea["limit"].Pull<int>(),
+                    Protocol = rea["protocol"].GetValue<string>(),
+                    Port = rea["port"].GetValue<int>(),
+                    Name = rea["name"].GetValue<string>(),
+                    Count = rea["count"].GetValue<int>(),
+                    CountLimit = rea["limit"].GetValue<int>(),
                 };
                 return inf;
             }
@@ -78,7 +78,7 @@ namespace Messenger.Modules
             var lst = new List<Host>();
             var stw = new Stopwatch();
             var soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            var txt = new PacketWriter().Push("protocol", Links.Protocol).GetBytes();
+            var txt = new PacketWriter().SetValue("protocol", Links.Protocol).GetBytes();
             var mis = new List<Task>();
 
             void _Refresh()

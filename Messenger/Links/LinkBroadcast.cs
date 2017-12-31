@@ -61,9 +61,9 @@ namespace Mikodev.Network
                     var len = _broadcast.ReceiveFrom(buf, ref iep);
 
                     var rea = new PacketReader(buf, 0, len);
-                    if (string.Equals(Links.Protocol, rea["protocol", true]?.Pull<string>()) == false)
+                    if (string.Equals(Links.Protocol, rea["protocol", true]?.GetValue<string>()) == false)
                         continue;
-                    var res = wtr.Push("count", _clients.Count).GetBytes();
+                    var res = wtr.SetValue("count", _clients.Count).GetBytes();
                     var sub = _broadcast.SendTo(res, iep);
                 }
                 catch (SocketException ex)

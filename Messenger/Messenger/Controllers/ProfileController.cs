@@ -25,14 +25,14 @@ namespace Messenger.Controllers
         [Route("user.profile")]
         public void Profile()
         {
-            var cid = Data["id"].Pull<int>();
+            var cid = Data["id"].GetValue<int>();
             var pro = new Profile(cid)
             {
-                Name = Data["name"].Pull<string>(),
-                Text = Data["text"].Pull<string>(),
+                Name = Data["name"].GetValue<string>(),
+                Text = Data["text"].GetValue<string>(),
             };
 
-            var buf = Data["image"].PullList();
+            var buf = Data["image"].GetBytes();
             if (buf.Length > 0)
                 pro.Image = CacheModule.SetBuffer(buf, true);
             ProfileModule.Insert(pro);
@@ -44,7 +44,7 @@ namespace Messenger.Controllers
         [Route("user.list")]
         public void List()
         {
-            var lst = Data.PullList<int>().ToList();
+            var lst = Data.GetArray<int>();
             ProfileModule.Remove(lst);
         }
     }

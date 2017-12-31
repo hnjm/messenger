@@ -62,18 +62,18 @@ namespace Messenger.Models
                 throw new ArgumentNullException(nameof(reader));
 
             _id = id;
-            var typ = reader["type"].Pull<string>();
+            var typ = reader["type"].GetValue<string>();
             if (typ == "file")
-                _length = reader["length"].Pull<long>();
+                _length = reader["length"].GetValue<long>();
             else if (typ == "dir")
                 _batch = true;
             else
                 throw new ApplicationException("Invalid share type!");
 
-            _key = reader["key"].Pull<Guid>();
-            _origin = reader["name"].Pull<string>();
+            _key = reader["key"].GetValue<Guid>();
+            _origin = reader["name"].GetValue<string>();
             _name = _origin;
-            _endpoints = reader["endpoints"].PullList<IPEndPoint>().ToList();
+            _endpoints = reader["endpoints"].GetList<IPEndPoint>();
             _status = ShareStatus.等待;
         }
 
@@ -92,7 +92,6 @@ namespace Messenger.Models
             async Task _Request()
             {
                 // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
-                //var soc = _ConnectAny();
                 var soc = _endpoints.Select(r => _Connect(r)).FirstOrDefault(r => r != null) ?? throw new ApplicationException("Source network unreachable.");
 
                 lock (_locker)

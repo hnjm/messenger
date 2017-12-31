@@ -222,19 +222,19 @@ namespace Messenger.Extensions
             {
                 var buf = await _socket.ReceiveAsyncExt();
                 var rea = new PacketReader(buf);
-                var typ = rea["type"].Pull<string>();
+                var typ = rea["type"].GetValue<string>();
 
                 if (typ == "dir")
                 {
                     // 重新拼接路径
-                    var dir = rea["path"].PullList<string>();
+                    var dir = rea["path"].GetEnumerable<string>();
                     cur = Path.Combine(new[] { path }.Concat(dir).ToArray());
                     Directory.CreateDirectory(cur);
                 }
                 else if (typ == "file")
                 {
-                    var key = rea["path"].Pull<string>();
-                    var len = rea["length"].Pull<long>();
+                    var key = rea["path"].GetValue<string>();
+                    var len = rea["length"].GetValue<long>();
                     var pth = Path.Combine(cur, key);
                     await _socket.ReceiveFileEx(pth, len, slice, token);
                 }

@@ -111,12 +111,12 @@ namespace Mikodev.Network
             {
                 var rea = new PacketReader(buf);
                 var rsa = new RSACryptoServiceProvider();
-                if (string.Equals(rea["protocol"].Pull<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
+                if (string.Equals(rea["protocol"].GetValue<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
-                cid = rea["source"].Pull<int>();
+                cid = rea["source"].GetValue<int>();
                 err = _Check(cid);
-                rsa.FromXmlString(rea["rsakey"].Pull<string>());
-                iep = rea["endpoint"].Pull<IPEndPoint>();
+                rsa.FromXmlString(rea["rsakey"].GetValue<string>());
+                iep = rea["endpoint"].GetValue<IPEndPoint>();
                 oep = (IPEndPoint)socket.RemoteEndPoint;
                 var res = PacketWriter.Serialize(new
                 {
@@ -230,7 +230,7 @@ namespace Mikodev.Network
             {
                 if (obj.Path == "user.group")
                 {
-                    var lst = obj.Data.PullList<int>().Where(r => r < Links.Id);
+                    var lst = obj.Data.GetArray<int>().Where(r => r < Links.Id);
                     var set = new HashSet<int>(lst);
                     if (set.Count > Links.GroupLabelLimit)
                         throw new LinkException(LinkError.GroupLimited);

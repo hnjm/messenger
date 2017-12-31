@@ -81,7 +81,7 @@ namespace Messenger.Modules
             if (pth == "share.directory" || pth == "share.file")
             {
                 var src = packet.Source;
-                var key = packet.Data.Pull<Guid>();
+                var key = packet.Data.GetValue<Guid>();
                 Share.Notify(src, key, socket)?.Wait();
             }
             else
