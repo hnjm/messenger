@@ -110,20 +110,26 @@ namespace Mikodev.Network
             byte[] _Response(byte[] buf)
             {
                 var rea = new PacketReader(buf);
-                var rsa = new RSACryptoServiceProvider();
                 if (string.Equals(rea["protocol"].GetValue<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
                 cid = rea["source"].GetValue<int>();
-                err = _Check(cid);
-                rsa.FromXmlString(rea["rsakey"].GetValue<string>());
+                var mod = rea["rsa/modulus"].GetBytes();
+                var exp = rea["rsa/exponent"].GetBytes();
                 iep = rea["endpoint"].GetValue<IPEndPoint>();
                 oep = (IPEndPoint)socket.RemoteEndPoint;
+                err = _Check(cid);
+                var rsa = new RSACryptoServiceProvider();
+                var par = new RSAParameters() { Exponent = exp, Modulus = mod };
+                rsa.ImportParameters(par);
                 var res = PacketWriter.Serialize(new
                 {
                     result = err,
-                    aeskey = rsa.Encrypt(key, true),
-                    aesiv = rsa.Encrypt(blk, true),
                     endpoint = oep,
+                    aes = new
+                    {
+                        key = rsa.Encrypt(key, true),
+                        iv = rsa.Encrypt(blk, true),
+                    }
                 });
                 return res.GetBytes();
             }

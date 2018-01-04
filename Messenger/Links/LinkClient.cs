@@ -63,6 +63,7 @@ namespace Mikodev.Network
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var lis = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var rsa = new RSACryptoServiceProvider();
+            var par = rsa.ExportParameters(false);
             var iep = default(IPEndPoint);
             var oep = default(IPEndPoint);
             var key = default(byte[]);
@@ -84,7 +85,11 @@ namespace Mikodev.Network
                     endpoint = iep,
                     path = "link.connect",
                     protocol = Links.Protocol,
-                    rsakey = rsa.ToXmlString(false),
+                    rsa = new
+                    {
+                        modulus = par.Modulus,
+                        exponent = par.Exponent,
+                    }
                 });
                 soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout, at client request.");
 
@@ -93,8 +98,8 @@ namespace Mikodev.Network
                 rea["result"].GetValue<LinkError>().AssertError();
 
                 oep = rea["endpoint"].GetValue<IPEndPoint>();
-                key = rsa.Decrypt(rea["aeskey"].GetBytes(), true);
-                blk = rsa.Decrypt(rea["aesiv"].GetBytes(), true);
+                key = rsa.Decrypt(rea["aes/key"].GetBytes(), true);
+                blk = rsa.Decrypt(rea["aes/iv"].GetBytes(), true);
             }
             catch (Exception)
             {
