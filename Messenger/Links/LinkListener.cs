@@ -118,7 +118,7 @@ namespace Mikodev.Network
                 iep = rea["endpoint"].GetValue<IPEndPoint>();
                 oep = (IPEndPoint)socket.RemoteEndPoint;
                 err = _Check(cid);
-                var rsa = new RSACryptoServiceProvider();
+                var rsa = RSA.Create();
                 var par = new RSAParameters() { Exponent = exp, Modulus = mod };
                 rsa.ImportParameters(par);
                 var res = PacketWriter.Serialize(new
@@ -127,8 +127,8 @@ namespace Mikodev.Network
                     endpoint = oep,
                     aes = new
                     {
-                        key = rsa.Encrypt(key, true),
-                        iv = rsa.Encrypt(blk, true),
+                        key = rsa.Encrypt(key, RSAEncryptionPadding.OaepSHA1),
+                        iv = rsa.Encrypt(blk, RSAEncryptionPadding.OaepSHA1),
                     }
                 });
                 return res.GetBytes();

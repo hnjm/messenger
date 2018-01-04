@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Logger
@@ -12,25 +13,12 @@ namespace Mikodev.Logger
         /// </summary>
         internal static readonly string _prefix = $"[{nameof(Logger)}]";
         internal static Logger s_log = null;
-        internal static string s_pre = null;
-        internal static int s_idx = 0;
-
-        internal static string _FilePath([CallerFilePath] string file = null) => file;
-
-        static Log()
-        {
-            var pth = _FilePath();
-            var idx = 0;
-            if (pth == null || (idx = pth.LastIndexOf(nameof(Mikodev.Logger)) - 1) < 0)
-                Environment.FailFast("Logger initial error!");
-            var pre = pth.Substring(0, idx);
-            s_pre = pre;
-            s_idx = pre.Length;
-            Trace.Listeners.Add(new LogTrace());
-        }
+        internal static int s_trace = 0;
 
         public static void SetPath(string path)
         {
+            if (Interlocked.CompareExchange(ref s_trace, 1, 0) == 0)
+                Trace.Listeners.Add(new LogTrace());
             var log = new Logger(path);
             s_log = log;
         }
@@ -55,9 +43,6 @@ namespace Mikodev.Logger
             if (message == null)
                 return;
             var lbr = Environment.NewLine;
-
-            if (file != null && file.StartsWith(s_pre))
-                file = '~' + file.Substring(s_idx);
 
             var msg = $"[时间: {DateTime.Now:u}]" + lbr +
                 $"[文件: {file}]" + lbr +
