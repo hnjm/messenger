@@ -89,7 +89,7 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(IsStarted));
             }
 
-            async Task _Request()
+            return Task.Run(() =>
             {
                 // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
                 var soc = _endpoints.Select(r => _Connect(r)).FirstOrDefault(r => r != null) ?? throw new ApplicationException("Source network unreachable.");
@@ -111,12 +111,11 @@ namespace Messenger.Models
                     source = LinkModule.Id,
                     target = _id,
                 });
-                await soc.SendAsyncExt(buf.GetBytes());
-            }
-
-            // 在接收函数退出时设置状态并释放资源
-            return Task.Run(_Request).ContinueWith(t =>
+                return soc.SendAsyncExt(buf.GetBytes());
+            })
+            .ContinueWith(t =>
             {
+                // 在接收函数退出时设置状态并释放资源
                 var exc = t.Exception;
                 if (exc == null)
                 {
