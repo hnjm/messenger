@@ -115,7 +115,7 @@ namespace Messenger.Models
             }
 
             // 在接收函数退出时设置状态并释放资源
-            return _Request().ContinueWith(t =>
+            return Task.Run(_Request).ContinueWith(t =>
             {
                 var exc = t.Exception;
                 if (exc == null)
