@@ -1,7 +1,6 @@
 ﻿using Messenger.Models;
 using Messenger.Modules;
 using Mikodev.Network;
-using System.Linq;
 
 namespace Messenger.Controllers
 {
@@ -32,7 +31,7 @@ namespace Messenger.Controllers
                 Text = Data["text"].GetValue<string>(),
             };
 
-            var buf = Data["image"].GetBytes();
+            var buf = Data["image"].GetArray<byte>();
             if (buf.Length > 0)
                 pro.Image = CacheModule.SetBuffer(buf, true);
             ProfileModule.Insert(pro);

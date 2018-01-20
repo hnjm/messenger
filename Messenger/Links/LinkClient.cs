@@ -98,8 +98,8 @@ namespace Mikodev.Network
                 rea["result"].GetValue<LinkError>().AssertError();
 
                 oep = rea["endpoint"].GetValue<IPEndPoint>();
-                key = rsa.Decrypt(rea["aes/key"].GetBytes(), RSAEncryptionPadding.OaepSHA1);
-                blk = rsa.Decrypt(rea["aes/iv"].GetBytes(), RSAEncryptionPadding.OaepSHA1);
+                key = rsa.Decrypt(rea["aes/key"].GetArray<byte>(), RSAEncryptionPadding.OaepSHA1);
+                blk = rsa.Decrypt(rea["aes/iv"].GetArray<byte>(), RSAEncryptionPadding.OaepSHA1);
             }
             catch (Exception)
             {
@@ -194,18 +194,18 @@ namespace Mikodev.Network
 
         internal async Task _Listener(CancellationToken token)
         {
-            void _Invoke(Socket socket)
+            void _Invoke(Socket soc)
             {
                 Task.Run(() =>
                 {
-                    var buf = socket.ReceiveAsyncExt().WaitTimeout("Timeout, at receive header packet.");
+                    var buf = soc.ReceiveAsyncExt().WaitTimeout("Timeout, at receive header packet.");
                     var pkt = new LinkPacket().LoadValue(buf);
-                    _requested.Invoke(socket, pkt);
+                    _requested.Invoke(soc, pkt);
                 })
                 .ContinueWith(task =>
                 {
                     Log.Error(task.Exception);
-                    socket.Dispose();
+                    soc.Dispose();
                 });
             }
 
@@ -220,11 +220,10 @@ namespace Mikodev.Network
                     soc.SetKeepAlive();
                     _Invoke(soc);
                 }
-                catch (SocketException ex)
+                catch (Exception)
                 {
-                    Log.Error(ex);
                     soc?.Dispose();
-                    continue;
+                    throw;
                 }
             }
         }
@@ -232,9 +231,9 @@ namespace Mikodev.Network
         internal void _Clean(Task task)
         {
             var err = task.Exception.Disaggregate();
-            var a = err is SocketException soc && soc.ErrorCode == (int)SocketError.ConnectionReset;
-            var b = err is ObjectDisposedException dis && dis.ObjectName == typeof(Socket).FullName;
-            if (a == false && b == false)
+            if (err != null &&
+                err is SocketException soc && soc.SocketErrorCode == SocketError.ConnectionReset &&
+                err is ObjectDisposedException dis && dis.ObjectName == typeof(Socket).FullName)
                 Log.Error(err);
             _OnDispose(err);
         }

@@ -38,7 +38,7 @@
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0} {1:HH:mm:ss}">
                                     <Binding Path="Profile.Name"/>
-                                    <Binding Path="Timestamp"/>
+                                    <Binding Path="DateTime"/>
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
@@ -136,7 +136,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Margin="0,4" Foreground="#FF808080" FontSize="12"
                            HorizontalAlignment="Center"
-                           Text="{Binding Path=Timestamp, StringFormat=HH:mm:ss}">
+                           Text="{Binding Path=DateTime, StringFormat=HH:mm:ss}">
                 </TextBlock>
                 <Grid Grid.Row="1" HorizontalAlignment="Center">
                     <TextBlock FontSize="12" Foreground="#FF808080">

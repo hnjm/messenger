@@ -26,7 +26,7 @@ namespace Messenger.Controllers
         [Route("msg.image")]
         public void Image()
         {
-            var buf = Data.GetBytes();
+            var buf = Data.GetArray<byte>();
             HistoryModule.Insert(Source, Target, "image", buf);
         }
 

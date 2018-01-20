@@ -8,44 +8,74 @@ namespace Messenger.Models
     /// </summary>
     public class Packet
     {
-        private int _target = 0;
-        private int _source = 0;
-        private int _group = 0;
+        private readonly string _key;
+        private readonly DateTime _timestamp;
+        private readonly int _source;
+        private readonly int _target;
+        private readonly int _index;
+        private readonly string _path;
+        private readonly object _value;
+
         private string _image = null;
-        private object _value = null;
         private Profile _profile = null;
-        private DateTime _time = DateTime.Now;
-        private string _path = null;
+
+        public Packet(string key, DateTime datetime, int index, int source, int target, string path, object value)
+        {
+            _key = key ?? throw new ArgumentNullException(nameof(key));
+            _timestamp = datetime;
+
+            _path = path ?? throw new ArgumentNullException(nameof(path));
+            _value = value;
+
+            _source = source;
+            _target = target;
+            _index = index;
+        }
+
+        public Packet(int index, int source, int target, string path, object value)
+        {
+            _path = path ?? throw new ArgumentNullException(nameof(path));
+            _value = value;
+
+            _source = source;
+            _target = target;
+            _index = index;
+
+            _key = Guid.NewGuid().ToString();
+            _timestamp = DateTime.Now;
+        }
+
+        public string Key => _key;
 
         /// <summary>
-        /// 收信人编号
+        /// 分组索引
         /// </summary>
-        public int Target { get => _target; set => _target = value; }
-
-        /// <summary>
-        /// 发信人编号
-        /// </summary>
-        public int Source { get => _source; set => _source = value; }
-
-        /// <summary>
-        /// 分组编号
-        /// </summary>
-        public int Group { get => _group; set => _group = value; }
-
-        /// <summary>
-        /// 消息类型
-        /// </summary>
-        public string Path { get => _path; set => _path = value; }
-
-        /// <summary>
-        /// 底层数据 (怎么解读取决于 <see cref="Path"/>)
-        /// </summary>
-        public object Object { get => _value; set => _value = value; }
+        public int Index => _index;
 
         /// <summary>
         /// 消息时间
         /// </summary>
-        public DateTime Timestamp { get => _time; set => _time = value; }
+        public DateTime DateTime => _timestamp;
+
+        /// <summary>
+        /// 收信人编号
+        /// </summary>
+        public int Target => _target;
+
+        /// <summary>
+        /// 发信人编号
+        /// </summary>
+        public int Source => _source;
+
+        /// <summary>
+        /// 消息类型
+        /// </summary>
+        public string Path => _path;
+
+        /// <summary>
+        /// 底层数据 (怎么解读取决于 <see cref="Path"/>)
+        /// </summary>
+        public object Object => _value;
 
         /// <summary>
         /// 发送者信息

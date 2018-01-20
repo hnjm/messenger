@@ -22,6 +22,7 @@ namespace Messenger
                 uiEnterRadio.IsChecked = true;
             else
                 uiCtrlEnterRadio.IsChecked = true;
+            return;
         }
 
         private void _ButtonClick(object sender, RoutedEventArgs e)
@@ -40,7 +41,7 @@ namespace Messenger
                 if (mai == null)
                     return;
                 LinkModule.Shutdown();
-                ProfileModule.SetInscope(null);
+                ProfileModule.Shutdown();
                 mai.frame.Navigate(new Connection());
             }
         }
@@ -52,6 +53,7 @@ namespace Messenger
                 SettingModule.UseCtrlEnter = false;
             else if (src == uiCtrlEnterRadio)
                 SettingModule.UseCtrlEnter = true;
+            return;
         }
     }
 }

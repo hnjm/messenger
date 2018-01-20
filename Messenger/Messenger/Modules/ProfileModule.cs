@@ -40,19 +40,19 @@ namespace Messenger.Modules
         public bool HasGroup
         {
             get => _hasgroup;
-            set => _EmitChange(ref _hasgroup, value);
+            private set => _EmitChange(ref _hasgroup, value);
         }
 
         public bool HasRecent
         {
             get => _hasrecent;
-            set => _EmitChange(ref _hasrecent, value);
+            private set => _EmitChange(ref _hasrecent, value);
         }
 
         public bool HasClient
         {
             get => _hasclient;
-            set => _EmitChange(ref _hasclient, value);
+            private set => _EmitChange(ref _hasclient, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -279,6 +279,11 @@ namespace Messenger.Modules
 
             s_ins._inscope = profile;
             s_ins._inscopechanged?.Invoke(s_ins, new EventArgs());
+        }
+
+        public static void Shutdown()
+        {
+            s_ins._inscope = null;
         }
 
         /// <summary>

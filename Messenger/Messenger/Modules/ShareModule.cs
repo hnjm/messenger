@@ -117,14 +117,14 @@ namespace Messenger.Modules
         /// <summary>
         /// 取消所有共享任务
         /// </summary>
-        public static void Close()
+        public static void Shutdown()
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
                 foreach (var i in s_ins._shareList)
-                    ((IDisposable)i).Dispose();
+                    i.Dispose();
                 foreach (var i in s_ins._receiverList)
-                    ((IDisposable)i).Dispose();
+                    i.Dispose();
             });
         }
 

@@ -119,7 +119,7 @@ namespace Messenger.Modules
             return res;
         }
 
-        private void _Save()
+        private void _Exit()
         {
             var res = _source.GetNotice(true);
             if (res.IsAny == false)
@@ -156,7 +156,7 @@ namespace Messenger.Modules
         public static void Update(string key, string value) => s_ins._Update(key, value);
 
         [Loader(int.MaxValue, LoaderFlags.OnExit)]
-        public static void Save() => s_ins._Save();
+        public static void Exit() => s_ins._Exit();
 
         [Loader(0, LoaderFlags.AsTask)]
         public static async Task Scan(CancellationToken token)

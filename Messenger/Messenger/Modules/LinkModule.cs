@@ -99,7 +99,7 @@ namespace Messenger.Modules
                 s_ins._client = null;
             }
 
-            ShareModule.Close();
+            ShareModule.Shutdown();
             ProfileModule.Clear();
             HistoryModule.Handled -= _HistoryHandled;
             ShareModule.PendingList.ListChanged -= _PendingListChanged;

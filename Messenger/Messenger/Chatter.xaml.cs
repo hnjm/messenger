@@ -62,7 +62,7 @@ namespace Messenger
         /// </summary>
         private void _HistoryReceiving(object sender, LinkEventArgs<Packet> e)
         {
-            if (e.Object.Group != _profile.Id)
+            if (e.Object.Index != _profile.Id)
                 return;
             e.Finish = true;
         }

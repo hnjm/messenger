@@ -113,8 +113,8 @@ namespace Mikodev.Network
                 if (string.Equals(rea["protocol"].GetValue<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
                 cid = rea["source"].GetValue<int>();
-                var mod = rea["rsa/modulus"].GetBytes();
-                var exp = rea["rsa/exponent"].GetBytes();
+                var mod = rea["rsa/modulus"].GetArray<byte>();
+                var exp = rea["rsa/exponent"].GetArray<byte>();
                 iep = rea["endpoint"].GetValue<IPEndPoint>();
                 oep = (IPEndPoint)socket.RemoteEndPoint;
                 err = _Check(cid);

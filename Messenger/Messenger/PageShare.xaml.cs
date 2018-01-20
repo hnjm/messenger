@@ -51,7 +51,7 @@ namespace Messenger
             }
             else if (tag == "stop")
             {
-                ShareModule.Close();
+                ShareModule.Shutdown();
             }
         }
     }
