@@ -62,34 +62,27 @@ namespace Mikodev.Network
 
         private async Task _Listen()
         {
-            void _Invoke(Socket soc) => Task.Run(() => _Connect(soc)).ContinueWith(tsk =>
+            void _Invoke(Socket soc) => Task.Run(() =>
             {
-                var ex = tsk.Exception;
-                if (ex == null)
-                    return;
-                Log.Error(ex);
-                soc.Dispose();
+                try
+                {
+                    soc.SetKeepAlive();
+                    _Accept(soc);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    soc.Dispose();
+                }
             });
 
             while (true)
             {
-                var soc = default(Socket);
-
-                try
-                {
-                    soc = await _socket.AcceptAsyncEx();
-                    soc.SetKeepAlive();
-                    _Invoke(soc);
-                }
-                catch (SocketException ex)
-                {
-                    Log.Error(ex);
-                    soc?.Dispose();
-                }
+                _Invoke(await _socket.AcceptAsyncEx());
             }
         }
 
-        private void _Connect(Socket socket)
+        private void _Accept(Socket socket)
         {
             LinkError _Check(int id)
             {
@@ -134,12 +127,17 @@ namespace Mikodev.Network
                 return res.GetBytes();
             }
 
+            async Task _Accept()
+            {
+                var buf = await socket.ReceiveAsyncExt().TimeoutAfter("Listener request timeout.");
+                var res = _Response(buf);
+                await socket.SendAsyncExt(res).TimeoutAfter("Listener response timeout.");
+                err.AssertError();
+            }
+
             try
             {
-                var buf = socket.ReceiveAsyncExt().WaitTimeout("Listener request timeout.");
-                var res = _Response(buf);
-                socket.SendAsyncExt(res).WaitTimeout("Listener response timeout.");
-                err.AssertError();
+                _Accept().Wait();
             }
             catch (Exception)
             {
@@ -148,7 +146,7 @@ namespace Mikodev.Network
                 throw;
             }
 
-            var clt = new LinkClient(cid, socket, iep, oep) { _key = key, _blk = blk };
+            var clt = new LinkClient(cid, socket, iep, oep, key, blk);
             _clients.TryUpdate(cid, clt, null).AssertFatal("Failed to update client!");
 
             clt.Received += _ClientReceived;
@@ -156,7 +154,7 @@ namespace Mikodev.Network
             clt.Start();
         }
 
-        private void _ClientReset(LinkClient client, IEnumerable<int> groups = null)
+        private void _ClientRefresh(LinkClient client, IEnumerable<int> groups = null)
         {
             /* Require lock */
             var cid = client._id;
@@ -218,7 +216,7 @@ namespace Mikodev.Network
             var clt = (LinkClient)sender;
 
             lock (_locker)
-                _ClientReset(clt);
+                _ClientRefresh(clt);
             _notice.Update();
 
             clt.Received -= _ClientReceived;
@@ -242,7 +240,7 @@ namespace Mikodev.Network
                         throw new LinkException(LinkError.GroupLimited);
                     var clt = (LinkClient)sender;
                     lock (_locker)
-                        _ClientReset(clt, set);
+                        _ClientRefresh(clt, set);
                     return;
                 }
 

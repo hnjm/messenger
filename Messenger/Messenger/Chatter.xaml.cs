@@ -1,4 +1,5 @@
-﻿using Messenger.Models;
+﻿using Messenger.Extensions;
+using Messenger.Models;
 using Messenger.Modules;
 using Microsoft.Win32;
 using Mikodev.Logger;
@@ -39,7 +40,7 @@ namespace Messenger
             uiProfileGrid.DataContext = _profile;
             uiMessageBox.ItemsSource = _messages;
             _messages.ListChanged += _ListChanged;
-            _ScrollDown();
+            uiMessageBox.ScrollIntoLastEx();
         }
 
         private void _Unloaded(object sender, RoutedEventArgs e)
@@ -54,7 +55,7 @@ namespace Messenger
         {
             if (e.ListChangedType != ListChangedType.ItemAdded)
                 return;
-            _ScrollDown();
+            uiMessageBox.ScrollIntoLastEx();
         }
 
         /// <summary>
@@ -71,26 +72,20 @@ namespace Messenger
         {
             if (sender != uiInputBox || e.Key != Key.Enter)
                 return;
-            var val = SettingModule.UseCtrlEnter;
             var mod = e.KeyboardDevice.Modifiers;
-            if ((mod & ModifierKeys.Shift) == ModifierKeys.Shift)
-                return;
-            if ((mod & ModifierKeys.Control) == ModifierKeys.Control && val == false)
-                return;
-            if ((mod & ModifierKeys.Control) != ModifierKeys.Control && val == true)
-                return;
-            _SendText();
+            var ins = SettingModule.Instance;
+            if (ins.UseControlEnter && mod == ModifierKeys.Control || ins.UseEnter && mod == ModifierKeys.None)
+                _SendText();
+            else
+                uiInputBox.InsertEx(Environment.NewLine);
             e.Handled = true;
         }
 
         private void _Click(object sender, RoutedEventArgs e)
         {
             var tag = (e.OriginalSource as Button)?.Tag as string;
-            if (tag == "symbol" && uiSymbolGrid.Visibility != Visibility.Visible)
-                uiSymbolGrid.Visibility = Visibility.Visible;
-            else
-                uiSymbolGrid.Visibility = Visibility.Collapsed;
-
+            if (tag == null)
+                return;
             if (tag == "text")
                 _SendText();
             else if (tag == "image")
@@ -98,34 +93,6 @@ namespace Messenger
             else if (tag == "clean")
                 HistoryModule.Clear(_profile.Id);
             uiInputBox.Focus();
-        }
-
-        private void _SymbolClick(object sender, RoutedEventArgs e)
-        {
-            if ((sender as FrameworkElement)?.DataContext is string con)
-                _TextBoxInsert(uiInputBox, con);
-            uiInputBox.Focus();
-        }
-
-        private void _ScrollDown()
-        {
-            var idx = _messages.Count - 1;
-            if (idx < 0)
-                return;
-            uiMessageBox.ScrollIntoView(_messages[idx]);
-        }
-
-        private void _TextBoxInsert(TextBox textbox, string str)
-        {
-            var txt = textbox.Text;
-            var sta = textbox.SelectionStart;
-            var len = textbox.SelectionLength;
-            var bef = txt.Substring(0, sta);
-            var aft = txt.Substring(sta + len);
-            var val = string.Concat(bef, str, aft);
-            textbox.Text = val;
-            textbox.SelectionStart = sta + str.Length;
-            textbox.SelectionLength = 0;
         }
 
         private void _SendText()

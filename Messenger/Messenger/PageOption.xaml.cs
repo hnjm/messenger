@@ -12,20 +12,9 @@ namespace Messenger
         public PageOption()
         {
             InitializeComponent();
-            Loaded += _Loaded;
         }
 
-        private void _Loaded(object sender, RoutedEventArgs e)
-        {
-            var val = SettingModule.UseCtrlEnter;
-            if (val == false)
-                uiEnterRadio.IsChecked = true;
-            else
-                uiCtrlEnterRadio.IsChecked = true;
-            return;
-        }
-
-        private void _ButtonClick(object sender, RoutedEventArgs e)
+        private void _Click(object sender, RoutedEventArgs e)
         {
             var tag = (e.OriginalSource as Button)?.Tag as string;
             if (tag == null)
@@ -44,16 +33,6 @@ namespace Messenger
                 ProfileModule.Shutdown();
                 mai.frame.Navigate(new Connection());
             }
-        }
-
-        private void _RadioClick(object sender, RoutedEventArgs e)
-        {
-            var src = e.OriginalSource;
-            if (src == uiEnterRadio)
-                SettingModule.UseCtrlEnter = false;
-            else if (src == uiCtrlEnterRadio)
-                SettingModule.UseCtrlEnter = true;
-            return;
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Messenger
         /// </summary>
         /// <param name="title">标题</param>
         /// <param name="content">内容 (调用 <see cref="object.ToString"/> 方法)</param>
-        public static void ShowError(string title, object content)
+        public static void ShowError(string title, Exception content)
         {
             var app = Application.Current;
             var dis = app.Dispatcher;

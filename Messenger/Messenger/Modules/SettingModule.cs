@@ -1,35 +1,63 @@
 ﻿using Messenger.Models;
+using System.ComponentModel;
 
 namespace Messenger.Modules
 {
     /// <summary>
     /// 管理用户界面设置
     /// </summary>
-    internal class SettingModule
+    internal class SettingModule : INotifyPropertyChanging, INotifyPropertyChanged
     {
         private const string _KeyCtrlEnter = "hotkey-control-enter";
 
-        private bool _ctrlenter = false;
+        private SettingModule() { }
 
         private static readonly SettingModule s_ins = new SettingModule();
 
-        /// <summary>
-        /// 使用 ctrl + enter 发送消息还是 enter
-        /// </summary>
-        public static bool UseCtrlEnter
+        public static SettingModule Instance => s_ins;
+
+        private bool _ctrlenter = false;
+
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public bool UseControlEnter
         {
-            get => s_ins._ctrlenter;
+            get => _ctrlenter;
             set
             {
-                s_ins._ctrlenter = value;
-                OptionModule.Update(_KeyCtrlEnter, value.ToString());
+                var changing = PropertyChanging;
+                if (changing != null)
+                {
+                    changing.Invoke(this, new PropertyChangingEventArgs(nameof(UseEnter)));
+                    changing.Invoke(this, new PropertyChangingEventArgs(nameof(UseControlEnter)));
+                }
+
+                if (_ctrlenter == value)
+                    return;
+                _ctrlenter = value;
+                EnvironmentModule.Update(_KeyCtrlEnter, value.ToString());
+
+                var changed = PropertyChanged;
+                if (changed != null)
+                {
+                    changed.Invoke(this, new PropertyChangedEventArgs(nameof(UseEnter)));
+                    changed.Invoke(this, new PropertyChangedEventArgs(nameof(UseControlEnter)));
+                }
             }
+        }
+
+        public bool UseEnter
+        {
+            get => UseControlEnter == false;
+            set => UseControlEnter = (value == false);
         }
 
         [Loader(8, LoaderFlags.OnLoad)]
         public static void Load()
         {
-            var str = OptionModule.Query(_KeyCtrlEnter, false.ToString());
+            var str = EnvironmentModule.Query(_KeyCtrlEnter, false.ToString());
             if (str != null && bool.TryParse(str, out var res))
                 s_ins._ctrlenter = res;
             return;

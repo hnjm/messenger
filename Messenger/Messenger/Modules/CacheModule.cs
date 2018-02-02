@@ -46,7 +46,7 @@ namespace Messenger.Modules
         {
             try
             {
-                s_ins._dir = OptionModule.Query(_KeyCache, _Directory);
+                s_ins._dir = EnvironmentModule.Query(_KeyCache, _Directory);
             }
             catch (Exception ex)
             {

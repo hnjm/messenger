@@ -8,12 +8,13 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Messenger.Extensions
 {
     internal static class Extension
     {
-        internal static readonly IReadOnlyList<string> _units = new[] { string.Empty, "K", "M", "G", "T", "P", "E" };
+        internal static readonly IReadOnlyList<string> s_units = new[] { string.Empty, "K", "M", "G", "T", "P", "E" };
 
         /// <summary>
         /// 分离主机字符串 (如 "some-host:7500" 分离成 "some-host" 和 7500)
@@ -60,7 +61,7 @@ namespace Messenger.Extensions
                 goto fail;
             var tmp = length;
             var idx = 0;
-            while (idx < _units.Count - 1)
+            while (idx < s_units.Count - 1)
             {
                 if (tmp < 1024)
                     break;
@@ -68,7 +69,7 @@ namespace Messenger.Extensions
                 idx++;
             }
             len = length / Math.Pow(1024, idx);
-            pos = _units[idx];
+            pos = s_units[idx];
             return true;
 
             fail:
@@ -296,6 +297,43 @@ namespace Messenger.Extensions
             {
                 return func.Invoke();
             }
+        }
+
+        /// <summary>
+        /// 插入文字到当前光标位置 (或替换当前选区文字)
+        /// </summary>
+        public static void InsertEx(this TextBox textbox, string text)
+        {
+            if (textbox == null)
+                throw new ArgumentNullException(nameof(textbox));
+            if (text == null)
+                text = string.Empty;
+            var txt = textbox.Text ?? string.Empty;
+            var sta = textbox.SelectionStart;
+            var len = textbox.SelectionLength;
+            var bef = txt.Substring(0, sta);
+            var aft = txt.Substring(sta + len);
+            var val = string.Concat(bef, text, aft);
+            textbox.Text = val;
+            textbox.SelectionStart = sta + text.Length;
+            textbox.SelectionLength = 0;
+        }
+
+        /// <summary>
+        /// 滚动到列表末尾
+        /// </summary>
+        public static void ScrollIntoLastEx(this ListBox listbox)
+        {
+            if (listbox == null)
+                throw new ArgumentNullException(nameof(listbox));
+            var lst = listbox.Items;
+            if (lst == null)
+                return;
+            var index = lst.Count - 1;
+            if (index < 0)
+                return;
+            var itm = lst[index];
+            listbox.ScrollIntoView(itm);
         }
     }
 }

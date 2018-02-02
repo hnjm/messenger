@@ -227,7 +227,7 @@ namespace Messenger.Modules
             });
 
             PostModule.UserGroups();
-            OptionModule.Update(_KeyLabel, args);
+            EnvironmentModule.Update(_KeyLabel, args);
             return true;
         }
 
@@ -242,7 +242,7 @@ namespace Messenger.Modules
             s_ins._local.Image = str;
 
             PostModule.UserProfile(Links.Id);
-            OptionModule.Update(_KeyImage, path);
+            EnvironmentModule.Update(_KeyImage, path);
         }
 
         public static void SetProfile(string name, string text)
@@ -251,15 +251,15 @@ namespace Messenger.Modules
             pro.Name = name;
             pro.Text = text;
 
-            OptionModule.Update(_KeyName, name);
-            OptionModule.Update(_KeyText, text);
+            EnvironmentModule.Update(_KeyName, name);
+            EnvironmentModule.Update(_KeyText, text);
             PostModule.UserProfile(Links.Id);
         }
 
         public static void SetId(int id)
         {
             s_ins._id = id;
-            OptionModule.Update(_KeyId, id.ToString());
+            EnvironmentModule.Update(_KeyId, id.ToString());
         }
 
         /// <summary>
@@ -312,13 +312,13 @@ namespace Messenger.Modules
             try
             {
                 var pro = s_ins._local;
-                s_ins._id = int.Parse(OptionModule.Query(_KeyId, new Random().Next(1, 1 << 16 + 1).ToString()));
-                pro.Name = OptionModule.Query(_KeyName);
-                pro.Text = OptionModule.Query(_KeyText);
+                s_ins._id = int.Parse(EnvironmentModule.Query(_KeyId, new Random().Next(1, 1 << 16 + 1).ToString()));
+                pro.Name = EnvironmentModule.Query(_KeyName);
+                pro.Text = EnvironmentModule.Query(_KeyText);
 
-                var lbs = OptionModule.Query(_KeyLabel);
+                var lbs = EnvironmentModule.Query(_KeyLabel);
                 SetGroupLabels(lbs);
-                var pth = OptionModule.Query(_KeyImage);
+                var pth = EnvironmentModule.Query(_KeyImage);
                 if (pth == null)
                     return;
                 var buf = CacheModule.ImageSquare(pth);

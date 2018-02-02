@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using static System.BitConverter;
 
@@ -25,7 +26,7 @@ namespace Mikodev.Network
             return arr;
         }
 
-        public static Task ConnectAsyncEx(this Socket socket, EndPoint endpoint) => Task.Factory.FromAsync((a, o) => socket.BeginConnect(endpoint, a, o), socket.EndConnect, null);
+        public static Task ConnectAsyncEx(this Socket socket, EndPoint endpoint) => Task.Factory.FromAsync((arg, obj) => socket.BeginConnect(endpoint, arg, obj), socket.EndConnect, null);
 
         public static Task<Socket> AcceptAsyncEx(this Socket socket) => Task.Factory.FromAsync(socket.BeginAccept, socket.EndAccept, null);
 
@@ -97,24 +98,40 @@ namespace Mikodev.Network
             return src;
         }
 
-        public static T WaitTimeout<T>(this Task<T> task, string message = null, int milliseconds = Links.Timeout)
+        public static async Task TimeoutAfter(this Task task, string message = null, int milliseconds = Links.Timeout)
         {
-            var res = task.Wait(milliseconds);
-            if (res == false)
-                throw string.IsNullOrEmpty(message)
-                    ? new TimeoutException()
-                    : new TimeoutException(message);
-            return task.Result;
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
+            if (milliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(milliseconds));
+            using (var src = new CancellationTokenSource())
+            {
+                var res = await Task.WhenAny(task, Task.Delay(milliseconds));
+                if (res != task)
+                    throw (string.IsNullOrEmpty(message))
+                        ? new TimeoutException()
+                        : new TimeoutException(message);
+                src.Cancel();
+                await task;
+            }
         }
 
-        public static void WaitTimeout(this Task task, string message = null, int milliseconds = Links.Timeout)
+        public static async Task<T> TimeoutAfter<T>(this Task<T> task, string message = null, int milliseconds = Links.Timeout)
         {
-            var res = task.Wait(milliseconds);
-            if (res == false)
-                throw string.IsNullOrEmpty(message)
-                    ? new TimeoutException()
-                    : new TimeoutException(message);
-            return;
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
+            if (milliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(milliseconds));
+            using (var src = new CancellationTokenSource())
+            {
+                var res = await Task.WhenAny(task, Task.Delay(milliseconds));
+                if (res != task)
+                    throw (string.IsNullOrEmpty(message))
+                        ? new TimeoutException()
+                        : new TimeoutException(message);
+                src.Cancel();
+                return await task;
+            }
         }
 
         public static void AssertFatal(this bool result, string message)
@@ -143,17 +160,6 @@ namespace Mikodev.Network
         /// </summary>
         /// <param name="value">Value can be null or any</param>
         public static Exception Disaggregate(this Exception value)
-        {
-            while (value is AggregateException agg && agg.InnerExceptions?.Count == 1 && agg.InnerException is Exception err)
-                value = err;
-            return value;
-        }
-
-        /// <summary>
-        /// Get <see cref="Exception.InnerException"/> from <see cref="AggregateException"/>
-        /// </summary>
-        /// <param name="value">Value can be null or any</param>
-        public static object Disaggregate(this object value)
         {
             while (value is AggregateException agg && agg.InnerExceptions?.Count == 1 && agg.InnerException is Exception err)
                 value = err;

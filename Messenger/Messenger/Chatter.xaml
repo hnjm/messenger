@@ -217,49 +217,12 @@
                      AllowDrop="True" PreviewDragOver="_TextBoxPreviewDragOver" PreviewDrop="_TextBoxPreviewDrop" SelectionBrush="LightGreen">
             </TextBox>
             <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center" Button.Click="_Click">
-                <Button Tag="clean" Margin="5,0" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="清空消息列表"/>
-                <Button Tag="symbol" VerticalAlignment="Center" Content="{DynamicResource PathSymbol}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="表情面板"/>
-                <Button Tag="image" VerticalAlignment="Center" Margin="5,0" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送图片"/>
-                <Button Tag="text" Margin="10,0,0,0" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送"/>
+                <Button Tag="clean" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="清空消息列表"/>
+                <Control Width="5"/>
+                <Button Tag="image" VerticalAlignment="Center" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送图片"/>
+                <Control Width="15"/>
+                <Button Tag="text" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送"/>
             </StackPanel>
-        </Grid>
-        <Grid x:Name="uiSymbolGrid" Grid.RowSpan="2"
-              Width="{Binding ElementName=uiMessageBox, Path=ActualWidth}"
-              VerticalAlignment="Bottom" Visibility="Collapsed"
-              SnapsToDevicePixels="True">
-            <Grid Margin="5,0" HorizontalAlignment="Right">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Border Grid.RowSpan="2" Background="#101010">
-                    <Border.Effect>
-                        <DropShadowEffect Color="#FFFFFF" ShadowDepth="0"/>
-                    </Border.Effect>
-                </Border>
-                <TextBlock Margin="5" Grid.Row="0" HorizontalAlignment="Left" Foreground="#C0C0C0" FontSize="16">表情</TextBlock>
-                <ListBox x:Name="listboxSymbol" Grid.Row="1" Margin="5,0,5,5" Width="342" Height="172" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         Style="{DynamicResource ThinListBox}" 
-                         ItemsSource="{x:Static module:SymbolModule.List}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel IsItemsHost="True"/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Button FontSize="24" Style="{DynamicResource GeometryButtonStyle}" Content="{Binding}" Click="_SymbolClick" Width="34" Height="34"/>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                </ListBox>
-            </Grid>
         </Grid>
     </Grid>
 </Page>

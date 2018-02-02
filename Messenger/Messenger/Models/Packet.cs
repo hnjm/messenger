@@ -128,5 +128,10 @@ namespace Messenger.Models
                 return null;
             }
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(Packet)} at {_timestamp:u}, form {_source} to {_target}, path: {_path}, value: {_value}";
+        }
     }
 }

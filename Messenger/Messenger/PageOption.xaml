@@ -3,6 +3,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:modules="clr-namespace:Messenger.Modules"
       mc:Ignorable="d" 
       d:DesignHeight="360" d:DesignWidth="480"
       KeepAlive="False"
@@ -15,13 +16,13 @@
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Margin="25,15" FontSize="36" Foreground="#FFC0C0C0" FontWeight="Light">设置</TextBlock>
         <ScrollViewer Grid.Row="1" Margin="0,10" Template="{DynamicResource ThinScrollViewer}">
-            <Grid Margin="25,0" Button.Click="_ButtonClick">
+            <Grid Margin="25,0" Button.Click="_Click">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="20"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0" HorizontalAlignment="Left" RadioButton.Click="_RadioClick">
+                <Grid Grid.Row="0" HorizontalAlignment="Left">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="20"/>
@@ -30,8 +31,8 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" FontSize="24" Foreground="#FFC0C0C0" Text="发送消息按键"/>
-                    <RadioButton x:Name="uiEnterRadio" Grid.Row="2" Content="Enter"/>
-                    <RadioButton x:Name="uiCtrlEnterRadio" Grid.Row="4" Content="Ctrl + Enter"/>
+                    <RadioButton Grid.Row="2" Content="Enter" IsChecked="{Binding Source={x:Static modules:SettingModule.Instance}, Path=UseEnter}"/>
+                    <RadioButton Grid.Row="4" Content="Control + Enter" IsChecked="{Binding Source={x:Static modules:SettingModule.Instance}, Path=UseControlEnter}"/>
                 </Grid>
                 <Grid Grid.Row="3" HorizontalAlignment="Left">
                     <Grid.RowDefinitions>

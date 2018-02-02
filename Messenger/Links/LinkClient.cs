@@ -21,12 +21,12 @@ namespace Mikodev.Network
         internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
         internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
         internal readonly Action<Socket, LinkPacket> _requested;
+        internal readonly byte[] _key = null;
+        internal readonly byte[] _blk = null;
 
         internal bool _started = false;
         internal bool _disposed = false;
         internal long _msglen = 0;
-        internal byte[] _key = null;
-        internal byte[] _blk = null;
 
         public int Id => _id;
 
@@ -46,19 +46,39 @@ namespace Mikodev.Network
 
         public event EventHandler<LinkEventArgs<Exception>> Disposed = null;
 
-        internal LinkClient(int id, Socket socket, IPEndPoint inner, IPEndPoint outer)
+        internal LinkClient(int id, Socket socket, IPEndPoint inner, IPEndPoint outer, byte[] key, byte[] block)
         {
             _id = id;
-            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-            _outer = outer ?? throw new ArgumentNullException(nameof(outer));
+            _socket = socket;
+
+            _inner = inner;
+            _outer = outer;
+
+            _key = key;
+            _blk = block;
         }
 
-        public LinkClient(int id, IPEndPoint connect, Action<Socket, LinkPacket> request)
+        internal LinkClient(int id, Socket socket, Socket listen, IPEndPoint connected, IPEndPoint inner, IPEndPoint outer, byte[] key, byte[] block, Action<Socket, LinkPacket> request)
         {
             _id = id;
-            _connected = connect ?? throw new ArgumentNullException(nameof(connect));
-            _requested = request ?? throw new ArgumentNullException(nameof(request));
+            _socket = socket;
+            _listen = listen;
+
+            _connected = connected;
+            _inner = inner;
+            _outer = outer;
+
+            _key = key;
+            _blk = block;
+            _requested = request;
+        }
+
+        public static LinkClient Connect(int id, IPEndPoint target, Action<Socket, LinkPacket> request)
+        {
+            if (target == null)
+                throw new ArgumentNullException(nameof(target));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
 
             var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
             var lis = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -69,9 +89,9 @@ namespace Mikodev.Network
             var key = default(byte[]);
             var blk = default(byte[]);
 
-            try
+            async Task _Connect()
             {
-                soc.ConnectAsyncEx(connect).WaitTimeout("Timeout, at connect to server.");
+                await soc.ConnectAsyncEx(target).TimeoutAfter("Timeout, at connect to server.");
                 soc.SetKeepAlive();
                 iep = (IPEndPoint)soc.LocalEndPoint;
 
@@ -91,15 +111,20 @@ namespace Mikodev.Network
                         exponent = par.Exponent,
                     }
                 });
-                soc.SendAsyncExt(req.GetBytes()).WaitTimeout("Timeout, at client request.");
 
-                var rec = soc.ReceiveAsyncExt().WaitTimeout("Timeout, at client response.");
+                await soc.SendAsyncExt(req.GetBytes()).TimeoutAfter("Timeout, at client request.");
+                var rec = await soc.ReceiveAsyncExt().TimeoutAfter("Timeout, at client response.");
+
                 var rea = new PacketReader(rec);
                 rea["result"].GetValue<LinkError>().AssertError();
-
                 oep = rea["endpoint"].GetValue<IPEndPoint>();
                 key = rsa.Decrypt(rea["aes/key"].GetArray<byte>(), RSAEncryptionPadding.OaepSHA1);
                 blk = rsa.Decrypt(rea["aes/iv"].GetArray<byte>(), RSAEncryptionPadding.OaepSHA1);
+            }
+
+            try
+            {
+                _Connect().Wait();
             }
             catch (Exception)
             {
@@ -108,12 +133,7 @@ namespace Mikodev.Network
                 throw;
             }
 
-            _socket = soc;
-            _listen = lis;
-            _inner = iep;
-            _outer = oep;
-            _key = key;
-            _blk = blk;
+            return new LinkClient(id, soc, lis, target, iep, oep, key, blk, request);
         }
 
         public void Start()
@@ -194,46 +214,37 @@ namespace Mikodev.Network
 
         internal async Task _Listener(CancellationToken token)
         {
-            void _Invoke(Socket soc)
+            void _Invoke(Socket soc) => Task.Run(async () =>
             {
-                Task.Run(() =>
+                try
                 {
-                    var buf = soc.ReceiveAsyncExt().WaitTimeout("Timeout, at receive header packet.");
+                    soc.SetKeepAlive();
+                    var buf = await soc.ReceiveAsyncExt().TimeoutAfter("Timeout, at receive header packet.");
                     var pkt = new LinkPacket().LoadValue(buf);
                     _requested.Invoke(soc, pkt);
-                })
-                .ContinueWith(task =>
+                }
+                catch (Exception ex)
                 {
-                    Log.Error(task.Exception);
+                    Log.Error(ex);
+                }
+                finally
+                {
                     soc.Dispose();
-                });
-            }
+                }
+            });
 
             while (true)
             {
                 token.ThrowIfCancellationRequested();
-                var soc = default(Socket);
-
-                try
-                {
-                    soc = await _listen.AcceptAsyncEx();
-                    soc.SetKeepAlive();
-                    _Invoke(soc);
-                }
-                catch (Exception)
-                {
-                    soc?.Dispose();
-                    throw;
-                }
+                var res = await _listen.AcceptAsyncEx();
+                _Invoke(res);
             }
         }
 
         internal void _Clean(Task task)
         {
             var err = task.Exception.Disaggregate();
-            if (err != null &&
-                err is SocketException soc && soc.SocketErrorCode == SocketError.ConnectionReset &&
-                err is ObjectDisposedException dis && dis.ObjectName == typeof(Socket).FullName)
+            if (err != null && (err is SocketException || err is ObjectDisposedException) == false)
                 Log.Error(err);
             _OnDispose(err);
         }
@@ -245,6 +256,8 @@ namespace Mikodev.Network
                 if (_disposed)
                     return;
                 _disposed = true;
+                _msgs.Clear();
+                _msglen = 0;
             }
             _cancel.Cancel();
             _cancel.Dispose();

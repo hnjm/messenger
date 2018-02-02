@@ -33,7 +33,7 @@ namespace Messenger.Modules
             set
             {
                 s_ins._host = value;
-                OptionModule.Update(_KeyLast, $"{value}:{s_ins._port}");
+                EnvironmentModule.Update(_KeyLast, $"{value}:{s_ins._port}");
             }
         }
 
@@ -43,7 +43,7 @@ namespace Messenger.Modules
             set
             {
                 s_ins._port = value;
-                OptionModule.Update(_KeyLast, $"{s_ins._host}:{value}");
+                EnvironmentModule.Update(_KeyLast, $"{s_ins._host}:{value}");
             }
         }
 
@@ -138,11 +138,11 @@ namespace Messenger.Modules
 
             try
             {
-                var sts = OptionModule.Query(_KeyList, iep.ToString());
+                var sts = EnvironmentModule.Query(_KeyList, iep.ToString());
                 foreach (var s in sts.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
                     lst.Add(s.ToEndPointEx());
 
-                var str = OptionModule.Query(_KeyLast, $"{IPAddress.Loopback}:{Links.Port}");
+                var str = EnvironmentModule.Query(_KeyLast, $"{IPAddress.Loopback}:{Links.Port}");
                 Extension.ToHostEx(str, out hos, out pot);
             }
             catch (Exception ex)

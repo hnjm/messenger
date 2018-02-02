@@ -3,9 +3,7 @@ using Messenger.Modules;
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -35,8 +33,7 @@ namespace Messenger.Models
         internal string _path = null;
         internal ShareStatus _status;
 
-        private Socket _socket = null;
-        private readonly List<IPEndPoint> _endpoints = null;
+        private readonly IPEndPoint[] _endpoints = null;
 
         public bool IsStarted => _started;
 
@@ -73,7 +70,7 @@ namespace Messenger.Models
             _key = reader["key"].GetValue<Guid>();
             _origin = reader["name"].GetValue<string>();
             _name = _origin;
-            _endpoints = reader["endpoints"].GetList<IPEndPoint>();
+            _endpoints = reader["endpoints"].GetArray<IPEndPoint>();
             _status = ShareStatus.等待;
         }
 
@@ -89,76 +86,79 @@ namespace Messenger.Models
                 OnPropertyChanged(nameof(IsStarted));
             }
 
-            return Task.Run(() =>
+            void _SetStatus(ShareStatus status)
             {
-                // 与发送者建立连接 (尝试连接对方返回的所有 IP, 原理请参考 "TCP NAT 穿透")
-                var soc = _endpoints.Select(r => _Connect(r)).FirstOrDefault(r => r != null) ?? throw new ApplicationException("Source network unreachable.");
-
                 lock (_locker)
                 {
                     if (_disposed)
+                        return;
+                    _status = status;
+                }
+            }
+
+            async Task _Start()
+            {
+                var soc = default(Socket);
+                var iep = default(IPEndPoint);
+
+                for (int i = 0; i < _endpoints.Length; i++)
+                {
+                    soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                    iep = _endpoints[i];
+
+                    try
                     {
-                        soc.Dispose();
-                        throw new InvalidOperationException();
+                        await soc.ConnectAsyncEx(iep).TimeoutAfter("Share receiver timeout.");
                     }
-                    _socket = soc;
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        soc.Dispose();
+                        soc = null;
+                    }
                 }
 
-                var buf = PacketWriter.Serialize(new
+                if (soc == null)
+                {
+                    _SetStatus(ShareStatus.失败);
+                    Dispose();
+                    return;
+                }
+
+                var buf = PacketConvert.Serialize(new
                 {
                     path = "share." + (_batch ? "directory" : "file"),
                     data = _key,
                     source = LinkModule.Id,
                     target = _id,
                 });
-                return soc.SendAsyncExt(buf.GetBytes());
-            })
-            .ContinueWith(t =>
-            {
-                // 在接收函数退出时设置状态并释放资源
-                var exc = t.Exception;
-                if (exc == null)
+
+                try
                 {
-                    _status = ShareStatus.运行;
-                    _Receive().ContinueWith(_Finish);
-                    return;
+                    soc.SetKeepAlive();
+                    await soc.SendAsyncExt(buf);
+                    _SetStatus(ShareStatus.运行);
+                    await _Receive(soc, _cancel.Token);
+                    _SetStatus(ShareStatus.成功);
+                    PostModule.Notice(_id, _batch ? "share.dir" : "share.file", _origin);
                 }
-
-                _socket?.Dispose();
-                Log.Error(exc);
-
-                lock (_locker)
+                catch (Exception ex)
                 {
-                    if (_disposed)
-                        return;
-                    _status = ShareStatus.中断;
+                    Log.Error(ex);
+                    _SetStatus(ShareStatus.中断);
+                    throw;
+                }
+                finally
+                {
+                    soc.Dispose();
                     Dispose();
                 }
-            });
+            }
+
+            return Task.Run(_Start);
         }
 
-        internal Socket _Connect(EndPoint endpoint)
-        {
-            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            try
-            {
-                soc.ConnectAsyncEx(endpoint).WaitTimeout("Share receiver timeout.");
-                soc.SetKeepAlive();
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-                soc.Dispose();
-
-                err = err.Disaggregate();
-                if (err is SocketException || err is TimeoutException)
-                    return null;
-                throw;
-            }
-            return soc;
-        }
-
-        internal Task _Receive()
+        internal Task _Receive(Socket socket, CancellationToken token)
         {
             void _UpdateInfo(FileSystemInfo info)
             {
@@ -172,32 +172,12 @@ namespace Messenger.Models
             {
                 var dir = ShareModule.AvailableDirectory(_name);
                 _UpdateInfo(dir);
-                return _socket.ReceiveDirectoryAsyncEx(dir.FullName, r => _position += r, _cancel.Token);
+                return socket.ReceiveDirectoryAsyncEx(dir.FullName, r => _position += r, token);
             }
 
             var inf = ShareModule.AvailableFile(_name);
             _UpdateInfo(inf);
-            return _socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, _cancel.Token);
-        }
-
-        internal void _Finish(Task task)
-        {
-            var err = task.Exception;
-            Log.Error(task.Exception);
-
-            lock (_locker)
-            {
-                if (_disposed)
-                    return;
-                _status = (err == null)
-                    ? ShareStatus.成功
-                    : ShareStatus.中断;
-                Dispose();
-            }
-
-            if (err != null)
-                return;
-            PostModule.Notice(_id, _batch ? "share.dir" : "share.file", _origin);
+            return socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, token);
         }
 
         public void Dispose()
@@ -206,17 +186,15 @@ namespace Messenger.Models
             {
                 if (_disposed)
                     return;
-
                 var val = _status & ShareStatus.终止;
                 if (val == 0)
                     _status = ShareStatus.取消;
-
-                _cancel.Cancel();
-                _cancel.Dispose();
-                _socket?.Dispose();
                 _disposed = true;
-                OnPropertyChanged(nameof(IsDisposed));
             }
+
+            _cancel.Cancel();
+            _cancel.Dispose();
+            OnPropertyChanged(nameof(IsDisposed));
         }
     }
 }

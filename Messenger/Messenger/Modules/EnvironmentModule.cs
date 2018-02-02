@@ -15,7 +15,7 @@ namespace Messenger.Modules
     /// <summary>
     /// 管理用户设置
     /// </summary>
-    internal class OptionModule
+    internal class EnvironmentModule
     {
         private const int _NoticeDelay = 1000;
         private const int _NoticeErrorDelay = 15 * 1000 - _NoticeDelay;
@@ -31,9 +31,9 @@ namespace Messenger.Modules
         private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
         private readonly LinkNoticeSource _source = new LinkNoticeSource(_NoticeInterval);
 
-        private static OptionModule s_ins = new OptionModule();
+        private static EnvironmentModule s_ins = new EnvironmentModule();
 
-        private OptionModule() { }
+        private EnvironmentModule() { }
 
         private void _Load(XmlDocument document)
         {

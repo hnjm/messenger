@@ -57,17 +57,6 @@
         </Style.Triggers>
     </Style>
 
-    <!--表情-->
-    <Path x:Key="PathSymbol" x:Shared="False"  Stroke="White" StrokeThickness="1" Width="32" Height="32">
-        <Path.Data>
-            <GeometryGroup>
-                <EllipseGeometry Center="10.5,10.5" RadiusX="1" RadiusY="1" />
-                <EllipseGeometry Center="21.5,10.5" RadiusX="1" RadiusY="1"/>
-                <PathGeometry Figures="M 8.5,17.5 A 8,8 0 0 0 23.5,17.5"/>
-            </GeometryGroup>
-        </Path.Data>
-    </Path>
-
     <!--发送-->
     <Path x:Key="PathArrow" x:Shared="False" Stroke="#C0C0C0" StrokeThickness="1.5" StrokeLineJoin="Round" Width="40" Height="40">
         <Path.Data>

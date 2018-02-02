@@ -32,7 +32,7 @@ namespace Messenger.Modules
         /// </summary>
         public static void Start(int id, IPEndPoint endpoint)
         {
-            var clt = new LinkClient(id, endpoint, _RequestHandler);
+            var clt = LinkClient.Connect(id, endpoint, _RequestHandler);
 
             void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Handle(args.Object);
 

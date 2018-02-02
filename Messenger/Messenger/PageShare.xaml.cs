@@ -1,5 +1,6 @@
 ﻿using Messenger.Modules;
 using Mikodev.Logger;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -40,13 +41,16 @@ namespace Messenger
             {
                 Task.Run(() =>
                 {
-                    if (Directory.Exists(ShareModule.SavePath) == false)
-                        return;
-                    Process.Start("explorer", "/e," + ShareModule.SavePath);
-                })
-                .ContinueWith(task =>
-                {
-                    Log.Error(task.Exception);
+                    try
+                    {
+                        if (Directory.Exists(ShareModule.SavePath) == false)
+                            return;
+                        using (Process.Start("explorer", "/e," + ShareModule.SavePath)) { }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex);
+                    }
                 });
             }
             else if (tag == "stop")

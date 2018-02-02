@@ -77,7 +77,7 @@ namespace Messenger.Modules
             set
             {
                 s_ins._savepath = value;
-                OptionModule.Update(_KeyPath, value);
+                EnvironmentModule.Update(_KeyPath, value);
             }
         }
 
@@ -206,7 +206,7 @@ namespace Messenger.Modules
         [Loader(32, LoaderFlags.OnLoad)]
         public static void Load()
         {
-            s_ins._savepath = OptionModule.Query(_KeyPath, _Path);
+            s_ins._savepath = EnvironmentModule.Query(_KeyPath, _Path);
         }
         #endregion
     }

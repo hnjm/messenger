@@ -62,12 +62,12 @@ namespace Messenger.Models
 
         internal void _Finish(Task task)
         {
-            var exc = task.Exception;
-            Log.Error(exc);
+            var err = task.Exception;
+            Log.Error(err);
 
             if (_cancel.IsCancellationRequested)
                 _status = ShareStatus.取消;
-            else if (exc != null)
+            else if (err != null)
                 _status = ShareStatus.中断;
             else
                 _status = ShareStatus.成功;

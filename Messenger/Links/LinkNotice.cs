@@ -22,6 +22,7 @@ namespace Mikodev.Network
 
         public void Handled()
         {
+            // 阻止多次调用
             if (Interlocked.CompareExchange(ref _status, 2, 1) != 1)
                 throw new InvalidOperationException("Invalid operation!");
             _source._Handled(_value);
