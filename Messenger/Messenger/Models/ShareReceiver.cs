@@ -103,6 +103,8 @@ namespace Messenger.Models
 
                 for (int i = 0; i < _endpoints.Length; i++)
                 {
+                    if (soc != null)
+                        break;
                     soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
                     iep = _endpoints[i];
 

@@ -59,6 +59,9 @@
   <PropertyGroup>
     <ApplicationIcon>Client.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mikodev.Exchange, Version=1.4.4.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Mikodev.Exchange.1.4.4\lib\net40\Mikodev.Exchange.dll</HintPath>
@@ -106,9 +109,6 @@
     <Compile Include="Controllers\MessageController.cs" />
     <Compile Include="Controllers\ProfileController.cs" />
     <Compile Include="Controllers\ShareController.cs" />
-    <Compile Include="Fallback.xaml.cs">
-      <DependentUpon>Fallback.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Framework.cs" />
     <Compile Include="Models\LoaderAttribute.cs" />
     <Compile Include="Models\LoaderFlags.cs" />
@@ -208,10 +208,6 @@
       <DependentUpon>Entrance.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Fallback.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="PageClient.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -278,6 +274,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <None Include="app.manifest" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

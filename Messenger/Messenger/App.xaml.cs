@@ -21,7 +21,7 @@ namespace Messenger
             DispatcherUnhandledException += (s, arg) =>
             {
                 arg.Handled = true;
-                Fallback.Show(null, "Unhandled Exception", arg.Exception);
+                MessageBox.Show(arg.Exception.ToString(), "Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             };
 
