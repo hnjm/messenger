@@ -165,5 +165,21 @@ namespace Mikodev.Network
                 value = err;
             return value;
         }
+
+        /// <summary>
+        /// 显式放弃等待该任务
+        /// </summary>
+        public static void Ignore(this Task task)
+        {
+            return;
+        }
+
+        /// <summary>
+        /// 显式放弃等待该任务
+        /// </summary>
+        public static void Ignore<T>(this Task<T> task)
+        {
+            return;
+        }
     }
 }

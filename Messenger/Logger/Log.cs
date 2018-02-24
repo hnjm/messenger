@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -8,12 +9,15 @@ namespace Mikodev.Logger
 {
     public static class Log
     {
+        private const int _MaxQueueLength = 256;
+
         /// <summary>
         /// 日志固定前缀 (防止循环记录日志)
         /// </summary>
         internal static readonly string _prefix = $"[{nameof(Logger)}]";
-        internal static Logger s_log = null;
+        internal static readonly Queue<string> s_queue = new Queue<string>();
         internal static int s_trace = 0;
+        internal static Logger s_log = null;
 
         public static void SetPath(string path)
         {
@@ -21,6 +25,45 @@ namespace Mikodev.Logger
                 Trace.Listeners.Add(new LogTrace());
             var log = new Logger(path);
             s_log = log;
+            Task.Run(_Monitor);
+        }
+
+        private static async Task _Monitor()
+        {
+            while (true)
+            {
+                var itr = default(IEnumerable<string>);
+                lock (s_queue)
+                {
+                    itr = s_queue.ToArray();
+                    s_queue.Clear();
+                }
+
+                try
+                {
+                    await s_log.Write(itr);
+                }
+                catch (Exception ex)
+                {
+                    _InternalError(ex.ToString());
+                }
+            }
+        }
+
+        private static void _Enqueue(string msg)
+        {
+            lock (s_queue)
+            {
+                var len = s_queue.Count + 1;
+                var sub = len - _MaxQueueLength;
+                if (sub > 0)
+                {
+                    for (int i = 0; i < len; i++)
+                        s_queue.Dequeue();
+                    _InternalError("Log queue full!");
+                }
+                s_queue.Enqueue(msg);
+            }
         }
 
         /// <summary>
@@ -51,15 +94,12 @@ namespace Mikodev.Logger
                 $"{message}" + lbr + lbr;
 
             Trace.Write(_prefix + Environment.NewLine + msg);
-            s_log?._Write(msg).ContinueWith(_Next);
+            _Enqueue(msg);
         }
 
-        internal static void _Next(Task t)
+        internal static void _InternalError(string msg)
         {
-            var x = t.Exception;
-            if (x == null)
-                return;
-            Trace.WriteLine(_prefix + Environment.NewLine + x);
+            Trace.WriteLine(_prefix + Environment.NewLine + msg);
         }
 
         internal static void _Trace(string txt)
@@ -71,8 +111,7 @@ namespace Mikodev.Logger
             var msg = $"[时间: {DateTime.Now:u}]" + lbr +
                 $"[来源: {nameof(Trace)}]" + lbr +
                 $"{txt}" + lbr + lbr;
-
-            s_log?._Write(msg).ContinueWith(_Next);
+            _Enqueue(msg);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Mikodev.Logger;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -73,7 +74,7 @@ namespace Mikodev.Network
             _requested = request;
         }
 
-        public static LinkClient Connect(int id, IPEndPoint target, Action<Socket, LinkPacket> request)
+        public static async Task<LinkClient> Connect(int id, IPEndPoint target, Action<Socket, LinkPacket> request)
         {
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
@@ -89,7 +90,7 @@ namespace Mikodev.Network
             var key = default(byte[]);
             var blk = default(byte[]);
 
-            async Task _Connect()
+            try
             {
                 await soc.ConnectAsyncEx(target).TimeoutAfter("Timeout, at connect to server.");
                 soc.SetKeepAlive();
@@ -121,11 +122,6 @@ namespace Mikodev.Network
                 key = rsa.Decrypt(rea["aes/key"].GetArray<byte>(), RSAEncryptionPadding.OaepSHA1);
                 blk = rsa.Decrypt(rea["aes/iv"].GetArray<byte>(), RSAEncryptionPadding.OaepSHA1);
             }
-
-            try
-            {
-                _Connect().Wait();
-            }
             catch (Exception)
             {
                 soc.Dispose();
@@ -136,18 +132,39 @@ namespace Mikodev.Network
             return new LinkClient(id, soc, lis, target, iep, oep, key, blk, request);
         }
 
-        public void Start()
+        public async Task Start()
         {
+            var arr = default(Task[]);
+            var err = default(Exception);
+
             lock (_loc)
             {
                 if (_started || _disposed)
                     throw new InvalidOperationException("Client has benn marked as started or disposed!");
                 _started = true;
-                if (_listen != null)
-                    _Listener(_cancel.Token).ContinueWith(_Clean);
-                _Sender(_cancel.Token).ContinueWith(_Clean);
-                _Receiver(_cancel.Token).ContinueWith(_Clean);
+
+                var lst = new[]
+                {
+                    _listen == null ? null : Task.Run(_Listener),
+                    Task.Run(_Sender),
+                    Task.Run(_Receiver),
+                };
+                arr = lst.Where(r => r != null).ToArray();
             }
+
+            try
+            {
+                await await Task.WhenAny(arr);
+            }
+            catch (Exception ex)
+            {
+                if ((ex is SocketException || ex is ObjectDisposedException) == false)
+                    Log.Error(ex);
+                err = ex;
+            }
+
+            _Dispose(err);
+            await Task.WhenAll(arr);
         }
 
         public void Enqueue(byte[] buffer)
@@ -164,7 +181,7 @@ namespace Mikodev.Network
             }
         }
 
-        internal async Task _Sender(CancellationToken token)
+        internal async Task _Sender()
         {
             bool _Dequeue(out byte[] buf)
             {
@@ -184,9 +201,8 @@ namespace Mikodev.Network
                 return false;
             }
 
-            while (true)
+            while (_cancel.IsCancellationRequested == false)
             {
-                token.ThrowIfCancellationRequested();
                 if (_Dequeue(out var buf))
                     await _socket.SendAsyncExt(LinkCrypto.Encrypt(buf, _key, _blk));
                 else
@@ -195,11 +211,10 @@ namespace Mikodev.Network
             }
         }
 
-        internal async Task _Receiver(CancellationToken token)
+        internal async Task _Receiver()
         {
-            while (true)
+            while (_cancel.IsCancellationRequested == false)
             {
-                token.ThrowIfCancellationRequested();
                 var buf = await _socket.ReceiveAsyncExt();
 
                 var rec = Received;
@@ -212,44 +227,34 @@ namespace Mikodev.Network
             }
         }
 
-        internal async Task _Listener(CancellationToken token)
+        internal async Task _Listener()
         {
-            void _Invoke(Socket soc) => Task.Run(async () =>
+            while (_cancel.IsCancellationRequested == false)
             {
-                try
-                {
-                    soc.SetKeepAlive();
-                    var buf = await soc.ReceiveAsyncExt().TimeoutAfter("Timeout, at receive header packet.");
-                    var pkt = new LinkPacket().LoadValue(buf);
-                    _requested.Invoke(soc, pkt);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                }
-                finally
-                {
-                    soc.Dispose();
-                }
-            });
+                var soc = await _listen.AcceptAsyncEx();
 
-            while (true)
-            {
-                token.ThrowIfCancellationRequested();
-                var res = await _listen.AcceptAsyncEx();
-                _Invoke(res);
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        soc.SetKeepAlive();
+                        var buf = await soc.ReceiveAsyncExt().TimeoutAfter("Timeout, at receive header packet.");
+                        var pkt = new LinkPacket().LoadValue(buf);
+                        _requested.Invoke(soc, pkt);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex);
+                    }
+                    finally
+                    {
+                        soc.Dispose();
+                    }
+                }).Ignore();
             }
         }
 
-        internal void _Clean(Task task)
-        {
-            var err = task.Exception.Disaggregate();
-            if (err != null && (err is SocketException || err is ObjectDisposedException) == false)
-                Log.Error(err);
-            _OnDispose(err);
-        }
-
-        internal void _OnDispose(Exception err = null)
+        internal void _Dispose(Exception err = null)
         {
             lock (_loc)
             {
@@ -276,6 +281,6 @@ namespace Mikodev.Network
             });
         }
 
-        public void Dispose() => _OnDispose();
+        public void Dispose() => _Dispose();
     }
 }

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mikodev.Network
@@ -16,62 +15,77 @@ namespace Mikodev.Network
         internal const int _NoticeDelay = 100;
         internal static readonly TimeSpan _NoticeInterval = TimeSpan.FromMilliseconds(1000);
 
-        internal int _started = 0;
-
+        internal readonly object _locker = new object();
+        internal readonly string _sname = null;
         internal readonly int _climit = Links.ServerSocketLimit;
         internal readonly int _port = Links.Port;
-        internal readonly object _locker = new object();
 
+        internal readonly Socket _broadcast = null;
         internal readonly Socket _socket = null;
         internal readonly LinkNoticeSource _notice = new LinkNoticeSource(_NoticeInterval);
         internal readonly ConcurrentDictionary<int, LinkClient> _clients = new ConcurrentDictionary<int, LinkClient>();
         internal readonly ConcurrentDictionary<int, HashSet<int>> _joined = new ConcurrentDictionary<int, HashSet<int>>();
         internal readonly ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>> _set = new ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>>();
 
-        public LinkListener(int port = Links.Port, int count = Links.ServerSocketLimit)
+        private LinkListener(Socket socket, Socket broadcast, int port, int count, string name)
         {
+            _socket = socket;
+            _broadcast = broadcast;
+            _port = port;
+            _climit = count;
+            _sname = name;
+        }
+
+        public static async Task Run(IPAddress address, int port = Links.Port, int broadcast = Links.BroadcastPort, int count = Links.ServerSocketLimit, string name = null)
+        {
+            if (address == null)
+                throw new ArgumentNullException(nameof(address));
             if (count < 1 || count > Links.ServerSocketLimit)
                 throw new ArgumentOutOfRangeException(nameof(count), "Count limit out of range!");
-            var iep = new IPEndPoint(IPAddress.Any, port);
-            var soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            var iep = new IPEndPoint(address, port);
+            var bep = new IPEndPoint(address, broadcast);
+            var soc = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var bro = new Socket(address.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
             try
             {
+                if (string.IsNullOrEmpty(name))
+                    name = Dns.GetHostName();
                 soc.Bind(iep);
+                bro.Bind(bep);
                 soc.Listen(count);
+
+                var lis = new LinkListener(soc, bro, port, count, name);
+                await Task.WhenAll(new Task[]
+                {
+                    Task.Run(lis._Notice),
+                    Task.Run(lis._Listen),
+                    Task.Run(lis._Broadcast),
+                });
             }
             catch (Exception)
             {
                 soc.Dispose();
+                bro.Dispose();
                 throw;
             }
-
-            _socket = soc;
-            _port = port;
-            _climit = count;
-        }
-
-        public Task Listen()
-        {
-            if (Interlocked.CompareExchange(ref _started, 1, 0) != 0)
-                throw new InvalidOperationException("Listen task already started!");
-
-            _Notice().ContinueWith(task => Log.Error(task.Exception));
-            return _Listen();
         }
 
         private async Task _Listen()
         {
-            void _Invoke(Socket soc) => Task.Run(() =>
+            void _Invoke(Socket soc) => Task.Run(async () =>
             {
                 try
                 {
                     soc.SetKeepAlive();
-                    _Accept(soc);
+                    await _AcceptClient(soc);
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex);
+                }
+                finally
+                {
                     soc.Dispose();
                 }
             });
@@ -82,7 +96,7 @@ namespace Mikodev.Network
             }
         }
 
-        private void _Accept(Socket socket)
+        private async Task _AcceptClient(Socket socket)
         {
             LinkError _Check(int id)
             {
@@ -127,17 +141,12 @@ namespace Mikodev.Network
                 return res.GetBytes();
             }
 
-            async Task _Accept()
+            try
             {
                 var buf = await socket.ReceiveAsyncExt().TimeoutAfter("Listener request timeout.");
                 var res = _Response(buf);
                 await socket.SendAsyncExt(res).TimeoutAfter("Listener response timeout.");
                 err.AssertError();
-            }
-
-            try
-            {
-                _Accept().Wait();
             }
             catch (Exception)
             {
@@ -151,10 +160,10 @@ namespace Mikodev.Network
 
             clt.Received += _ClientReceived;
             clt.Disposed += _ClientDisposed;
-            clt.Start();
+            await clt.Start();
         }
 
-        private void _ClientRefresh(LinkClient client, IEnumerable<int> groups = null)
+        private void _Refresh(LinkClient client, IEnumerable<int> groups = null)
         {
             /* Require lock */
             var cid = client._id;
@@ -205,8 +214,8 @@ namespace Mikodev.Network
                 });
 
                 var buf = wtr.GetBytes();
-                foreach (var i in _clients.Values)
-                    i?.Enqueue(buf);
+                foreach (var clt in _clients.Values)
+                    clt?.Enqueue(buf);
                 res.Handled();
             }
         }
@@ -216,7 +225,7 @@ namespace Mikodev.Network
             var clt = (LinkClient)sender;
 
             lock (_locker)
-                _ClientRefresh(clt);
+                _Refresh(clt);
             _notice.Update();
 
             clt.Received -= _ClientReceived;
@@ -240,7 +249,7 @@ namespace Mikodev.Network
                         throw new LinkException(LinkError.GroupLimited);
                     var clt = (LinkClient)sender;
                     lock (_locker)
-                        _ClientRefresh(clt, set);
+                        _Refresh(clt, set);
                     return;
                 }
 
@@ -264,6 +273,48 @@ namespace Mikodev.Network
                         if (val != null && val._id != src)
                             val.Enqueue(buf);
                 return;
+            }
+        }
+
+        private async Task _Broadcast()
+        {
+            var wtr = PacketWriter.Serialize(new
+            {
+                protocol = Links.Protocol,
+                port = _port,
+                name = _sname,
+                limit = _climit,
+            });
+
+            while (true)
+            {
+                var ava = _broadcast.Available;
+                if (ava < 1)
+                {
+                    await Task.Delay(Links.Delay);
+                    continue;
+                }
+
+                try
+                {
+                    var buf = new byte[Math.Min(ava, Links.BufferLength)];
+                    var iep = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
+                    var len = _broadcast.ReceiveFrom(buf, ref iep);
+
+                    var rea = new PacketReader(buf, 0, len);
+                    if (string.Equals(Links.Protocol, rea["protocol", true]?.GetValue<string>()) == false)
+                        continue;
+                    var res = wtr.SetValue("count", _clients.Count).GetBytes();
+                    var sub = _broadcast.SendTo(res, iep);
+                }
+                catch (SocketException ex)
+                {
+                    Log.Error(ex);
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
             }
         }
     }

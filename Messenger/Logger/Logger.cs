@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,11 +16,14 @@ namespace Mikodev.Logger
             _filepath = filepath + _ext;
         }
 
-        internal async Task _Write(string msg)
+        internal async Task Write(IEnumerable<string> arr)
         {
             using (var fst = new StreamWriter(_filepath, true, Encoding.UTF8))
             {
-                await fst.WriteAsync(msg);
+                foreach (var i in arr)
+                {
+                    await fst.WriteAsync(i);
+                }
             }
         }
     }

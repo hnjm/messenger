@@ -95,35 +95,30 @@ namespace Messenger
                 return;
             }
 
-            var flg = false;
             uiConnectButton.IsEnabled = false;
-
             try
             {
                 var uid = int.Parse(uiIdBox.Text);
                 var pot = int.Parse(uiPortBox.Text);
                 var hos = uiHostBox.Text;
 
-                await Task.Run(() =>
-                {
-                    var add = IPAddress.TryParse(hos, out var hst);
-                    if (add == false)
-                        hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
-                    var iep = new IPEndPoint(hst, pot);
-                    LinkModule.Start(uid, iep);
-                    HostModule.Name = hos;
-                    HostModule.Port = pot;
-                    flg = true;
-                });
+                var add = IPAddress.TryParse(hos, out var hst);
+                if (add == false)
+                    hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
+                var iep = new IPEndPoint(hst, pot);
+
+                // 放弃等待该方法返回的任务
+                var _ = await LinkModule.Start(uid, iep);
+                HostModule.Name = hos;
+                HostModule.Port = pot;
+
+                NavigationService.Navigate(new PageFrame());
             }
             catch (Exception ex)
             {
                 Log.Error(ex);
                 Entrance.ShowError("连接失败", ex);
             }
-
-            if (flg == true)
-                NavigationService.Navigate(new PageFrame());
             uiConnectButton.IsEnabled = true;
         }
     }

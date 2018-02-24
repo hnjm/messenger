@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -30,9 +31,9 @@ namespace Messenger.Modules
         /// <summary>
         /// 启动连接 (与 <see cref="Shutdown"/> 方法为非完全线程安全的关系, 不过两个方法不可能同时调用)
         /// </summary>
-        public static void Start(int id, IPEndPoint endpoint)
+        public static async Task<Task> Start(int id, IPEndPoint endpoint)
         {
-            var clt = LinkClient.Connect(id, endpoint, _RequestHandler);
+            var clt = await LinkClient.Connect(id, endpoint, _RequestHandler);
 
             void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Handle(args.Object);
 
@@ -72,7 +73,7 @@ namespace Messenger.Modules
             PostModule.UserRequest();
             PostModule.UserGroups();
 
-            clt.Start();
+            return clt.Start();
         }
 
         private static void _RequestHandler(Socket socket, LinkPacket packet)

@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mikodev.Exchange, Version=1.4.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mikodev.Exchange.1.4.4\lib\net40\Mikodev.Exchange.dll</HintPath>
+    <Reference Include="Mikodev.Exchange, Version=1.4.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mikodev.Exchange.1.4.5\lib\net40\Mikodev.Exchange.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -44,7 +44,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LinkBroadcast.cs" />
     <Compile Include="LinkCrypto.cs" />
     <Compile Include="LinkClient.cs" />
     <Compile Include="LinkError.cs" />

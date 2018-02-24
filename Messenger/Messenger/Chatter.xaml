@@ -218,9 +218,9 @@
             </TextBox>
             <StackPanel Grid.Column="1" Grid.Row="2" Margin="5" Orientation="Horizontal" VerticalAlignment="Center" Button.Click="_Click">
                 <Button Tag="clean" VerticalAlignment="Center" Content="{DynamicResource PathRemove}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="清空消息列表"/>
-                <Control Width="5"/>
+                <Control Width="5" Focusable="False"/>
                 <Button Tag="image" VerticalAlignment="Center" Content="{DynamicResource PathImage}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送图片"/>
-                <Control Width="15"/>
+                <Control Width="15" Focusable="False"/>
                 <Button Tag="text" Content="{DynamicResource PathArrow}" Style="{DynamicResource GeometryButtonStyle}" ToolTip="发送"/>
             </StackPanel>
         </Grid>
