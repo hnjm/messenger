@@ -78,11 +78,7 @@ namespace Mikodev.Network
                 try
                 {
                     soc.SetKeepAlive();
-                    await _AcceptClient(soc);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
+                    await await _AcceptClient(soc);
                 }
                 finally
                 {
@@ -96,7 +92,7 @@ namespace Mikodev.Network
             }
         }
 
-        private async Task _AcceptClient(Socket socket)
+        private async Task<Task> _AcceptClient(Socket socket)
         {
             LinkError _Check(int id)
             {
@@ -160,7 +156,7 @@ namespace Mikodev.Network
 
             clt.Received += _ClientReceived;
             clt.Disposed += _ClientDisposed;
-            await clt.Start();
+            return clt.Start();
         }
 
         private void _Refresh(LinkClient client, IEnumerable<int> groups = null)
