@@ -2,7 +2,7 @@
 
 namespace Mikodev.Logger
 {
-    internal class LogTrace : TraceListener
+    internal class LogListener : TraceListener
     {
         public override void Write(string message) => Log._Trace(message);
 

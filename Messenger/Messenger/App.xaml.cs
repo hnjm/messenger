@@ -1,5 +1,4 @@
-﻿using Messenger.Modules;
-using Mikodev.Logger;
+﻿using Mikodev.Logger;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,9 +14,6 @@ namespace Messenger
         {
             base.OnStartup(e);
 
-            Log.SetPath(nameof(Messenger));
-            EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
-
             DispatcherUnhandledException += (s, arg) =>
             {
                 arg.Handled = true;
@@ -25,9 +21,17 @@ namespace Messenger
                 Shutdown(1);
             };
 
-            SessionEnding += (s, arg) => LinkModule.Shutdown();
-            Exit += (s, _) => Framework.Close();
+            void _Close(object sender, EventArgs args)
+            {
+                Framework.Close();
+                Log.Close();
+            }
 
+            Exit += _Close;
+            SessionEnding += _Close;
+
+            Log.Run($"{nameof(Messenger)}.log");
+            EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
             Framework.Start();
         }
     }

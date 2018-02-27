@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,33 +17,79 @@ namespace Mikodev.Logger
         /// 日志固定前缀 (防止循环记录日志)
         /// </summary>
         internal static readonly string _prefix = $"[{nameof(Logger)}]";
+        internal static readonly object s_filelocker = new object();
         internal static readonly Queue<string> s_queue = new Queue<string>();
-        internal static int s_trace = 0;
-        internal static Logger s_log = null;
+        internal static TraceListener s_listener = null;
+        internal static StreamWriter s_writer = null;
+        internal static CancellationTokenSource s_cancel = null;
+        internal static Task s_task = null;
 
-        public static void SetPath(string path)
+        public static void Run(string path)
         {
-            if (Interlocked.CompareExchange(ref s_trace, 1, 0) == 0)
-                Trace.Listeners.Add(new LogTrace());
-            var log = new Logger(path);
-            s_log = log;
-            Task.Run(_Monitor);
+            lock (s_filelocker)
+            {
+                if (s_listener is null)
+                    Trace.Listeners.Add((s_listener = new LogListener()));
+
+                s_writer?.Dispose();
+                var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                s_writer = new StreamWriter(stream, Encoding.UTF8, 1024, false);
+
+                if (s_cancel is null && s_task is null)
+                {
+                    var cancel = new CancellationTokenSource();
+                    s_task = Task.Run(new Func<Task>(() => _Monitor(cancel.Token)));
+                    s_cancel = cancel;
+                }
+            }
         }
 
-        private static async Task _Monitor()
+        public static void Close()
+        {
+            lock (s_filelocker)
+            {
+                var tsk = s_task;
+                var src = s_cancel;
+                var wtr = s_writer;
+                src.Cancel();
+                tsk.Wait();
+                src.Dispose();
+                wtr.Dispose();
+
+                s_task = null;
+                s_cancel = null;
+                s_writer = null;
+            }
+        }
+
+        private static async Task _Monitor(CancellationToken token)
         {
             while (true)
             {
-                var itr = default(IEnumerable<string>);
+                var arr = default(string[]);
                 lock (s_queue)
                 {
-                    itr = s_queue.ToArray();
+                    arr = s_queue.ToArray();
                     s_queue.Clear();
+                }
+
+                if (arr.Length < 1)
+                {
+                    if (token.IsCancellationRequested)
+                        return;
+                    await Task.Delay(4);
+                    continue;
                 }
 
                 try
                 {
-                    await s_log.Write(itr);
+                    lock (s_filelocker)
+                    {
+                        var wtr = s_writer;
+                        foreach (var i in arr)
+                            wtr.Write(i);
+                        wtr.Flush();
+                    }
                 }
                 catch (Exception ex)
                 {

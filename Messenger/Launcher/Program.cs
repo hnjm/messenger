@@ -11,7 +11,7 @@ namespace Launcher
     {
         static async Task Main(string[] args)
         {
-            Log.SetPath(nameof(Launcher));
+            Log.Run($"{nameof(Launcher)}.log");
 
             try
             {
@@ -29,15 +29,15 @@ namespace Launcher
                         continue;
                     dic.Add(idx[0].ToLower(), idx[1]);
                 }
-                if (dic.TryGetValue("address", out var str))
+                if (dic.TryGetValue("addr", out var str))
                     add = IPAddress.Parse(str);
                 if (dic.TryGetValue("name", out str))
                     nam = str;
                 if (dic.TryGetValue("max", out str))
                     max = int.Parse(str);
-                if (dic.TryGetValue("port", out str))
+                if (dic.TryGetValue("tcpport", out str))
                     pot = int.Parse(str);
-                if (dic.TryGetValue("broadcast", out str))
+                if (dic.TryGetValue("udpport", out str))
                     bro = int.Parse(str);
 
                 await LinkListener.Run(add, pot, bro, max, nam);
@@ -46,6 +46,8 @@ namespace Launcher
             {
                 Log.Error(ex);
             }
+
+            Log.Close();
         }
     }
 }
