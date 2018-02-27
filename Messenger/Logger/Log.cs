@@ -51,6 +51,10 @@ namespace Mikodev.Logger
                 var tsk = s_task;
                 var src = s_cancel;
                 var wtr = s_writer;
+
+                if (tsk is null || src is null || wtr is null)
+                    return;
+
                 src.Cancel();
                 tsk.Wait();
                 src.Dispose();
