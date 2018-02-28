@@ -5,21 +5,13 @@
         <Setter Property="Control.Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Ellipse>
-                        <Ellipse.Fill>
-                            <RadialGradientBrush>
-                                <GradientStop Offset="0.7" Color="Transparent"/>
-                                <GradientStop Offset="0.8" Color="#40FFFFFF"/>
-                                <GradientStop Offset="1" Color="Transparent"/>
-                            </RadialGradientBrush>
-                        </Ellipse.Fill>
-                    </Ellipse>
+                    <Ellipse Margin="4" Stroke="{DynamicResource Generic.Focus.Brush}" StrokeDashArray="2"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <!--图标按钮-->
+    <!--圆形图标按钮-->
     <Style x:Key="GeometryButtonStyle" TargetType="{x:Type Button}">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="#FFA0A0A0"/>
@@ -27,32 +19,19 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
-                    <Border Background="{TemplateBinding Background}">
+                    <Grid>
+                        <Ellipse Fill="{TemplateBinding Background}"/>
                         <ContentPresenter Focusable="False" HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" SnapsToDevicePixels="True"/>
-                    </Border>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background">
-                    <Setter.Value>
-                        <RadialGradientBrush>
-                            <GradientStop Offset="0.75" Color="#FF202020"/>
-                            <GradientStop Offset="1" Color="Transparent"/>
-                        </RadialGradientBrush>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="Background" Value="#FF404040"/>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background">
-                    <Setter.Value>
-                        <RadialGradientBrush>
-                            <GradientStop Offset="0.75" Color="#FF101010"/>
-                            <GradientStop Offset="1" Color="Transparent"/>
-                        </RadialGradientBrush>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="Background" Value="#FF303030"/>
             </Trigger>
         </Style.Triggers>
     </Style>

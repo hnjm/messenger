@@ -26,18 +26,19 @@
     <!-- 菜单样式 (没有二级菜单样式) -->
     <Style TargetType="ContextMenu">
         <Setter Property="Background" Value="#FF202020"/>
-        <Setter Property="BorderBrush" Value="#FF808080"/>
+        <Setter Property="BorderBrush" Value="#FF606060"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FocusVisualStyle" Value="{StaticResource GenericFocusVisualStyle}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
                     <Border x:Name="border" MinWidth="240"
-                            SnapsToDevicePixels="True"
+                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
-                        <StackPanel Margin="0,8" IsItemsHost="True" SnapsToDevicePixels="True"/>
+                        <StackPanel Margin="0,4" IsItemsHost="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -144,7 +145,7 @@
     <SolidColorBrush x:Key="Button.Static.Border" Color="#FF606060"/>
     <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FF404040"/>
     <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF808080"/>
-    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FF101010"/>
+    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FF303030"/>
     <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF404040"/>
     <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FF404040"/>
     <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FF505050"/>

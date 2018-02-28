@@ -20,22 +20,21 @@ namespace Messenger.Models
         }
 
         /// <summary>
-        /// 通知发送者并返回关联任务 (返回值为 null 时表示无可用发送者)
+        /// 通知发送者并返回关联任务
         /// </summary>
-        public static Task Notify(int id, Guid key, Socket socket)
+        public static async Task Notify(int id, Guid key, Socket socket)
         {
             var lst = _backlog?.GetInvocationList();
             if (lst == null)
-                return null;
+                return;
             foreach (var i in lst)
             {
                 var fun = (Func<int, Guid, Socket, Task>)i;
                 var res = fun.Invoke(id, key, socket);
                 if (res == null)
                     continue;
-                return res;
+                await res;
             }
-            return null;
         }
 
         internal readonly Guid _key = Guid.NewGuid();

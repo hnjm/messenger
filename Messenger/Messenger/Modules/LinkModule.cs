@@ -76,14 +76,14 @@ namespace Messenger.Modules
             return clt.Start();
         }
 
-        private static void _RequestHandler(Socket socket, LinkPacket packet)
+        private static async Task _RequestHandler(Socket socket, LinkPacket packet)
         {
             var pth = packet.Path;
             if (pth == "share.directory" || pth == "share.file")
             {
                 var src = packet.Source;
                 var key = packet.Data.GetValue<Guid>();
-                Share.Notify(src, key, socket)?.Wait();
+                await Share.Notify(src, key, socket);
             }
             else
             {

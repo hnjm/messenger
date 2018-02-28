@@ -21,7 +21,7 @@ namespace Mikodev.Network
         internal readonly IPEndPoint _connected = null;
         internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
         internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
-        internal readonly Action<Socket, LinkPacket> _requested;
+        internal readonly Func<Socket, LinkPacket, Task> _requested;
         internal readonly byte[] _key = null;
         internal readonly byte[] _blk = null;
 
@@ -59,7 +59,7 @@ namespace Mikodev.Network
             _blk = block;
         }
 
-        internal LinkClient(int id, Socket socket, Socket listen, IPEndPoint connected, IPEndPoint inner, IPEndPoint outer, byte[] key, byte[] block, Action<Socket, LinkPacket> request)
+        internal LinkClient(int id, Socket socket, Socket listen, IPEndPoint connected, IPEndPoint inner, IPEndPoint outer, byte[] key, byte[] block, Func<Socket, LinkPacket, Task> request)
         {
             _id = id;
             _socket = socket;
@@ -74,7 +74,7 @@ namespace Mikodev.Network
             _requested = request;
         }
 
-        public static async Task<LinkClient> Connect(int id, IPEndPoint target, Action<Socket, LinkPacket> request)
+        public static async Task<LinkClient> Connect(int id, IPEndPoint target, Func<Socket, LinkPacket, Task> request)
         {
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
@@ -240,7 +240,7 @@ namespace Mikodev.Network
                         soc.SetKeepAlive();
                         var buf = await soc.ReceiveAsyncExt().TimeoutAfter("Timeout, at receive header packet.");
                         var pkt = new LinkPacket().LoadValue(buf);
-                        _requested.Invoke(soc, pkt);
+                        await _requested.Invoke(soc, pkt);
                     }
                     catch (Exception ex)
                     {

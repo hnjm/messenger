@@ -40,7 +40,7 @@
                         <!--控制按钮-->
                         <Button Tag="stop" ToolTip="关闭传输"
                             Content="{DynamicResource PathLiteStop}"
-                            Style="{DynamicResource GeometryButtonStyle}"/>
+                            Background="Transparent" BorderThickness="0" Padding="0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="0">
                         <StackPanel Orientation="Horizontal">

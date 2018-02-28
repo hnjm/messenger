@@ -34,10 +34,10 @@
                         <!--控制按钮-->
                         <Button Name="PlayButton" Margin="8,0" Tag="play" ToolTip="启动传输"
                                 Content="{DynamicResource PathLitePlay}"
-                                Style="{DynamicResource GeometryButtonStyle}"/>
+                                Background="Transparent" BorderThickness="0" Padding="0"/>
                         <Button Name="StopButton" Tag="stop" ToolTip="关闭传输"
                                 Content="{DynamicResource PathLiteStop}"
-                                Style="{DynamicResource GeometryButtonStyle}"/>
+                                Background="Transparent" BorderThickness="0" Padding="0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="0">
                         <StackPanel Name="uiTitlePanel">
