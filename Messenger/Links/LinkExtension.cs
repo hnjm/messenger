@@ -156,28 +156,9 @@ namespace Mikodev.Network
         }
 
         /// <summary>
-        /// Get <see cref="Exception.InnerException"/> from <see cref="AggregateException"/>
-        /// </summary>
-        /// <param name="value">Value can be null or any</param>
-        public static Exception Disaggregate(this Exception value)
-        {
-            while (value is AggregateException agg && agg.InnerExceptions?.Count == 1 && agg.InnerException is Exception err)
-                value = err;
-            return value;
-        }
-
-        /// <summary>
         /// 显式放弃等待该任务
         /// </summary>
-        public static void Ignore(this Task task)
-        {
-            return;
-        }
-
-        /// <summary>
-        /// 显式放弃等待该任务
-        /// </summary>
-        public static void Ignore<T>(this Task<T> task)
+        public static void Ignore<T>(this T task) where T : Task
         {
             return;
         }

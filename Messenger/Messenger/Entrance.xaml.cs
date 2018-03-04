@@ -1,6 +1,5 @@
 ﻿using Messenger.Modules;
 using Microsoft.Win32;
-using Mikodev.Network;
 using System;
 using System.ComponentModel;
 using System.Windows;
@@ -58,8 +57,7 @@ namespace Messenger
                     return;
                 win.uiHeadText.Text = title;
 
-                var obj = content.Disaggregate();
-                win.uiContentText.Text = obj?.ToString() ?? "未提供信息";
+                win.uiContentText.Text = content?.ToString() ?? "未提供信息";
                 win.uiMessagePanel.Visibility = Visibility.Visible;
             });
         }

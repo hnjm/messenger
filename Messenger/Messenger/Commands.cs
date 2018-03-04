@@ -27,15 +27,16 @@ namespace Messenger
             rmv.Executed += _RemoveExecuted;
 
             var vie = new CommandBinding { Command = ViewImage };
-            vie.CanExecute += _LargeImageCanExecute;
-            vie.Executed += _LargeImageExecuted;
+            vie.CanExecute += _ViewImageCanExecute;
+            vie.Executed += _ViewImageExecuted;
 
-            Application.Current.MainWindow.CommandBindings.Add(cpy);
-            Application.Current.MainWindow.CommandBindings.Add(rmv);
-            Application.Current.MainWindow.CommandBindings.Add(vie);
+            var list = Application.Current.MainWindow.CommandBindings;
+            list.Add(cpy);
+            list.Add(rmv);
+            list.Add(vie);
         }
 
-        private static void _LargeImageCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private static void _ViewImageCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null || msg.Path != "image")
@@ -45,7 +46,7 @@ namespace Messenger
             e.Handled = true;
         }
 
-        private static void _LargeImageExecuted(object sender, ExecutedRoutedEventArgs e)
+        private static void _ViewImageExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             var msg = (e.OriginalSource as FrameworkElement)?.DataContext as Packet;
             if (msg is null)

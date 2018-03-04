@@ -13,26 +13,27 @@ namespace Launcher
         {
             Log.Run($"{nameof(Launcher)}.log");
 
+            var add = IPAddress.Any;
+            var nam = default(string);
+            var max = Links.ServerSocketLimit;
+            var pot = Links.Port;
+            var bro = Links.BroadcastPort;
+            var dic = new Dictionary<string, string>();
+
+            foreach (var i in args)
+            {
+                var idx = i.Split(new char[] { ':' }, 2);
+                if (idx.Length < 2)
+                    continue;
+                dic.Add(idx[0].ToLower(), idx[1]);
+            }
+
             try
             {
-                var add = IPAddress.Any;
-                var nam = default(string);
-                var max = Links.ServerSocketLimit;
-                var pot = Links.Port;
-                var bro = Links.BroadcastPort;
-                var dic = new Dictionary<string, string>();
-
-                foreach (var i in args)
-                {
-                    var idx = i.Split(new char[] { ':' }, 2);
-                    if (idx.Length < 2)
-                        continue;
-                    dic.Add(idx[0].ToLower(), idx[1]);
-                }
-                if (dic.TryGetValue("addr", out var str))
-                    add = IPAddress.Parse(str);
-                if (dic.TryGetValue("name", out str))
+                if (dic.TryGetValue("name", out var str))
                     nam = str;
+                if (dic.TryGetValue("addr", out str))
+                    add = IPAddress.Parse(str);
                 if (dic.TryGetValue("max", out str))
                     max = int.Parse(str);
                 if (dic.TryGetValue("tcpport", out str))
