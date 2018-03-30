@@ -33,7 +33,7 @@ namespace Messenger.Modules
         private BindingList<Profile> _group = new BindingList<Profile>();
         private BindingList<Profile> _recent = new BindingList<Profile>();
         private BindingList<Profile> _client = new BindingList<Profile>();
-        private List<WeakReference> _spaces = new List<WeakReference>();
+        private LinkedList<WeakReference> _spaces = new LinkedList<WeakReference>();
         private Profile _inscope = null;
         private EventHandler _inscopechanged = null;
 
@@ -143,19 +143,16 @@ namespace Messenger.Modules
                 return ins._local;
             var spa = ins._spaces;
 
-            var idx = 0;
             var pro = default(Profile);
-            while (idx < spa.Count)
+            var ele = spa.First;
+            while (ele != null)
             {
-                var tar = (Profile)spa[idx].Target;
-                if (tar != null)
-                {
-                    if (pro == null && tar.Id == id)
-                        pro = tar;
-                    idx++;
-                    continue;
-                }
-                spa.RemoveAt(idx);
+                var cur = ele;
+                ele = ele.Next;
+                if (!(cur.Value.Target is Profile val))
+                    spa.Remove(cur);
+                else if (pro == null && val.Id == id)
+                    pro = val;
             }
 
             if (pro != null)
@@ -166,7 +163,7 @@ namespace Messenger.Modules
             if (create == false)
                 return null;
             pro = new Profile(id) { Name = $"佚名 [{id}]" };
-            spa.Add(new WeakReference(pro));
+            spa.AddLast(new WeakReference(pro));
             return pro;
         }
 

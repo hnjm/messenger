@@ -335,5 +335,22 @@ namespace Messenger.Extensions
             var itm = lst[index];
             listbox.ScrollIntoView(itm);
         }
+
+        /// <summary>
+        /// 将元素添加到列表的末尾, 如果列表长度超出限制, 则从开始移除多余的部分
+        /// </summary>
+        public static void AddLimitEx<T>(this IList<T> list, T value, int max)
+        {
+            if (list is null)
+                throw new ArgumentNullException(nameof(list));
+            if (max < 1)
+                throw new ArgumentOutOfRangeException(nameof(max));
+            list.Add(value);
+            var sub = list.Count - max;
+            if (sub > 0)
+                for (int i = 0; i < sub; i++)
+                    list.RemoveAt(0);
+            return;
+        }
     }
 }

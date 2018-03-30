@@ -36,7 +36,7 @@ namespace Messenger
             (Application.Current as App).TextBoxKeyDown += _TextBoxKeyDown;
 
             _profile = ProfileModule.Inscope;
-            _messages = HistoryModule.Query(_profile.Id);
+            _messages = _profile.GetMessages();
             uiProfileGrid.DataContext = _profile;
             uiMessageBox.ItemsSource = _messages;
             _messages.ListChanged += _ListChanged;

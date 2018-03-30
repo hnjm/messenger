@@ -1,8 +1,8 @@
-﻿using Messenger.Models;
+﻿using Messenger.Extensions;
+using Messenger.Models;
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
@@ -16,6 +16,8 @@ namespace Messenger.Modules
     /// </summary>
     internal class HistoryModule
     {
+        private const int _Max = 64;
+
         /// <summary>
         /// 默认数据库路径
         /// </summary>
@@ -34,7 +36,6 @@ namespace Messenger.Modules
         /// 数据库实例 (为 null 说明出错, 此时相当于 "阅后即焚")
         /// </summary>
         private SQLiteConnection _con = null;
-        private ConcurrentDictionary<int, BindingList<Packet>> _msg = new ConcurrentDictionary<int, BindingList<Packet>>();
         private EventHandler<LinkEventArgs<Packet>> _rec = null;
         private EventHandler<LinkEventArgs<Packet>> _han = null;
 
@@ -103,13 +104,14 @@ namespace Messenger.Modules
         /// </summary>
         private static void _Insert(Packet pkt)
         {
-            var lst = Query(pkt.Index);
-            Application.Current.Dispatcher.Invoke(() => lst.Add(pkt));
+            Application.Current.Dispatcher.Invoke(() =>
+                ProfileModule.Query(pkt.Index)
+                ?.GetMessages()
+                .AddLimitEx(pkt, _Max));
             var con = s_ins._con;
             if (con == null)
                 return;
-            var str = pkt.Object as string;
-            if (str == null)
+            if (!(pkt.Object is string str))
                 return;
 
             Task.Run(() =>
@@ -145,11 +147,9 @@ namespace Messenger.Modules
         /// <summary>
         /// 依据编号查询 并返回最近的 N 条消息记录 (返回值不会为 null)
         /// </summary>
-        public static BindingList<Packet> Query(int gid, int max = 32)
+        public static BindingList<Packet> Query(int gid, int max = _Max)
         {
-            var lst = s_ins._msg.GetOrAdd(gid, _ => new BindingList<Packet>());
-            if (lst.Count > 0)
-                return lst;
+            var lst = new BindingList<Packet>();
             var con = s_ins._con;
             if (con == null)
                 return lst;
@@ -224,8 +224,9 @@ namespace Messenger.Modules
 
         public static void Remove(Packet pkt)
         {
-            if (s_ins._msg.TryGetValue(pkt.Index, out var lst))
-                lst.Remove(pkt);
+            ProfileModule.Query(pkt.Index)
+                ?.GetMessagesOrDefault()
+                ?.Remove(pkt);
             var con = s_ins._con;
             if (con == null)
                 return;
@@ -258,8 +259,9 @@ namespace Messenger.Modules
         /// </summary>
         public static void Clear(int idx)
         {
-            if (s_ins._msg.TryGetValue(idx, out var lst))
-                lst.Clear();
+            ProfileModule.Query(idx)
+                ?.GetMessagesOrDefault()
+                ?.Clear();
             var con = s_ins._con;
             if (con == null)
                 return;

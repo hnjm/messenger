@@ -1,4 +1,5 @@
-﻿using Mikodev.Network;
+﻿using Messenger.Modules;
+using Mikodev.Network;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -37,6 +38,7 @@ namespace Messenger.Models
         private string _name = null;
         private string _text = null;
         private string _logo = null;
+        private BindingList<Packet> _messages;
 
         public Profile(int id) => _id = id;
 
@@ -73,12 +75,36 @@ namespace Messenger.Models
             set => OnPropertyChange(ref _logo, value);
         }
 
+        /// <summary>
+        /// 获取关联的消息记录列表
+        /// </summary>
+        public BindingList<Packet> GetMessages()
+        {
+            var lst = _messages;
+            if (lst != null)
+                return lst;
+            lst = HistoryModule.Query(_id);
+            _messages = lst;
+            return lst;
+        }
+
+        /// <summary>
+        /// 获取关联的消息记录列表 (如果尚未创建, 返回 null)
+        /// </summary>
+        /// <returns></returns>
+        public BindingList<Packet> GetMessagesOrDefault() => _messages;
+
         public Profile CopyFrom(Profile profile)
         {
             Name = profile._name;
             Text = profile._text;
             Image = profile._logo;
             return this;
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Profile)} id: {_id}, name: {_name}";
         }
     }
 }
