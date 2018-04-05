@@ -22,8 +22,7 @@ namespace Mikodev.Network
         internal readonly Queue<byte[]> _msgs = new Queue<byte[]>();
         internal readonly CancellationTokenSource _cancel = new CancellationTokenSource();
         internal readonly Func<Socket, LinkPacket, Task> _requested;
-        internal readonly byte[] _key = null;
-        internal readonly byte[] _blk = null;
+        internal readonly AesManaged _aes = new AesManaged();
 
         internal bool _started = false;
         internal bool _disposed = false;
@@ -55,8 +54,8 @@ namespace Mikodev.Network
             _inner = inner;
             _outer = outer;
 
-            _key = key;
-            _blk = block;
+            _aes.Key = key;
+            _aes.IV = block;
         }
 
         internal LinkClient(int id, Socket socket, Socket listen, IPEndPoint connected, IPEndPoint inner, IPEndPoint outer, byte[] key, byte[] block, Func<Socket, LinkPacket, Task> request)
@@ -69,8 +68,8 @@ namespace Mikodev.Network
             _inner = inner;
             _outer = outer;
 
-            _key = key;
-            _blk = block;
+            _aes.Key = key;
+            _aes.IV = block;
             _requested = request;
         }
 
@@ -204,7 +203,7 @@ namespace Mikodev.Network
             while (_cancel.IsCancellationRequested == false)
             {
                 if (_Dequeue(out var buf))
-                    await _socket.SendAsyncExt(LinkCrypto.Encrypt(buf, _key, _blk));
+                    await _socket.SendAsyncExt(_aes.Encrypt(buf));
                 else
                     await Task.Delay(Links.Delay);
                 continue;
@@ -220,7 +219,7 @@ namespace Mikodev.Network
                 var rec = Received;
                 if (rec == null)
                     continue;
-                var res = LinkCrypto.Decrypt(buf, _key, _blk);
+                var res = _aes.Decrypt(buf);
                 var pkt = new LinkPacket().LoadValue(res);
                 var arg = new LinkEventArgs<LinkPacket>(pkt);
                 rec.Invoke(this, arg);
@@ -268,6 +267,7 @@ namespace Mikodev.Network
             _cancel.Dispose();
             _socket.Dispose();
             _listen?.Dispose();
+            _aes.Dispose();
 
             var dis = Disposed;
             if (dis == null)

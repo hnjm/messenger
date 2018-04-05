@@ -10,20 +10,7 @@ namespace Mikodev.Network
 
         internal const int _Block = 16;
 
-        [ThreadStatic]
-        internal static AesManaged s_aes = null;
-
         internal readonly static Random s_ran = new Random();
-
-        internal static AesManaged _Instance()
-        {
-            var aes = s_aes;
-            if (aes != null)
-                return aes;
-            aes = new AesManaged() { KeySize = _Key * 8, BlockSize = _Block * 8 };
-            s_aes = aes;
-            return aes;
-        }
 
         public static byte[] GetKey()
         {
@@ -41,31 +28,15 @@ namespace Mikodev.Network
             return buf;
         }
 
-        public static byte[] Encrypt(byte[] buffer, byte[] key, byte[] iv)
-        {
-            var aes = _Instance();
-            aes.Key = key;
-            aes.IV = iv;
-            var val = _Writer(buffer, 0, buffer.Length, aes.CreateEncryptor());
-            return val;
-        }
+        public static byte[] Encrypt(this AesManaged aes, byte[] buf) => Transform(buf, 0, buf.Length, aes.CreateEncryptor());
 
-        public static byte[] Decrypt(byte[] buffer, byte[] key, byte[] iv)
-        {
-            var aes = _Instance();
-            aes.Key = key;
-            aes.IV = iv;
-            var val = _Writer(buffer, 0, buffer.Length, aes.CreateDecryptor());
-            return val;
-        }
+        public static byte[] Decrypt(this AesManaged aes, byte[] buf) => Transform(buf, 0, buf.Length, aes.CreateDecryptor());
 
-        internal static byte[] _Writer(byte[] buffer, int offset, int count, ICryptoTransform tramsform)
+        internal static byte[] Transform(byte[] buffer, int offset, int count, ICryptoTransform tramsform)
         {
             var mst = new MemoryStream();
             using (var cst = new CryptoStream(mst, tramsform, CryptoStreamMode.Write))
-            {
                 cst.Write(buffer, offset, count);
-            }
             return mst.ToArray();
         }
     }

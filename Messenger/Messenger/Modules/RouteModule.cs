@@ -45,7 +45,7 @@ namespace Messenger.Modules
             return;
         }
 
-        public static void Handle(LinkPacket arg)
+        public static void Invoke(LinkPacket arg)
         {
             var dic = s_ins._dic;
             if (dic.TryGetValue(arg.Path, out var act))

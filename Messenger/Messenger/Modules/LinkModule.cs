@@ -35,7 +35,7 @@ namespace Messenger.Modules
         {
             var clt = await LinkClient.Connect(id, endpoint, _RequestHandler);
 
-            void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Handle(args.Object);
+            void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Invoke(args.Object);
 
             void _OnDisposed(object sender, LinkEventArgs<Exception> args)
             {
