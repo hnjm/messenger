@@ -47,7 +47,7 @@ namespace Messenger.Modules
             }
         }
 
-        internal static Host _GetHostInfo(byte[] buffer, int offset, int length)
+        internal static Host GetHostInfo(byte[] buffer, int offset, int length)
         {
             try
             {
@@ -73,24 +73,33 @@ namespace Messenger.Modules
         /// 通过 UDP 广播从搜索列表搜索服务器
         /// </summary>
         /// <returns></returns>
-        public static IEnumerable<Host> Refresh()
+        public static async Task<Host[]> Refresh()
         {
             var lst = new List<Host>();
-            var stw = new Stopwatch();
             var soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var txt = new PacketWriter().SetValue("protocol", Links.Protocol).GetBytes();
             var mis = new List<Task>();
 
-            void _Refresh()
+            async Task _RefreshAsync()
             {
                 var buf = new byte[Links.BufferLength];
-                while (true)
+                var stw = Stopwatch.StartNew();
+                while (stw.ElapsedMilliseconds < _Timeout)
                 {
-                    var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
-                    var len = soc.ReceiveFrom(buf, ref iep);
-                    var inf = _GetHostInfo(buf, 0, len);
+                    var len = soc.Available;
+                    if (len < 1)
+                    {
+                        if (stw.ElapsedMilliseconds > _Timeout)
+                            break;
+                        await Task.Delay(4);
+                        continue;
+                    }
 
-                    if (inf == null || inf.Protocol.Equals(Links.Protocol) == false)
+                    var iep = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort) as EndPoint;
+                    len = Math.Min(len, buf.Length);
+                    len = soc.ReceiveFrom(buf, 0, len, SocketFlags.None, ref iep);
+                    var inf = GetHostInfo(buf, 0, len);
+                    if (inf == null || inf.Protocol != Links.Protocol)
                         continue;
                     inf.Address = ((IPEndPoint)iep).Address;
                     inf.Delay = stw.ElapsedMilliseconds;
@@ -105,12 +114,11 @@ namespace Messenger.Modules
             {
                 soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
                 soc.Bind(new IPEndPoint(IPAddress.Any, 0));
-                stw.Start();
 
-                var tsk = Task.Run(new Action(_Refresh));
+                var run = Task.Run(_RefreshAsync);
                 foreach (var a in s_ins._points)
                     soc.SendTo(txt, a);
-                tsk.Wait(_Timeout);
+                await run;
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
             {
@@ -121,8 +129,7 @@ namespace Messenger.Modules
                 soc.Dispose();
             }
 
-            stw.Stop();
-            return lst;
+            return lst.ToArray();
         }
 
         /// <summary>

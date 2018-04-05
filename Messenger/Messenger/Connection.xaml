@@ -122,7 +122,6 @@
             </Grid>
             <StackPanel Margin="5,10" Orientation="Horizontal" HorizontalAlignment="Right" Button.Click="_Click">
                 <Button x:Name="uiRefreshButton" Margin="5,0" Width="80" Visibility="Collapsed">刷新</Button>
-                <Button x:Name="uiClearButton" Margin="5,0" Width="80" Visibility="Collapsed">清空</Button>
                 <Button x:Name="uiBrowserButton" Margin="5,0" Width="80">服务器</Button>
                 <Button x:Name="uiConnectButton" Margin="5,0" Width="80">连接</Button>
             </StackPanel>

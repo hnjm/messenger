@@ -42,10 +42,10 @@ namespace Messenger
             }
             uiIdBox.Text = ProfileModule.Id.ToString();
             uiServerList.ItemsSource = _hosts;
-            uiServerList.SelectionChanged += ListBox_SelectionChanged;
+            uiServerList.SelectionChanged += _SelectionChanged;
         }
 
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void _SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count < 1)
                 return;
@@ -59,12 +59,10 @@ namespace Messenger
 
         private async void _Click(object sender, RoutedEventArgs e)
         {
-            var src = (Button)e.OriginalSource;
-
-            async void refresh()
+            async void _Refresh()
             {
                 uiRefreshButton.IsEnabled = false;
-                var lst = await Task.Run(() => HostModule.Refresh());
+                var lst = await Task.Run(HostModule.Refresh);
                 foreach (var inf in lst)
                 {
                     int idx = _hosts.IndexOf(inf);
@@ -75,51 +73,49 @@ namespace Messenger
                 uiRefreshButton.IsEnabled = true;
             }
 
+            var src = (Button)e.OriginalSource;
             if (src == uiBrowserButton)
             {
                 uiBrowserButton.Visibility = Visibility.Collapsed;
-                uiClearButton.Visibility =
                 uiRefreshButton.Visibility =
                 uiListGrid.Visibility = Visibility.Visible;
-                refresh();
+                _Refresh();
                 return;
             }
             else if (src == uiRefreshButton)
             {
-                refresh();
-                return;
-            }
-            else if (src == uiClearButton)
-            {
                 _hosts.Clear();
+                _Refresh();
                 return;
             }
-
-            uiConnectButton.IsEnabled = false;
-            try
+            else if (src == uiConnectButton)
             {
-                var uid = int.Parse(uiIdBox.Text);
-                var pot = int.Parse(uiPortBox.Text);
-                var hos = uiHostBox.Text;
+                uiConnectButton.IsEnabled = false;
+                try
+                {
+                    var uid = int.Parse(uiIdBox.Text);
+                    var pot = int.Parse(uiPortBox.Text);
+                    var hos = uiHostBox.Text;
 
-                var add = IPAddress.TryParse(hos, out var hst);
-                if (add == false)
-                    hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
-                var iep = new IPEndPoint(hst, pot);
+                    var add = IPAddress.TryParse(hos, out var hst);
+                    if (add == false)
+                        hst = Dns.GetHostEntry(hos).AddressList.First(r => r.AddressFamily == AddressFamily.InterNetwork);
+                    var iep = new IPEndPoint(hst, pot);
 
-                // 放弃等待该方法返回的任务
-                var _ = await LinkModule.Start(uid, iep);
-                HostModule.Name = hos;
-                HostModule.Port = pot;
+                    // 放弃等待该方法返回的任务
+                    var _ = await LinkModule.Start(uid, iep);
+                    HostModule.Name = hos;
+                    HostModule.Port = pot;
 
-                NavigationService.Navigate(new PageFrame());
+                    NavigationService.Navigate(new PageFrame());
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    Entrance.ShowError("连接失败", ex);
+                }
+                uiConnectButton.IsEnabled = true;
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex);
-                Entrance.ShowError("连接失败", ex);
-            }
-            uiConnectButton.IsEnabled = true;
         }
     }
 }
