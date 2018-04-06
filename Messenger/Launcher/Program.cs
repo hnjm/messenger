@@ -13,12 +13,12 @@ namespace Launcher
     {
         static async Task Main(string[] args)
         {
-            Log.Run($"{nameof(Launcher)}.log");
+            Log.Run(nameof(Launcher) + ".log");
 
             try
             {
                 var xml = new XmlDocument();
-                xml.Load($"{nameof(Launcher)}.settings.xml");
+                xml.Load(nameof(Launcher) + ".settings.xml");
                 var lst = xml.SelectNodes("/settings/setting[@key]");
                 var dic = ((IEnumerable)lst)
                     .Cast<XmlElement>()

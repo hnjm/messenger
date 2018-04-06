@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -100,12 +101,14 @@ namespace Messenger.Modules
             }
 
             var fst = default(FileStream);
+            var wtr = default(StreamWriter);
             var res = false;
 
             try
             {
                 fst = new FileStream(path, FileMode.Create);
-                doc.Save(fst);
+                wtr = new StreamWriter(fst, Encoding.UTF8);
+                doc.Save(wtr);
                 res = true;
             }
             catch (Exception ex)
@@ -114,6 +117,7 @@ namespace Messenger.Modules
             }
             finally
             {
+                wtr?.Dispose();
                 fst?.Dispose();
             }
             return res;

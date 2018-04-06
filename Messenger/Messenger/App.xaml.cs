@@ -30,7 +30,7 @@ namespace Messenger
             Exit += _Close;
             SessionEnding += _Close;
 
-            Log.Run($"{nameof(Messenger)}.log");
+            Log.Run(nameof(Messenger) + ".log");
             EventManager.RegisterClassHandler(typeof(TextBox), UIElement.KeyDownEvent, new KeyEventHandler((s, arg) => TextBoxKeyDown?.Invoke(s, arg)));
             Framework.Start();
         }
