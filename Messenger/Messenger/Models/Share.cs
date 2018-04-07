@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Messenger.Models
 {
-    public sealed class Share : IDisposed, INotifyPropertyChanged
+    public sealed class Share : IFinal, IDisposable, INotifyPropertyChanged
     {
         internal static Func<int, Guid, Socket, Task> _backlog;
 
@@ -75,7 +75,7 @@ namespace Messenger.Models
 
         public BindingList<ShareWorker> WorkerList => _list;
 
-        public bool IsDisposed => Volatile.Read(ref _closed) != 0;
+        public bool IsFinal => Volatile.Read(ref _closed) != 0;
 
         internal Share(FileSystemInfo info)
         {
@@ -110,7 +110,7 @@ namespace Messenger.Models
                 return;
             _backlog -= _Accept;
 
-            OnPropertyChanged(nameof(IsDisposed));
+            OnPropertyChanged(nameof(IsFinal));
             var lst = default(List<ShareWorker>);
             Application.Current.Dispatcher.Invoke(() => lst = _list.ToList());
             lst.ForEach(r => r.Dispose());

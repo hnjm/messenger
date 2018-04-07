@@ -113,7 +113,7 @@
     <Compile Include="Models\LoaderAttribute.cs" />
     <Compile Include="Models\LoaderFlags.cs" />
     <Compile Include="Models\RouteAttribute.cs" />
-    <Compile Include="Models\IDisposed.cs" />
+    <Compile Include="Models\IFinal.cs" />
     <Compile Include="Models\ShareStatus.cs" />
     <Compile Include="Models\Share.cs" />
     <Compile Include="Models\ShareReceiver.cs" />

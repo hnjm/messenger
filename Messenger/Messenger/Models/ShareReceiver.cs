@@ -11,12 +11,11 @@ using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
-    public sealed class ShareReceiver : ShareBasic, IDisposed
+    public sealed class ShareReceiver : ShareBasic, IDisposable
     {
         private readonly object _locker = new object();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        internal readonly int _id;
         internal readonly Guid _key;
         internal readonly long _length;
         internal readonly bool _batch = false;
@@ -31,17 +30,16 @@ namespace Messenger.Models
         internal long _position = 0;
         internal string _name = null;
         internal string _path = null;
-        internal ShareStatus _status;
 
         private readonly IPEndPoint[] _endpoints = null;
 
         public bool IsStarted => _started;
 
+        public bool IsDisposed => _disposed;
+
         public override long Length => _length;
 
         public override bool IsBatch => _batch;
-
-        public override bool IsDisposed => _disposed;
 
         public override string Name => _name;
 
@@ -49,16 +47,11 @@ namespace Messenger.Models
 
         public override long Position => _position;
 
-        public override ShareStatus Status => _status;
-
-        protected override int Id => _id;
-
-        public ShareReceiver(int id, PacketReader reader)
+        public ShareReceiver(int id, PacketReader reader) : base(id)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            _id = id;
             var typ = reader["type"].GetValue<string>();
             if (typ == "file")
                 _length = reader["length"].GetValue<long>();
@@ -71,7 +64,6 @@ namespace Messenger.Models
             _origin = reader["name"].GetValue<string>();
             _name = _origin;
             _endpoints = reader["endpoints"].GetArray<IPEndPoint>();
-            _status = ShareStatus.等待;
         }
 
         public Task Start()
@@ -81,83 +73,76 @@ namespace Messenger.Models
                 if (_started || _disposed)
                     throw new InvalidOperationException();
                 _started = true;
-                _status = ShareStatus.连接;
-                Register();
-                OnPropertyChanged(nameof(IsStarted));
             }
 
-            void _SetStatus(ShareStatus status)
+            Status = ShareStatus.连接;
+            Register();
+            OnPropertyChanged(nameof(IsStarted));
+            return Task.Run(_Start);
+        }
+
+        private async Task _Start()
+        {
+            var soc = default(Socket);
+            var iep = default(IPEndPoint);
+
+            for (int i = 0; i < _endpoints.Length; i++)
             {
-                lock (_locker)
-                {
-                    if (_disposed)
-                        return;
-                    _status = status;
-                }
-            }
-
-            async Task _Start()
-            {
-                var soc = default(Socket);
-                var iep = default(IPEndPoint);
-
-                for (int i = 0; i < _endpoints.Length; i++)
-                {
-                    if (soc != null)
-                        break;
-                    soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                    iep = _endpoints[i];
-
-                    try
-                    {
-                        await soc.ConnectAsyncEx(iep).TimeoutAfter("Share receiver timeout.");
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        soc.Dispose();
-                        soc = null;
-                    }
-                }
-
-                if (soc == null)
-                {
-                    _SetStatus(ShareStatus.失败);
-                    Dispose();
-                    return;
-                }
-
-                var buf = PacketConvert.Serialize(new
-                {
-                    path = "share." + (_batch ? "directory" : "file"),
-                    data = _key,
-                    source = LinkModule.Id,
-                    target = _id,
-                });
+                if (soc != null)
+                    break;
+                soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                iep = _endpoints[i];
 
                 try
                 {
-                    soc.SetKeepAlive();
-                    await soc.SendAsyncExt(buf);
-                    _SetStatus(ShareStatus.运行);
-                    await _Receive(soc, _cancel.Token);
-                    _SetStatus(ShareStatus.成功);
-                    PostModule.Notice(_id, _batch ? "share.dir" : "share.file", _origin);
+                    await soc.ConnectAsyncEx(iep).TimeoutAfter("Share receiver timeout.");
                 }
-                catch (Exception ex)
+                catch (Exception err)
                 {
-                    Log.Error(ex);
-                    _SetStatus(ShareStatus.中断);
-                    throw;
-                }
-                finally
-                {
+                    Log.Error(err);
                     soc.Dispose();
-                    Dispose();
+                    soc = null;
                 }
             }
 
-            return Task.Run(_Start);
+            if (soc == null)
+            {
+                Status = ShareStatus.失败;
+                Dispose();
+                return;
+            }
+
+            var buf = PacketConvert.Serialize(new
+            {
+                path = "share." + (_batch ? "directory" : "file"),
+                data = _key,
+                source = LinkModule.Id,
+                target = Id,
+            });
+
+            try
+            {
+                soc.SetKeepAlive();
+                await soc.SendAsyncExt(buf);
+                Status = ShareStatus.运行;
+                await _Receive(soc, _cancel.Token);
+                Status = ShareStatus.成功;
+                PostModule.Notice(Id, _batch ? "share.dir" : "share.file", _origin);
+            }
+            catch (OperationCanceledException)
+            {
+                Status = ShareStatus.取消;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                Status = ShareStatus.中断;
+            }
+            finally
+            {
+                soc.Dispose();
+                Dispose();
+            }
         }
 
         internal Task _Receive(Socket socket, CancellationToken token)
@@ -176,10 +161,12 @@ namespace Messenger.Models
                 _UpdateInfo(dir);
                 return socket.ReceiveDirectoryAsyncEx(dir.FullName, r => _position += r, token);
             }
-
-            var inf = ShareModule.AvailableFile(_name);
-            _UpdateInfo(inf);
-            return socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, token);
+            else
+            {
+                var inf = ShareModule.AvailableFile(_name);
+                _UpdateInfo(inf);
+                return socket.ReceiveFileEx(inf.FullName, _length, r => _position += r, token);
+            }
         }
 
         public void Dispose()
@@ -188,9 +175,6 @@ namespace Messenger.Models
             {
                 if (_disposed)
                     return;
-                var val = _status & ShareStatus.终止;
-                if (val == 0)
-                    _status = ShareStatus.取消;
                 _disposed = true;
             }
 

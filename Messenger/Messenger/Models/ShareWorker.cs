@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 
 namespace Messenger.Models
 {
-    public sealed class ShareWorker : ShareBasic, IDisposed
+    public sealed class ShareWorker : ShareBasic, IDisposable
     {
-        internal readonly int _id;
         internal readonly object _locker = new object();
         internal readonly Share _source;
         internal readonly Socket _socket;
@@ -18,15 +17,10 @@ namespace Messenger.Models
         internal long _position = 0;
         internal bool _started = false;
         internal bool _disposed = false;
-        internal ShareStatus _status;
-
-        protected override int Id => _id;
 
         public override long Length => _source.Length;
 
         public override bool IsBatch => _source.IsBatch;
-
-        public override bool IsDisposed => _disposed;
 
         public override string Name => _source._name;
 
@@ -34,44 +28,45 @@ namespace Messenger.Models
 
         public override long Position => _position;
 
-        public override ShareStatus Status => _status;
-
-        public ShareWorker(Share share, int id, Socket socket)
+        public ShareWorker(Share share, int id, Socket socket) : base(id)
         {
-            _id = id;
             _source = share;
             _socket = socket;
-            _status = ShareStatus.等待;
         }
 
-        public Task Start()
+        public async Task Start()
         {
             lock (_locker)
             {
                 if (_started || _disposed)
                     throw new InvalidOperationException();
                 _started = true;
-                _status = ShareStatus.运行;
-                Register();
             }
 
-            if (_source._info is FileInfo inf)
-                return _socket.SendFileEx(_source._path, _source._length, r => _position += r, _cancel.Token).ContinueWith(_Finish);
-            return _socket.SendDirectoryAsyncEx(_source._path, r => _position += r, _cancel.Token).ContinueWith(_Finish);
-        }
+            Status = ShareStatus.运行;
+            Register();
 
-        internal void _Finish(Task task)
-        {
-            var err = task.Exception;
-            Log.Error(err);
-
-            if (_cancel.IsCancellationRequested)
-                _status = ShareStatus.取消;
-            else if (err != null)
-                _status = ShareStatus.中断;
-            else
-                _status = ShareStatus.成功;
-            Dispose();
+            try
+            {
+                if (_source._info is FileInfo inf)
+                    await _socket.SendFileEx(_source._path, _source._length, r => _position += r, _cancel.Token);
+                else
+                    await _socket.SendDirectoryAsyncEx(_source._path, r => _position += r, _cancel.Token);
+                Status = ShareStatus.成功;
+            }
+            catch (OperationCanceledException)
+            {
+                Status = ShareStatus.取消;
+            }
+            catch (Exception ex)
+            {
+                Status = ShareStatus.中断;
+                Log.Error(ex);
+            }
+            finally
+            {
+                Dispose();
+            }
         }
 
         public void Dispose()
@@ -80,11 +75,10 @@ namespace Messenger.Models
             {
                 if (_disposed)
                     return;
-                _cancel.Cancel();
-                _cancel.Dispose();
                 _disposed = true;
-                OnPropertyChanged(nameof(IsDisposed));
             }
+            _cancel.Cancel();
+            _cancel.Dispose();
         }
     }
 }

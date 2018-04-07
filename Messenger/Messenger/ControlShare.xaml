@@ -55,7 +55,7 @@
                 </Grid>
             </Grid>
             <ControlTemplate.Triggers>
-                <DataTrigger Binding="{Binding Path=IsDisposed}" Value="True">
+                <DataTrigger Binding="{Binding Path=IsFinal}" Value="True">
                     <Setter TargetName="uiTogglePanel" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path=IsBatch}" Value="True">

@@ -8,18 +8,17 @@ namespace Messenger.Models
     [AttributeUsage(AttributeTargets.Method)]
     public class LoaderAttribute : Attribute
     {
-        private int _lev = 0;
-
-        private LoaderFlags _flag = LoaderFlags.None;
+        private readonly int _lev;
+        private readonly LoaderFlags _tag;
 
         public int Level => _lev;
 
-        public LoaderFlags Flag => _flag;
+        public LoaderFlags Flag => _tag;
 
         public LoaderAttribute(int level, LoaderFlags flag)
         {
             _lev = level;
-            _flag = flag;
+            _tag = flag;
         }
     }
 }

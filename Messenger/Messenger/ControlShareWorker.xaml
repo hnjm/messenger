@@ -104,7 +104,7 @@
                         <Setter TargetName="PlayButton" Property="Visibility" Value="Collapsed"/>
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
-                <DataTrigger Binding="{Binding Path=IsDisposed}" Value="True">
+                <DataTrigger Binding="{Binding Path=IsFinal}" Value="True">
                     <Setter TargetName="uiTogglePanel" Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Converter={StaticResource ObjectTypeConverter}}" Value="{x:Type  model:ShareWorker}">

@@ -129,17 +129,17 @@ namespace Messenger.Modules
         }
 
         /// <summary>
-        /// 移除所有 <see cref="IDisposed.IsDisposed"/> 值为真的项目, 返回被移除的项目
+        /// 移除所有 <see cref="IFinal.IsFinal"/> 值为真的项目, 返回被移除的项目
         /// </summary>
-        public static List<IDisposed> Remove()
+        public static List<IFinal> Remove()
         {
-            var lst = new List<IDisposed>();
-            void remove<T>(IList<T> list)
+            var lst = new List<IFinal>();
+            void _Remove<T>(IList<T> list) where T : IFinal
             {
                 for (int i = 0; i < list.Count; i++)
                 {
-                    var val = (IDisposed)list[i];
-                    if (val.IsDisposed == false)
+                    var val = list[i];
+                    if (val.IsFinal == false)
                         continue;
                     lst.Add(val);
                     list.RemoveAt(i);
@@ -150,9 +150,9 @@ namespace Messenger.Modules
             Application.Current.Dispatcher.Invoke(() =>
             {
                 foreach (var i in s_ins._shareList)
-                    remove(i.WorkerList);
-                remove(s_ins._shareList);
-                remove(s_ins._receiverList);
+                    _Remove(i.WorkerList);
+                _Remove(s_ins._shareList);
+                _Remove(s_ins._receiverList);
             });
             return lst;
         }
