@@ -15,9 +15,11 @@
         <Grid Grid.Column="0" Background="#FF202020">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
+            <Grid Grid.Row="0" Height="{StaticResource Generic.Caption.Height}"/>
+            <Grid Grid.Row="1">
                 <TextBox x:Name="uiSearchBox" Margin="10" MaxLength="24" Tag="搜索" TextChanged="_TextChanged"/>
                 <Path Margin="15" HorizontalAlignment="Right" Stroke="#FFC0C0C0" StrokeThickness="1" Width="18" Height="18">
                     <Path.Data>
@@ -28,8 +30,8 @@
                     </Path.Data>
                 </Path>
             </Grid>
-            <Frame x:Name="uiLeftFrame" Grid.Row="1"/>
-            <Grid x:Name="uiPanel" Grid.Row="1" Background="#FF202020" Visibility="Hidden">
+            <Frame x:Name="uiLeftFrame" Grid.Row="2"/>
+            <Grid x:Name="uiPanel" Grid.Row="2" Background="#FF202020" Visibility="Hidden">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition/>
@@ -54,6 +56,8 @@
                 <Grid Grid.Row="3" Height="48"/>
             </Grid>
         </Grid>
-        <Frame x:Name="uiRightFrame" Grid.Column="1" Background="#FF000000"/>
+        <Grid Grid.Column="1" Background="#FF000000">
+            <Frame x:Name="uiRightFrame"/>
+        </Grid>
     </Grid>
 </Page>

@@ -14,8 +14,10 @@ namespace Messenger.Tools
             if (value is Visual vis && targetType == typeof(Thickness) && parameter is Thickness mar)
             {
                 var win = PresentationSource.FromVisual(vis);
-                var hor = 1.0 / win.CompositionTarget.TransformToDevice.M11;
-                var ver = 1.0 / win.CompositionTarget.TransformToDevice.M22;
+                var hor = win.CompositionTarget.TransformToDevice.M11;
+                var ver = win.CompositionTarget.TransformToDevice.M22;
+                hor = Math.Floor(hor) / hor;
+                ver = Math.Floor(ver) / ver;
                 var thi = new Thickness(hor * mar.Left, ver * mar.Top, hor * mar.Right, ver * mar.Bottom);
                 return thi;
             }

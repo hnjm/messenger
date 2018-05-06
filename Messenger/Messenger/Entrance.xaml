@@ -81,40 +81,31 @@
             </Setter>
         </Style>
 
-        <SolidColorBrush x:Key="Border.Active.Background" Color="#FF383838"/>
         <ControlTemplate x:Key="FlatWindowTemplate" TargetType="Window">
             <Border Name="BasicBorder" Loaded="_BorderLoaded" SnapsToDevicePixels="True">
                 <Grid Name="BasicGrid"
                       Margin="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource LogicToPixelConverter}, ConverterParameter={StaticResource WindowBorderMargin}}"
                       Background="{TemplateBinding Background}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Name="TitleRow" Height="30"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <Grid Name="TitleGrid" Grid.Row="0"
+                    <Border BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <AdornerDecorator>
+                            <ContentPresenter/>
+                        </AdornerDecorator>
+                    </Border>
+                    <Grid VerticalAlignment="Top" Height="{StaticResource Generic.Caption.Height}"
                           Background="Transparent"
                           MouseLeftButtonDown="_MouseLeftButtonDown"
                           SnapsToDevicePixels="True">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"
-                                   Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=Title}"/>
                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Button.Click="_PanelClick" SnapsToDevicePixels="True">
                             <Button Name="MenuMin" Tag="min" Content="{StaticResource MenuIconMin}" Style="{StaticResource MenuButtonStyle}"/>
                             <Button Name="MenuMax" Tag="max" Content="{StaticResource MenuIconMax}" Style="{StaticResource MenuButtonStyle}"/>
                             <Button Name="MenuExit" Tag="exit" Content="{StaticResource MenuIconExit}" Style="{StaticResource MenuButtonStyle}"/>
                         </StackPanel>
                     </Grid>
-                    <Border Grid.Row="1"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <AdornerDecorator>
-                            <ContentPresenter/>
-                        </AdornerDecorator>
-                    </Border>
                 </Grid>
             </Border>
             <ControlTemplate.Triggers>
                 <Trigger Property="IsActive" Value="True">
-                    <Setter TargetName="TitleGrid" Property="Background" Value="{StaticResource Border.Active.Background}"/>
                     <Setter TargetName="BasicBorder" Property="BorderBrush" Value="#FF202020"/>
                 </Trigger>
                 <Trigger Property="WindowState" Value="Maximized">
