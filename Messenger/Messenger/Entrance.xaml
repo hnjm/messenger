@@ -13,7 +13,7 @@
         <!--#region Flat window style-->
         <tool:LogicToPixelConverter x:Key="LogicToPixelConverter"/>
 
-        <Thickness x:Key="WindowBorderMargin">1</Thickness>
+        <Thickness x:Key="WindowBorderMargin">0</Thickness>
 
         <Style x:Key="MenuPathStyle" TargetType="Path">
             <Setter Property="StrokeThickness" Value="1"/>
