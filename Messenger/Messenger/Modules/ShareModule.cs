@@ -136,7 +136,7 @@ namespace Messenger.Modules
             var lst = new List<IFinal>();
             void _Remove<T>(IList<T> list) where T : IFinal
             {
-                for (int i = 0; i < list.Count; i++)
+                for (var i = 0; i < list.Count; i++)
                 {
                     var val = list[i];
                     if (val.IsFinal == false)

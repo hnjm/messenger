@@ -24,17 +24,17 @@ namespace Messenger.Controllers
         [Route("user.profile")]
         public void Profile()
         {
-            var cid = Data["id"].GetValue<int>();
-            var pro = new Profile(cid)
+            var clientId = Data["id"].As<int>();
+            var profile = new Profile(clientId)
             {
-                Name = Data["name"].GetValue<string>(),
-                Text = Data["text"].GetValue<string>(),
+                Name = Data["name"].As<string>(),
+                Text = Data["text"].As<string>(),
             };
 
-            var buf = Data["image"].GetArray<byte>();
-            if (buf.Length > 0)
-                pro.Image = CacheModule.SetBuffer(buf, true);
-            ProfileModule.Insert(pro);
+            var buffer = Data["image"].As<byte[]>();
+            if (buffer.Length > 0)
+                profile.Image = CacheModule.SetBuffer(buffer, true);
+            ProfileModule.Insert(profile);
         }
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace Messenger.Controllers
         [Route("user.list")]
         public void List()
         {
-            var lst = Data.GetArray<int>();
-            ProfileModule.Remove(lst);
+            var list = Data.As<int[]>();
+            _ = ProfileModule.Remove(list);
         }
     }
 }

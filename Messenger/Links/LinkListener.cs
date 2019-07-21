@@ -13,18 +13,27 @@ namespace Mikodev.Network
     public sealed partial class LinkListener
     {
         internal const int _NoticeDelay = 100;
+
         internal static readonly TimeSpan _NoticeInterval = TimeSpan.FromMilliseconds(1000);
 
         internal readonly object _locker = new object();
+
         internal readonly string _sname = null;
+
         internal readonly int _climit = Links.ServerSocketLimit;
+
         internal readonly int _port = Links.Port;
 
         internal readonly Socket _broadcast = null;
+
         internal readonly Socket _socket = null;
+
         internal readonly LinkNoticeSource _notice = new LinkNoticeSource(_NoticeInterval);
+
         internal readonly ConcurrentDictionary<int, LinkClient> _clients = new ConcurrentDictionary<int, LinkClient>();
+
         internal readonly ConcurrentDictionary<int, HashSet<int>> _joined = new ConcurrentDictionary<int, HashSet<int>>();
+
         internal readonly ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>> _set = new ConcurrentDictionary<int, ConcurrentDictionary<int, LinkClient>>();
 
         private LinkListener(Socket socket, Socket broadcast, int port, int count, string name)
@@ -58,9 +67,9 @@ namespace Mikodev.Network
                 var lis = new LinkListener(soc, bro, port, count, name);
                 await Task.WhenAll(new Task[]
                 {
-                    Task.Run(lis._Notice),
-                    Task.Run(lis._Listen),
-                    Task.Run(lis._Broadcast),
+                    Task.Run(lis.Notice),
+                    Task.Run(lis.Listen),
+                    Task.Run(lis.Broadcast),
                 });
             }
             catch (Exception)
@@ -71,14 +80,14 @@ namespace Mikodev.Network
             }
         }
 
-        private async Task _Listen()
+        private async Task Listen()
         {
             void _Invoke(Socket soc) => Task.Run(async () =>
             {
                 try
                 {
-                    soc.SetKeepAlive();
-                    await await _AcceptClient(soc);
+                    _ = soc.SetKeepAlive();
+                    await await AcceptClient(soc);
                 }
                 finally
                 {
@@ -92,7 +101,7 @@ namespace Mikodev.Network
             }
         }
 
-        private async Task<Task> _AcceptClient(Socket socket)
+        private async Task<Task> AcceptClient(Socket socket)
         {
             LinkError _Check(int id)
             {
@@ -112,19 +121,19 @@ namespace Mikodev.Network
 
             byte[] _Response(byte[] buf)
             {
-                var rea = new PacketReader(buf);
-                if (string.Equals(rea["protocol"].GetValue<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
+                var rea = LinkExtension.Generator.AsToken(buf);
+                if (string.Equals(rea["protocol"].As<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
-                cid = rea["source"].GetValue<int>();
-                var mod = rea["rsa/modulus"].GetArray<byte>();
-                var exp = rea["rsa/exponent"].GetArray<byte>();
-                iep = rea["endpoint"].GetValue<IPEndPoint>();
+                cid = rea["source"].As<int>();
+                var mod = rea["rsa"]["modulus"].As<byte[]>();
+                var exp = rea["rsa"]["exponent"].As<byte[]>();
+                iep = rea["endpoint"].As<IPEndPoint>();
                 oep = (IPEndPoint)socket.RemoteEndPoint;
                 err = _Check(cid);
                 var rsa = RSA.Create();
                 var par = new RSAParameters() { Exponent = exp, Modulus = mod };
                 rsa.ImportParameters(par);
-                var res = PacketWriter.Serialize(new
+                var res = LinkExtension.Generator.ToBytes(new
                 {
                     result = err,
                     endpoint = oep,
@@ -134,7 +143,7 @@ namespace Mikodev.Network
                         iv = rsa.Encrypt(blk, RSAEncryptionPadding.OaepSHA1),
                     }
                 });
-                return res.GetBytes();
+                return res;
             }
 
             try
@@ -154,12 +163,12 @@ namespace Mikodev.Network
             var clt = new LinkClient(cid, socket, iep, oep, key, blk);
             _clients.TryUpdate(cid, clt, null).AssertFatal("Failed to update client!");
 
-            clt.Received += _ClientReceived;
-            clt.Disposed += _ClientDisposed;
+            clt.Received += ClientReceived;
+            clt.Disposed += ClientDisposed;
             return clt.Start();
         }
 
-        private void _Refresh(LinkClient client, IEnumerable<int> groups = null)
+        private void Refresh(LinkClient client, IEnumerable<int> groups = null)
         {
             /* Require lock */
             var cid = client._id;
@@ -191,101 +200,91 @@ namespace Mikodev.Network
             }
         }
 
-        private async Task _Notice()
+        private async Task Notice()
         {
             while (true)
             {
                 await Task.Delay(_NoticeDelay);
-                var res = _notice.Notice();
-                if (res.IsAny == false)
+                var notice = _notice.Notice();
+                if (notice.IsAny == false)
                     continue;
 
-                var lst = _clients.Where(r => r.Value != null).Select(r => r.Key).ToList();
-                var wtr = PacketWriter.Serialize(new
+                var list = _clients.Where(r => r.Value != null).Select(r => r.Key).ToList();
+                var buffer = LinkExtension.Generator.ToBytes(new
                 {
                     source = Links.Id,
                     target = Links.Id,
                     path = "user.list",
-                    data = lst,
+                    data = list,
                 });
 
-                var buf = wtr.GetBytes();
-                foreach (var clt in _clients.Values)
-                    clt?.Enqueue(buf);
-                res.Handled();
+                foreach (var client in _clients.Values)
+                    client?.Enqueue(buffer);
+                notice.Handled();
             }
         }
 
-        private void _ClientDisposed(object sender, EventArgs e)
+        private void ClientDisposed(object sender, EventArgs e)
         {
             var clt = (LinkClient)sender;
 
             lock (_locker)
-                _Refresh(clt);
+                Refresh(clt);
             _notice.Update();
 
-            clt.Received -= _ClientReceived;
-            clt.Disposed -= _ClientDisposed;
+            clt.Received -= ClientReceived;
+            clt.Disposed -= ClientDisposed;
         }
 
-        private void _ClientReceived(object sender, LinkEventArgs<LinkPacket> arg)
+        private void ClientReceived(object sender, LinkEventArgs<LinkPacket> arg)
         {
-            var obj = arg.Object;
-            var src = obj.Source;
-            var tar = obj.Target;
-            var buf = obj.Buffer;
+            var packet = arg.Object;
+            var source = packet.Source;
+            var target = packet.Target;
+            var buffer = packet.Buffer;
 
-            if (tar == Links.Id)
+            if (target == Links.Id)
             {
-                if (obj.Path == "user.group")
+                if (packet.Path == "user.group")
                 {
-                    var lst = obj.Data.GetArray<int>().Where(r => r < Links.Id);
-                    var set = new HashSet<int>(lst);
-                    if (set.Count > Links.GroupLabelLimit)
+                    var list = new HashSet<int>(packet.Data.As<int[]>().Where(r => r < Links.Id));
+                    if (list.Count > Links.GroupLabelLimit)
                         throw new LinkException(LinkError.GroupLimited);
-                    var clt = (LinkClient)sender;
+                    var client = (LinkClient)sender;
                     lock (_locker)
-                        _Refresh(clt, set);
+                        Refresh(client, list);
                     return;
                 }
 
-                foreach (var val in _clients.Values)
-                    if (val != null && val._id != src)
-                        val.Enqueue(buf);
+                foreach (var value in _clients.Values)
+                    if (value != null && value._id != source)
+                        value.Enqueue(buffer);
                 return;
             }
-            else if (tar > Links.Id)
+            else if (target > Links.Id)
             {
                 // Thread safe operation
-                if (_clients.TryGetValue(tar, out var val))
-                    val?.Enqueue(buf);
+                if (_clients.TryGetValue(target, out var val))
+                    val?.Enqueue(buffer);
                 return;
             }
             else
             {
                 // Thread safe operation
-                if (_set.TryGetValue(tar, out var grp))
+                if (_set.TryGetValue(target, out var grp))
                     foreach (var val in grp.Values)
-                        if (val != null && val._id != src)
-                            val.Enqueue(buf);
+                        if (val != null && val._id != source)
+                            val.Enqueue(buffer);
                 return;
             }
         }
 
-        private async Task _Broadcast()
+        private async Task Broadcast()
         {
-            var wtr = PacketWriter.Serialize(new
-            {
-                protocol = Links.Protocol,
-                port = _port,
-                name = _sname,
-                limit = _climit,
-            });
-
             while (true)
             {
-                var ava = _broadcast.Available;
-                if (ava < 1)
+                var available = _broadcast.Available;
+                if (available < 1)
                 {
                     await Task.Delay(Links.Delay);
                     continue;
@@ -293,15 +292,22 @@ namespace Mikodev.Network
 
                 try
                 {
-                    var buf = new byte[Math.Min(ava, Links.BufferLength)];
-                    var iep = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
-                    var len = _broadcast.ReceiveFrom(buf, ref iep);
+                    var buffer = new byte[Math.Min(available, Links.BufferLength)];
+                    var remote = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
+                    var length = _broadcast.ReceiveFrom(buffer, ref remote);
 
-                    var rea = new PacketReader(buf, 0, len);
-                    if (string.Equals(Links.Protocol, rea["protocol", true]?.GetValue<string>()) == false)
+                    var packet = LinkExtension.Generator.AsToken(new ReadOnlyMemory<byte>(buffer, 0, length));
+                    if (string.Equals(Links.Protocol, packet["protocol"].As<string>()) == false)
                         continue;
-                    var res = wtr.SetValue("count", _clients.Count).GetBytes();
-                    var sub = _broadcast.SendTo(res, iep);
+                    var res = LinkExtension.Generator.ToBytes(new
+                    {
+                        protocol = Links.Protocol,
+                        port = _port,
+                        name = _sname,
+                        limit = _climit,
+                        count = _clients.Count,
+                    });
+                    _ = _broadcast.SendTo(res, remote);
                 }
                 catch (SocketException ex)
                 {

@@ -65,7 +65,7 @@ namespace Messenger
                 var lst = await Task.Run(HostModule.Refresh);
                 foreach (var inf in lst)
                 {
-                    int idx = _hosts.IndexOf(inf);
+                    var idx = _hosts.IndexOf(inf);
                     if (idx < 0)
                         _hosts.Add(inf);
                     else _hosts[idx] = inf;

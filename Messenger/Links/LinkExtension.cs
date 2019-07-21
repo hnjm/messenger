@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Mikodev.Binary;
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -9,22 +11,7 @@ namespace Mikodev.Network
 {
     public static class LinkExtension
     {
-        public static byte[] Concat(params byte[][] arrays)
-        {
-            var sum = 0;
-            for (int i = 0; i < arrays.Length; i++)
-                sum += arrays[i].Length;
-            var arr = new byte[sum];
-            var idx = 0;
-            for (int i = 0; i < arrays.Length; i++)
-            {
-                var cur = arrays[i];
-                var len = cur.Length;
-                Buffer.BlockCopy(cur, 0, arr, idx, len);
-                idx += len;
-            }
-            return arr;
-        }
+        public static Generator Generator { get; } = new Generator();
 
         public static Task ConnectAsyncEx(this Socket socket, EndPoint endpoint) => Task.Factory.FromAsync((arg, obj) => socket.BeginConnect(endpoint, arg, obj), socket.EndConnect, null);
 
@@ -34,10 +21,11 @@ namespace Mikodev.Network
         {
             if (enable == true && (before < 1 || interval < 1))
                 throw new ArgumentOutOfRangeException("Keep alive argument out of range.");
-            var val = new byte[sizeof(uint)];
-            var res = Concat(GetBytes(1U), GetBytes(before), GetBytes(interval));
-            socket.IOControl(IOControlCode.KeepAliveValues, res, val);
-            return ToInt32(val, 0);
+            var result = new byte[sizeof(uint)];
+            // struct layout: uint32, uint32, uint32 (total 12 bytes)
+            var option = Generator.ToBytes((1U, before, interval));
+            _ = socket.IOControl(IOControlCode.KeepAliveValues, option, result);
+            return ToInt32(result, 0);
         }
 
         public static async Task<byte[]> ReceiveAsyncExt(this Socket socket)
@@ -86,16 +74,17 @@ namespace Mikodev.Network
             }
         }
 
-        public static LinkPacket LoadValue(this LinkPacket src, byte[] buf)
+        public static LinkPacket LoadValue(this LinkPacket me, byte[] buffer)
         {
-            var ori = new PacketReader(buf);
-            src._buf = buf;
-            src._ori = ori;
-            src._src = ori["source"].GetValue<int>();
-            src._tar = ori["target"].GetValue<int>();
-            src._pth = ori["path"].GetValue<string>();
-            src._dat = ori["data", true];
-            return src;
+            var origin = Generator.AsToken(buffer);
+            me.Buffer = buffer;
+            me.Origin = origin;
+            me.Source = origin["source"].As<int>();
+            me.Target = origin["target"].As<int>();
+            me.Path = origin["path"].As<string>();
+            if (((IReadOnlyDictionary<string, Token>)origin).TryGetValue("data", out var data))
+                me.Data = data;
+            return me;
         }
 
         public static async Task TimeoutAfter(this Task task, string message = null, int milliseconds = Links.Timeout)
@@ -153,14 +142,6 @@ namespace Mikodev.Network
             if (error == LinkError.Success)
                 return;
             throw new LinkException(error);
-        }
-
-        /// <summary>
-        /// 显式放弃等待该任务
-        /// </summary>
-        public static void Ignore<T>(this T task) where T : Task
-        {
-            return;
         }
     }
 }

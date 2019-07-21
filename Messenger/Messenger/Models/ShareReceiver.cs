@@ -1,5 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Modules;
+using Mikodev.Binary;
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
@@ -14,10 +15,13 @@ namespace Messenger.Models
     public sealed class ShareReceiver : ShareBasic, IDisposable
     {
         private readonly object _locker = new object();
+
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
         internal readonly Guid _key;
+
         internal readonly long _length;
+
         internal readonly bool _batch = false;
 
         /// <summary>
@@ -26,9 +30,13 @@ namespace Messenger.Models
         internal readonly string _origin;
 
         internal bool _started = false;
+
         internal bool _disposed = false;
+
         internal long _position = 0;
+
         internal string _name = null;
+
         internal string _path = null;
 
         private readonly IPEndPoint[] _endpoints = null;
@@ -47,23 +55,23 @@ namespace Messenger.Models
 
         public override long Position => _position;
 
-        public ShareReceiver(int id, PacketReader reader) : base(id)
+        public ShareReceiver(int id, Token reader) : base(id)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            var typ = reader["type"].GetValue<string>();
+            var typ = reader["type"].As<string>();
             if (typ == "file")
-                _length = reader["length"].GetValue<long>();
+                _length = reader["length"].As<long>();
             else if (typ == "dir")
                 _batch = true;
             else
                 throw new ApplicationException("Invalid share type!");
 
-            _key = reader["key"].GetValue<Guid>();
-            _origin = reader["name"].GetValue<string>();
+            _key = reader["key"].As<Guid>();
+            _origin = reader["name"].As<string>();
             _name = _origin;
-            _endpoints = reader["endpoints"].GetArray<IPEndPoint>();
+            _endpoints = reader["endpoints"].As<IPEndPoint[]>();
         }
 
         public Task Start()
@@ -78,41 +86,40 @@ namespace Messenger.Models
             Status = ShareStatus.连接;
             Register();
             OnPropertyChanged(nameof(IsStarted));
-            return Task.Run(_Start);
+            return Task.Run(StartAsync);
         }
 
-        private async Task _Start()
+        private async Task StartAsync()
         {
-            var soc = default(Socket);
-            var iep = default(IPEndPoint);
+            var socket = default(Socket);
 
-            for (int i = 0; i < _endpoints.Length; i++)
+            for (var i = 0; i < _endpoints.Length; i++)
             {
-                if (soc != null)
+                if (socket != null)
                     break;
-                soc = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                iep = _endpoints[i];
+                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                var endpoint = _endpoints[i];
 
                 try
                 {
-                    await soc.ConnectAsyncEx(iep).TimeoutAfter("Share receiver timeout.");
+                    await socket.ConnectAsyncEx(endpoint).TimeoutAfter("Share receiver timeout.");
                 }
                 catch (Exception err)
                 {
                     Log.Error(err);
-                    soc.Dispose();
-                    soc = null;
+                    socket.Dispose();
+                    socket = null;
                 }
             }
 
-            if (soc == null)
+            if (socket == null)
             {
                 Status = ShareStatus.失败;
                 Dispose();
                 return;
             }
 
-            var buf = PacketConvert.Serialize(new
+            var buf = LinkExtension.Generator.ToBytes(new
             {
                 path = "share." + (_batch ? "directory" : "file"),
                 data = _key,
@@ -122,10 +129,10 @@ namespace Messenger.Models
 
             try
             {
-                soc.SetKeepAlive();
-                await soc.SendAsyncExt(buf);
+                _ = socket.SetKeepAlive();
+                await socket.SendAsyncExt(buf);
                 Status = ShareStatus.运行;
-                await _Receive(soc, _cancel.Token);
+                await Receive(socket, _cancel.Token);
                 Status = ShareStatus.成功;
                 PostModule.Notice(Id, _batch ? "share.dir" : "share.file", _origin);
             }
@@ -140,12 +147,12 @@ namespace Messenger.Models
             }
             finally
             {
-                soc.Dispose();
+                socket.Dispose();
                 Dispose();
             }
         }
 
-        internal Task _Receive(Socket socket, CancellationToken token)
+        internal Task Receive(Socket socket, CancellationToken token)
         {
             void _UpdateInfo(FileSystemInfo info)
             {

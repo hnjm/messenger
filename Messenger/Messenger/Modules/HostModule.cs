@@ -18,14 +18,18 @@ namespace Messenger.Modules
     internal class HostModule
     {
         private const int _Timeout = 1000;
+
         private const string _KeyLast = "server-last";
+
         private const string _KeyList = "server-broadcast-list";
 
         private string _host = null;
+
         private int _port = 0;
+
         private readonly List<IPEndPoint> _points = new List<IPEndPoint>();
 
-        private static HostModule s_ins = new HostModule();
+        private static readonly HostModule s_ins = new HostModule();
 
         public static string Name
         {
@@ -51,14 +55,14 @@ namespace Messenger.Modules
         {
             try
             {
-                var rea = new PacketReader(buffer, offset, length);
+                var rea = LinkExtension.Generator.AsToken(new ReadOnlyMemory<byte>(buffer, offset, length));
                 var inf = new Host()
                 {
-                    Protocol = rea["protocol"].GetValue<string>(),
-                    Port = rea["port"].GetValue<int>(),
-                    Name = rea["name"].GetValue<string>(),
-                    Count = rea["count"].GetValue<int>(),
-                    CountLimit = rea["limit"].GetValue<int>(),
+                    Protocol = rea["protocol"].As<string>(),
+                    Port = rea["port"].As<int>(),
+                    Name = rea["name"].As<string>(),
+                    Count = rea["count"].As<int>(),
+                    CountLimit = rea["limit"].As<int>(),
                 };
                 return inf;
             }
@@ -77,7 +81,7 @@ namespace Messenger.Modules
         {
             var lst = new List<Host>();
             var soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            var txt = new PacketWriter().SetValue("protocol", Links.Protocol).GetBytes();
+            var txt = LinkExtension.Generator.ToBytes(new { protocol = Links.Protocol });
             var mis = new List<Task>();
 
             async Task _RefreshAsync()
@@ -117,7 +121,7 @@ namespace Messenger.Modules
 
                 var run = Task.Run(_RefreshAsync);
                 foreach (var a in s_ins._points)
-                    soc.SendTo(txt, a);
+                    _ = soc.SendTo(txt, a);
                 await run;
             }
             catch (Exception ex) when (ex is SocketException || ex is AggregateException)
@@ -150,7 +154,7 @@ namespace Messenger.Modules
                     lst.Add(s.ToEndPointEx());
 
                 var str = EnvironmentModule.Query(_KeyLast, $"{IPAddress.Loopback}:{Links.Port}");
-                Extension.ToHostEx(str, out hos, out pot);
+                _ = Extension.ToHostEx(str, out hos, out pot);
             }
             catch (Exception ex)
             {

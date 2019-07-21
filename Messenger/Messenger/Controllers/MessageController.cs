@@ -16,8 +16,8 @@ namespace Messenger.Controllers
         [Route("msg.text")]
         public void Text()
         {
-            var txt = Data.GetValue<string>();
-            HistoryModule.Insert(Source, Target, "text", txt);
+            var text = Data.As<string>();
+            _ = HistoryModule.Insert(Source, Target, "text", text);
         }
 
         /// <summary>
@@ -26,8 +26,8 @@ namespace Messenger.Controllers
         [Route("msg.image")]
         public void Image()
         {
-            var buf = Data.GetArray<byte>();
-            HistoryModule.Insert(Source, Target, "image", buf);
+            var buffer = Data.As<byte[]>();
+            _ = HistoryModule.Insert(Source, Target, "image", buffer);
         }
 
         /// <summary>
@@ -36,9 +36,8 @@ namespace Messenger.Controllers
         [Route("msg.notice")]
         public void Notice()
         {
-            var dat = Data;
-            var typ = Data["type"].GetValue<string>();
-            var par = Data["parameter"].GetValue<string>();
+            var typ = Data["type"].As<string>();
+            var par = Data["parameter"].As<string>();
             var str = typ == "share.file"
                 ? $"已成功接收文件 {par}"
                 : typ == "share.dir"
@@ -47,7 +46,7 @@ namespace Messenger.Controllers
             if (str == null)
                 Log.Info($"Unknown notice type: {typ}, parameter: {par}");
             else
-                HistoryModule.Insert(Source, Target, "notice", str);
+                _ = HistoryModule.Insert(Source, Target, "notice", str);
             return;
         }
     }

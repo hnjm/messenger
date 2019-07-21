@@ -33,7 +33,7 @@ namespace Messenger.Extensions
                 goto fail;
             return true;
 
-            fail:
+        fail:
             host = null;
             port = 0;
             return false;
@@ -72,7 +72,7 @@ namespace Messenger.Extensions
             pos = s_units[idx];
             return true;
 
-            fail:
+        fail:
             len = 0;
             pos = string.Empty;
             return false;
@@ -183,23 +183,23 @@ namespace Messenger.Extensions
             async Task _SendDir(DirectoryInfo subdir, IEnumerable<string> relative)
             {
                 // 发送文件夹相对路径
-                var cur = PacketWriter.Serialize(new
+                var current = LinkExtension.Generator.ToBytes(new
                 {
                     type = "dir",
                     path = relative,
                 });
-                await socket.SendAsyncExt(cur.GetBytes());
+                await socket.SendAsyncExt(current);
 
                 foreach (var file in subdir.GetFiles())
                 {
                     var len = file.Length;
-                    var wtr = PacketWriter.Serialize(new
+                    var wtr = LinkExtension.Generator.ToBytes(new
                     {
                         type = "file",
                         path = file.Name,
                         length = len,
                     });
-                    await socket.SendAsyncExt(wtr.GetBytes());
+                    await socket.SendAsyncExt(wtr);
                     await socket.SendFileEx(file.FullName, len, slice, token);
                 }
 
@@ -210,8 +210,8 @@ namespace Messenger.Extensions
             }
 
             await _SendDir(new DirectoryInfo(path), Enumerable.Empty<string>());
-            var end = PacketWriter.Serialize(new { type = "end", });
-            await socket.SendAsyncExt(end.GetBytes());
+            var end = LinkExtension.Generator.ToBytes(new { type = "end", });
+            await socket.SendAsyncExt(end);
         }
 
         internal static async Task ReceiveDirectoryAsyncEx(this Socket _socket, string path, Action<long> slice, CancellationToken token)
@@ -222,20 +222,20 @@ namespace Messenger.Extensions
             while (true)
             {
                 var buf = await _socket.ReceiveAsyncExt();
-                var rea = new PacketReader(buf);
-                var typ = rea["type"].GetValue<string>();
+                var rea = LinkExtension.Generator.AsToken(buf);
+                var typ = rea["type"].As<string>();
 
                 if (typ == "dir")
                 {
                     // 重新拼接路径
-                    var dir = rea["path"].GetEnumerable<string>();
+                    var dir = rea["path"].As<string[]>();
                     cur = Path.Combine(new[] { path }.Concat(dir).ToArray());
-                    Directory.CreateDirectory(cur);
+                    _ = Directory.CreateDirectory(cur);
                 }
                 else if (typ == "file")
                 {
-                    var key = rea["path"].GetValue<string>();
-                    var len = rea["length"].GetValue<long>();
+                    var key = rea["path"].As<string>();
+                    var len = rea["length"].As<long>();
                     var pth = Path.Combine(cur, key);
                     await _socket.ReceiveFileEx(pth, len, slice, token);
                 }
@@ -348,7 +348,7 @@ namespace Messenger.Extensions
             list.Add(value);
             var sub = list.Count - max;
             if (sub > 0)
-                for (int i = 0; i < sub; i++)
+                for (var i = 0; i < sub; i++)
                     list.RemoveAt(0);
             return;
         }

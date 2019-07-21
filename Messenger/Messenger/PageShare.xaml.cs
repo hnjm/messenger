@@ -19,15 +19,14 @@ namespace Messenger
             InitializeComponent();
         }
 
-        private void _Click(object sender, RoutedEventArgs e)
+        private void Click(object sender, RoutedEventArgs e)
         {
-            var tag = (e.OriginalSource as Button)?.Tag as string;
-            if (tag == null)
+            if (!((e.OriginalSource as Button)?.Tag is string tag))
                 return;
 
             if (tag == "clean")
             {
-                ShareModule.Remove();
+                _ = ShareModule.Remove();
             }
             else if (tag == "change")
             {
@@ -39,7 +38,7 @@ namespace Messenger
             }
             else if (tag == "open")
             {
-                Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     try
                     {

@@ -20,8 +20,11 @@ namespace Messenger.Modules
     internal class LinkModule
     {
         private LinkModule() { }
+
         private static readonly LinkModule s_ins = new LinkModule();
+
         private LinkClient _client = null;
+
         private readonly object _locker = new object();
 
         public static int Id => s_ins._client?.Id ?? ProfileModule.Id;
@@ -33,14 +36,14 @@ namespace Messenger.Modules
         /// </summary>
         public static async Task<Task> Start(int id, IPEndPoint endpoint)
         {
-            var clt = await LinkClient.Connect(id, endpoint, _RequestHandler);
+            var clt = await LinkClient.Connect(id, endpoint, RequestHandler);
 
-            void _OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Invoke(args.Object);
+            void OnReceived(object sender, LinkEventArgs<LinkPacket> args) => RouteModule.Invoke(args.Object);
 
-            void _OnDisposed(object sender, LinkEventArgs<Exception> args)
+            void OnDisposed(object sender, LinkEventArgs<Exception> args)
             {
-                clt.Received -= _OnReceived;
-                clt.Disposed -= _OnDisposed;
+                clt.Received -= OnReceived;
+                clt.Disposed -= OnDisposed;
 
                 // 置空
                 lock (s_ins._locker)
@@ -51,8 +54,8 @@ namespace Messenger.Modules
                 Entrance.ShowError("连接中断", obj);
             }
 
-            clt.Received += _OnReceived;
-            clt.Disposed += _OnDisposed;
+            clt.Received += OnReceived;
+            clt.Disposed += OnDisposed;
 
             lock (s_ins._locker)
             {
@@ -64,8 +67,8 @@ namespace Messenger.Modules
                 s_ins._client = clt;
             }
 
-            HistoryModule.Handled += _HistoryHandled;
-            ShareModule.PendingList.ListChanged += _PendingListChanged;
+            HistoryModule.Handled += HistoryHandled;
+            ShareModule.PendingList.ListChanged += PendingListChanged;
 
             ProfileModule.SetId(id);
 
@@ -76,13 +79,13 @@ namespace Messenger.Modules
             return clt.Start();
         }
 
-        private static async Task _RequestHandler(Socket socket, LinkPacket packet)
+        private static async Task RequestHandler(Socket socket, LinkPacket packet)
         {
             var pth = packet.Path;
             if (pth == "share.directory" || pth == "share.file")
             {
                 var src = packet.Source;
-                var key = packet.Data.GetValue<Guid>();
+                var key = packet.Data.As<Guid>();
                 await Share.Notify(src, key, socket);
             }
             else
@@ -102,8 +105,8 @@ namespace Messenger.Modules
 
             ShareModule.Shutdown();
             ProfileModule.Clear();
-            HistoryModule.Handled -= _HistoryHandled;
-            ShareModule.PendingList.ListChanged -= _PendingListChanged;
+            HistoryModule.Handled -= HistoryHandled;
+            ShareModule.PendingList.ListChanged -= PendingListChanged;
         }
 
         public static void Enqueue(byte[] buffer) => s_ins._client?.Enqueue(buffer);
@@ -122,22 +125,22 @@ namespace Messenger.Modules
             return res;
         }
 
-        private static void _HistoryHandled(object sender, LinkEventArgs<Packet> e)
+        private static void HistoryHandled(object sender, LinkEventArgs<Packet> e)
         {
             var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
             if (e.Finish == false || Application.Current.MainWindow.IsActive == false)
-                NativeMethods.FlashWindow(hdl, true);
+                _ = NativeMethods.FlashWindow(hdl, true);
             return;
         }
 
-        private static void _PendingListChanged(object sender, ListChangedEventArgs e)
+        private static void PendingListChanged(object sender, ListChangedEventArgs e)
         {
             if (sender == ShareModule.PendingList && e.ListChangedType == ListChangedType.ItemAdded)
             {
                 if (Application.Current.MainWindow.IsActive == true)
                     return;
                 var hdl = new WindowInteropHelper(Application.Current.MainWindow).Handle;
-                NativeMethods.FlashWindow(hdl, true);
+                _ = NativeMethods.FlashWindow(hdl, true);
             }
         }
     }

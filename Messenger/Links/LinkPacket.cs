@@ -1,24 +1,19 @@
-﻿namespace Mikodev.Network
+﻿using Mikodev.Binary;
+
+namespace Mikodev.Network
 {
     public class LinkPacket
     {
-        internal int _src = 0;
-        internal int _tar = 0;
-        internal string _pth = null;
-        internal byte[] _buf = null;
-        internal PacketReader _ori = null;
-        internal PacketReader _dat = null;
+        public int Source { get; internal set; } = 0;
 
-        public int Source => _src;
+        public int Target { get; internal set; } = 0;
 
-        public int Target => _tar;
+        public string Path { get; internal set; } = null;
 
-        public string Path => _pth;
+        public Token Data { get; internal set; } = null;
 
-        public byte[] Buffer => _buf;
+        public Token Origin { get; internal set; } = null;
 
-        public PacketReader Origin => _ori;
-
-        public PacketReader Data => _dat;
+        public byte[] Buffer { get; internal set; } = null;
     }
 }

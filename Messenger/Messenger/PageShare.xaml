@@ -59,7 +59,7 @@
                     </StackPanel>
                 </ScrollViewer>
                 <Border Grid.Row="2" Background="#FF202020" Height="1"/>
-                <StackPanel Grid.Row="3" Margin="10" Orientation="Horizontal" HorizontalAlignment="Left" SnapsToDevicePixels="True" Button.Click="_Click">
+                <StackPanel Grid.Row="3" Margin="10" Orientation="Horizontal" HorizontalAlignment="Left" SnapsToDevicePixels="True" Button.Click="Click">
                     <Button Tag="stop" Content="{DynamicResource PathStop}" ToolTip="全部停止" Padding="0" Background="Transparent" BorderThickness="0"/>
                     <Button Tag="clean" Margin="10,0" Content="{DynamicResource PathDelete}" ToolTip="清理列表" Padding="0" Background="Transparent" BorderThickness="0"/>
                     <Button Tag="open" Content="{DynamicResource PathView}" ToolTip="打开保存文件夹" Padding="0" Background="Transparent" BorderThickness="0"/>
