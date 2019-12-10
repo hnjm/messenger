@@ -9,9 +9,9 @@ using System.Xml;
 
 namespace Launcher
 {
-    class Program
+    internal class Program
     {
-        static async Task Main()
+        private static async Task Main()
         {
             Log.Run(nameof(Launcher) + ".log");
 

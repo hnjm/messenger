@@ -1,4 +1,5 @@
-﻿using Mikodev.Logger;
+﻿using Mikodev.Binary;
+using Mikodev.Logger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -107,7 +108,7 @@ namespace Mikodev.Network
                 listen.Bind(local);
                 listen.Listen(Links.ClientSocketLimit);
 
-                var req = LinkExtension.Generator.ToBytes(new
+                var req = LinkExtension.Generator.Encode(new
                 {
                     source = id,
                     endpoint = local,
@@ -123,7 +124,7 @@ namespace Mikodev.Network
                 await socket.SendAsyncExt(req).TimeoutAfter("Timeout, at client request.");
                 var rec = await socket.ReceiveAsyncExt().TimeoutAfter("Timeout, at client response.");
 
-                var rea = LinkExtension.Generator.AsToken(rec);
+                var rea = new Token(LinkExtension.Generator, rec);
                 rea["result"].As<LinkError>().AssertError();
                 var remote = rea["endpoint"].As<IPEndPoint>();
                 var rsaKey = rsa.Decrypt(rea["aes"]["key"].As<byte[]>(), RSAEncryptionPadding.OaepSHA1);

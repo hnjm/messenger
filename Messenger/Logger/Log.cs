@@ -17,6 +17,7 @@ namespace Mikodev.Logger
         /// 日志固定前缀 (防止循环记录日志)
         /// </summary>
         internal static readonly string _prefix = $"[{nameof(Logger)}]";
+
         internal static readonly object s_filelocker = new object();
         internal static readonly Queue<string> s_queue = new Queue<string>();
         internal static TraceListener s_listener = null;

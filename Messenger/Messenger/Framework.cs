@@ -12,6 +12,7 @@ namespace Messenger
     public sealed class Framework : IDisposable
     {
         private Framework() { }
+
         private static Framework s_ins = new Framework();
 
         private readonly object _locker = new object();

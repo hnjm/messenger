@@ -45,11 +45,13 @@ namespace Messenger.Models
         protected void Register() => s_action += _Refresh;
 
         #region PropertyChange
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string str = null) =>
             Application.Current.Dispatcher.Invoke(() =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty)));
+
         #endregion
 
         private int _id;

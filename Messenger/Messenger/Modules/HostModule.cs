@@ -1,5 +1,6 @@
 ﻿using Messenger.Extensions;
 using Messenger.Models;
+using Mikodev.Binary;
 using Mikodev.Logger;
 using Mikodev.Network;
 using System;
@@ -55,7 +56,7 @@ namespace Messenger.Modules
         {
             try
             {
-                var rea = LinkExtension.Generator.AsToken(new ReadOnlyMemory<byte>(buffer, offset, length));
+                var rea = new Token(LinkExtension.Generator, new ReadOnlyMemory<byte>(buffer, offset, length));
                 var inf = new Host()
                 {
                     Protocol = rea["protocol"].As<string>(),
@@ -81,7 +82,7 @@ namespace Messenger.Modules
         {
             var lst = new List<Host>();
             var soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            var txt = LinkExtension.Generator.ToBytes(new { protocol = Links.Protocol });
+            var txt = LinkExtension.Generator.Encode(new { protocol = Links.Protocol });
             var mis = new List<Task>();
 
             async Task _RefreshAsync()

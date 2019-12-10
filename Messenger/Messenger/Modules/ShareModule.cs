@@ -46,6 +46,7 @@ namespace Messenger.Modules
         }
 
         #region PropertyChange
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public event PropertyChangingEventHandler PropertyChanging;
@@ -58,6 +59,7 @@ namespace Messenger.Modules
             source = target;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
         #endregion
 
         private ShareModule()
@@ -158,6 +160,7 @@ namespace Messenger.Modules
         }
 
         #region Other methods
+
         /// <summary>
         /// 检查文件名在指定目录下是否可用 如果冲突则添加随机后缀并重试 再次失败则抛出异常
         /// </summary>
@@ -208,6 +211,7 @@ namespace Messenger.Modules
         {
             s_ins._savepath = EnvironmentModule.Query(_KeyPath, _Path);
         }
+
         #endregion
     }
 }

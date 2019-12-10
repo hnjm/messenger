@@ -1,4 +1,5 @@
-﻿using Mikodev.Logger;
+﻿using Mikodev.Binary;
+using Mikodev.Logger;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -121,7 +122,7 @@ namespace Mikodev.Network
 
             byte[] _Response(byte[] buf)
             {
-                var rea = LinkExtension.Generator.AsToken(buf);
+                var rea = new Token(LinkExtension.Generator, buf);
                 if (string.Equals(rea["protocol"].As<string>(), Links.Protocol, StringComparison.InvariantCultureIgnoreCase) == false)
                     throw new LinkException(LinkError.ProtocolMismatch);
                 cid = rea["source"].As<int>();
@@ -133,7 +134,7 @@ namespace Mikodev.Network
                 var rsa = RSA.Create();
                 var par = new RSAParameters() { Exponent = exp, Modulus = mod };
                 rsa.ImportParameters(par);
-                var res = LinkExtension.Generator.ToBytes(new
+                var res = LinkExtension.Generator.Encode(new
                 {
                     result = err,
                     endpoint = oep,
@@ -210,7 +211,7 @@ namespace Mikodev.Network
                     continue;
 
                 var list = _clients.Where(r => r.Value != null).Select(r => r.Key).ToList();
-                var buffer = LinkExtension.Generator.ToBytes(new
+                var buffer = LinkExtension.Generator.Encode(new
                 {
                     source = Links.Id,
                     target = Links.Id,
@@ -296,10 +297,10 @@ namespace Mikodev.Network
                     var remote = (EndPoint)new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
                     var length = _broadcast.ReceiveFrom(buffer, ref remote);
 
-                    var packet = LinkExtension.Generator.AsToken(new ReadOnlyMemory<byte>(buffer, 0, length));
+                    var packet = new Token(LinkExtension.Generator, new ReadOnlyMemory<byte>(buffer, 0, length));
                     if (string.Equals(Links.Protocol, packet["protocol"].As<string>()) == false)
                         continue;
-                    var res = LinkExtension.Generator.ToBytes(new
+                    var res = LinkExtension.Generator.Encode(new
                     {
                         protocol = Links.Protocol,
                         port = _port,

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Messenger.Models
+﻿namespace Messenger.Models
 {
     internal interface IFinal
     {

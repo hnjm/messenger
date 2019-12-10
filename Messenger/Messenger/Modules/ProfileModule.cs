@@ -93,7 +93,7 @@ namespace Messenger.Modules
             HasRecent = rec > 0;
         }
 
-        // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- 
+        // ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 
         private static ProfileModule s_ins = new ProfileModule();
 
@@ -107,6 +107,7 @@ namespace Messenger.Modules
         public static BindingList<Profile> GroupList => s_ins._group;
         public static BindingList<Profile> RecentList => s_ins._recent;
         public static BindingList<Profile> ClientList => s_ins._client;
+
         public static event EventHandler InscopeChanged { add => s_ins._inscopechanged += value; remove => s_ins._inscopechanged -= value; }
 
         public static void Clear()

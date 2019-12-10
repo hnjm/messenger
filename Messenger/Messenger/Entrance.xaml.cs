@@ -63,6 +63,7 @@ namespace Messenger
         }
 
         #region Flat window style
+
         private void _BorderLoaded(object sender, RoutedEventArgs e)
         {
             // 隐藏窗体控制按钮
@@ -118,6 +119,7 @@ namespace Messenger
             var val = Registry.GetValue(_TabletModeKey, _TabletModeValue, -1);
             return val.Equals(1);
         }
+
         #endregion
     }
 }

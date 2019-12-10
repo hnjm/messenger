@@ -1,4 +1,5 @@
-﻿using Mikodev.Network;
+﻿using Mikodev.Binary;
+using Mikodev.Network;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -183,7 +184,7 @@ namespace Messenger.Extensions
             async Task _SendDir(DirectoryInfo subdir, IEnumerable<string> relative)
             {
                 // 发送文件夹相对路径
-                var current = LinkExtension.Generator.ToBytes(new
+                var current = LinkExtension.Generator.Encode(new
                 {
                     type = "dir",
                     path = relative,
@@ -193,7 +194,7 @@ namespace Messenger.Extensions
                 foreach (var file in subdir.GetFiles())
                 {
                     var len = file.Length;
-                    var wtr = LinkExtension.Generator.ToBytes(new
+                    var wtr = LinkExtension.Generator.Encode(new
                     {
                         type = "file",
                         path = file.Name,
@@ -210,7 +211,7 @@ namespace Messenger.Extensions
             }
 
             await _SendDir(new DirectoryInfo(path), Enumerable.Empty<string>());
-            var end = LinkExtension.Generator.ToBytes(new { type = "end", });
+            var end = LinkExtension.Generator.Encode(new { type = "end", });
             await socket.SendAsyncExt(end);
         }
 
@@ -222,7 +223,7 @@ namespace Messenger.Extensions
             while (true)
             {
                 var buf = await _socket.ReceiveAsyncExt();
-                var rea = LinkExtension.Generator.AsToken(buf);
+                var rea = new Token(LinkExtension.Generator, buf);
                 var typ = rea["type"].As<string>();
 
                 if (typ == "dir")

@@ -19,8 +19,10 @@ namespace Messenger.Tools
             {
                 case int val when val > MaxShowValue:
                     return OverflowText;
+
                 case int val when val < 0 == false:
                     return val.ToString();
+
                 default:
                     return 0.ToString();
             }

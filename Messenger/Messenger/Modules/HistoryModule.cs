@@ -36,6 +36,7 @@ namespace Messenger.Modules
         /// 数据库实例 (为 null 说明出错, 此时相当于 "阅后即焚")
         /// </summary>
         private SQLiteConnection _con = null;
+
         private EventHandler<LinkEventArgs<Packet>> _rec = null;
         private EventHandler<LinkEventArgs<Packet>> _han = null;
 

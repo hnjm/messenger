@@ -46,11 +46,13 @@ namespace Messenger.Models
         internal int _closed = 0;
 
         #region PropertyChange
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         internal void OnPropertyChanged(string str = null) =>
             Application.Current.Dispatcher.Invoke(() =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(str ?? string.Empty)));
+
         #endregion
 
         /// <summary>

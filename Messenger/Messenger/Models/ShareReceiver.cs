@@ -119,7 +119,7 @@ namespace Messenger.Models
                 return;
             }
 
-            var buf = LinkExtension.Generator.ToBytes(new
+            var buf = LinkExtension.Generator.Encode(new
             {
                 path = "share." + (_batch ? "directory" : "file"),
                 data = _key,

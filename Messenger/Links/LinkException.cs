@@ -33,20 +33,28 @@ namespace Mikodev.Network
             {
                 case LinkError.Success:
                     return "Operation successful without error!";
+
                 case LinkError.Overflow:
                     return "Buffer length overflow!";
+
                 case LinkError.ProtocolMismatch:
                     return "Protocol mismatch!";
+
                 case LinkError.IdInvalid:
                     return "Invalid client id!";
+
                 case LinkError.IdConflict:
                     return "Client id conflict with current users!";
+
                 case LinkError.CountLimited:
                     return "Client count has been limited!";
+
                 case LinkError.GroupLimited:
                     return "Group label is too many!";
+
                 case LinkError.QueueLimited:
                     return "Message queue full!";
+
                 default:
                     return "Unknown error!";
             }

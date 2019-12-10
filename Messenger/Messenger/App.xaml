@@ -5,11 +5,11 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Collection.xaml"/>
-                <ResourceDictionary Source="Resources/Container.xaml"/>
-                <ResourceDictionary Source="Resources/General.xaml"/>
-                <ResourceDictionary Source="Resources/Geometry.xaml"/>
-                <ResourceDictionary Source="Resources/Validation.xaml"/>
+                <ResourceDictionary Source="Resources/Collection.xaml" />
+                <ResourceDictionary Source="Resources/Container.xaml" />
+                <ResourceDictionary Source="Resources/General.xaml" />
+                <ResourceDictionary Source="Resources/Geometry.xaml" />
+                <ResourceDictionary Source="Resources/Validation.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

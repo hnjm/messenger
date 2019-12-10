@@ -1,4 +1,5 @@
 ﻿using Messenger.Models;
+using Mikodev.Binary;
 using Mikodev.Network;
 using System.IO;
 using System.Windows;
@@ -9,7 +10,7 @@ namespace Messenger.Modules
     {
         public static void Text(int targetId, string item)
         {
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = targetId,
@@ -22,7 +23,7 @@ namespace Messenger.Modules
 
         public static void Image(int targetId, byte[] item)
         {
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = targetId,
@@ -38,7 +39,7 @@ namespace Messenger.Modules
         /// </summary>
         public static void Notice(int dst, string genre, string arg)
         {
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = dst,
@@ -59,7 +60,7 @@ namespace Messenger.Modules
         public static void UserProfile(int targetId)
         {
             var profile = ProfileModule.Current;
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = targetId,
@@ -77,7 +78,7 @@ namespace Messenger.Modules
 
         public static void UserRequest()
         {
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = Links.Id,
@@ -91,7 +92,7 @@ namespace Messenger.Modules
         /// </summary>
         public static void UserGroups()
         {
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = Links.Id,
@@ -108,7 +109,7 @@ namespace Messenger.Modules
         {
             var share = new Share(new FileInfo(filepath));
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(share));
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = dst,
@@ -130,7 +131,7 @@ namespace Messenger.Modules
         {
             var share = new Share(new DirectoryInfo(directory));
             Application.Current.Dispatcher.Invoke(() => ShareModule.ShareList.Add(share));
-            var buffer = LinkExtension.Generator.ToBytes(new
+            var buffer = LinkExtension.Generator.Encode(new
             {
                 source = LinkModule.Id,
                 target = dst,

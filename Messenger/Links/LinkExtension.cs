@@ -1,6 +1,5 @@
 ﻿using Mikodev.Binary;
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -11,7 +10,7 @@ namespace Mikodev.Network
 {
     public static class LinkExtension
     {
-        public static Generator Generator { get; } = new Generator();
+        public static IGenerator Generator { get; } = Binary.Generator.CreateDefault();
 
         public static Task ConnectAsyncEx(this Socket socket, EndPoint endpoint) => Task.Factory.FromAsync((arg, obj) => socket.BeginConnect(endpoint, arg, obj), socket.EndConnect, null);
 
@@ -23,7 +22,7 @@ namespace Mikodev.Network
                 throw new ArgumentOutOfRangeException("Keep alive argument out of range.");
             var result = new byte[sizeof(uint)];
             // struct layout: uint32, uint32, uint32 (total 12 bytes)
-            var option = Generator.ToBytes((1U, before, interval));
+            var option = Generator.Encode((1U, before, interval));
             _ = socket.IOControl(IOControlCode.KeepAliveValues, option, result);
             return ToInt32(result, 0);
         }
@@ -76,14 +75,13 @@ namespace Mikodev.Network
 
         public static LinkPacket LoadValue(this LinkPacket me, byte[] buffer)
         {
-            var origin = Generator.AsToken(buffer);
+            var origin = new Token(Generator, buffer);
             me.Buffer = buffer;
             me.Origin = origin;
             me.Source = origin["source"].As<int>();
             me.Target = origin["target"].As<int>();
             me.Path = origin["path"].As<string>();
-            if (((IReadOnlyDictionary<string, Token>)origin).TryGetValue("data", out var data))
-                me.Data = data;
+            me.Data = origin["data", nothrow: true];
             return me;
         }
 

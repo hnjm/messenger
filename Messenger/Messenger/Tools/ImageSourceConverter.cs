@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 
 namespace Messenger.Tools
 {
-    class ImageSourceConverter : IValueConverter
+    internal class ImageSourceConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

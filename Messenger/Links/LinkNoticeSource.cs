@@ -41,7 +41,7 @@ namespace Mikodev.Network
                 goto nothing;
             return new LinkNotice(this, ver);
 
-            nothing:
+        nothing:
             return new LinkNotice();
         }
 
